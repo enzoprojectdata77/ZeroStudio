@@ -1,3 +1,20 @@
+/*
+ *  This file is part of AndroidIDE.
+ *
+ *  AndroidIDE is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  AndroidIDE is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package android.zero.studio.kotlin.analysis.symbolic
 
 import android.util.Log
@@ -13,7 +30,7 @@ import com.intellij.psi.PsiPackageStatement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.LightVirtualFile
 import com.itsaky.androidide.resources.R
-import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import com.itsaky.androidide.utils.Environment
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
@@ -21,6 +38,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
@@ -30,10 +48,10 @@ import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
+import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtPackageDirective
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid
@@ -42,8 +60,13 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import java.io.File
 
 /**
- * Data class for overridable members.
- * Contains [insertOffset] to avoid passing PSI elements across module boundaries.
+ * 数据类：表示可重写的成员。
+ * 用于将编译器内部的 Descriptor 转换为 IDE UI 可用的数据模型。
+ * 
+ * @property signature 成员签名字符串。
+ * @property sourceClass 来源类名。
+ * @property descriptor 原始声明描述符。
+ * @property insertOffset 建议的代码插入位置偏移量。
  */
 data class OverridableMember(
     val signature: String,
@@ -53,26 +76,55 @@ data class OverridableMember(
 )
 
 /**
- * Resolves symbols from source code for navigation and generation purposes.
+ * <strong>PsiSymbolResolver</strong> 负责从源代码（Java/Kotlin）中提取符号信息并分析成员继承关系。
+ * 
+ * 该类是“跳转到符号”和“重写方法”功能的核心引擎。基于 <b>kotlin-compiler-2.2.0</b>。
+ * 
+ * <h3>工作流程线路图</h3>
+ * <pre>
+ * [输入源码]
+ *    |
+ *    +--[环境初始化]--> 注入 Unsafe 兼容属性 -> 创建 KotlinCoreEnvironment (IntelliJ Project)
+ *    |
+ *    +--[文件载入]--> 创建 LightVirtualFile -> 映射为 PSI 树 (KtFile/PsiJavaFile)
+ *    |
+ *    +--[逻辑分支]
+ *         |
+ *         +--[符号提取]--> 遍历 PSI 树 -> 收集 Package/Class/Method/Property -> 转换为 SymbolInfo
+ *         |
+ *         +--[重写分析]--> 调用 TopDownAnalyzer -> 建立解析上下文 (BindingContext) -> 
+ *                         获取类描述符 -> 递归父类 Scope -> 过滤可重写成员
+ * [输出结果]
+ * </pre>
  *
  * @author android_zero
+ * @updated 2025.10.28: 适配 kotlin-compiler-2.2.0，修复了在 Android 平台上的 Unsafe 环境初始化崩溃。
  */
 object PsiSymbolResolver {
 
     private const val TAG = "PsiSymbolResolver"
 
     /**
-     * Parses a file to extract a list of symbols for the "Go to Symbol" feature.
+     * 解析给定源码文件并提取其中的符号列表。
+     * 
+     * @param fileName 文件名（带扩展名）。
+     * @param code 源码文本。
+     * @param classpaths 编译所需的依赖路径。
+     * @return 排序后的 [SymbolInfo] 列表。
      */
+    @JvmStatic
     fun parseFileSymbols(
         fileName: String,
         code: String,
         classpaths: Set<File>
     ): List<SymbolInfo> {
-        val disposable = Disposer.newDisposable()
+        val disposable = Disposer.newDisposable("SymbolResolver_ParseFile")
         val symbols = mutableListOf<SymbolInfo>()
 
         try {
+            // 设置底层环境属性，防止 Unsafe 方法缺失崩溃
+            patchEnvironmentProperties()
+            
             val configuration = createConfiguration(classpaths)
             val environment = KotlinCoreEnvironment.createForProduction(
                 disposable,
@@ -84,7 +136,7 @@ object PsiSymbolResolver {
             val isKotlin = fileName.endsWith(".kt", ignoreCase = true) || fileName.endsWith(".kts", ignoreCase = true)
 
             if (isKotlin) {
-                val virtualFile = LightVirtualFile(fileName, org.jetbrains.kotlin.idea.KotlinFileType.INSTANCE, code)
+                val virtualFile = LightVirtualFile(fileName, KotlinFileType.INSTANCE, code)
                 val ktFile = PsiManager.getInstance(project).findFile(virtualFile) as? KtFile
                 ktFile?.let { extractKotlinSymbols(it, code, symbols) }
             } else {
@@ -94,7 +146,9 @@ object PsiSymbolResolver {
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error parsing symbols", e)
+            Log.e(TAG, "解析符号时发生异常: ${e.message}", e)
+        } catch (err: Error) {
+            Log.e(TAG, "解析符号时发生底层错误 (Unsafe/JVM): ${err.message}", err)
         } finally {
             Disposer.dispose(disposable)
         }
@@ -103,16 +157,25 @@ object PsiSymbolResolver {
     }
 
     /**
-     * Finds overridable members for the "Override Methods" feature.
+     * 查找当前光标位置所属类中可以被重写的成员。
+     * 
+     * @param fileName 文件名。
+     * @param code 源码文本。
+     * @param cursorOffset 当前光标在文本中的偏移量。
+     * @param classpaths 依赖路径。
+     * @return [OverridableMember] 列表。
      */
+    @JvmStatic
     fun findOverridableMembers(
         fileName: String,
         code: String,
         cursorOffset: Int,
         classpaths: Set<File>
     ): List<OverridableMember> {
-        val disposable = Disposer.newDisposable()
+        val disposable = Disposer.newDisposable("SymbolResolver_FindOverride")
         try {
+            patchEnvironmentProperties()
+            
             val configuration = createConfiguration(classpaths)
             val environment = KotlinCoreEnvironment.createForProduction(
                 disposable,
@@ -121,9 +184,10 @@ object PsiSymbolResolver {
             )
             
             val project = environment.project
-            val virtualFile = LightVirtualFile(fileName, org.jetbrains.kotlin.idea.KotlinFileType.INSTANCE, code)
+            val virtualFile = LightVirtualFile(fileName, KotlinFileType.INSTANCE, code)
             val ktFile = PsiManager.getInstance(project).findFile(virtualFile) as? KtFile ?: return emptyList()
 
+            // 执行全量符号分析以获取描述符
             val analyzer = TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
                 project = project,
                 files = listOf(ktFile),
@@ -136,27 +200,29 @@ object PsiSymbolResolver {
             val elementAtCursor = ktFile.findElementAt(cursorOffset) ?: return emptyList()
             val containingClass = PsiTreeUtil.getParentOfType(elementAtCursor, KtClassOrObject::class.java) ?: return emptyList()
             
-            // Calculate insert offset: At the end of the class body, before the closing brace '}'
+            // 计算插入点：大括号起始处
             val body = containingClass.body
-            val insertOffset = body?.rBrace?.textOffset ?: (containingClass.textOffset + containingClass.textLength - 1)
+            val insertOffset = body?.lBrace?.textOffset?.let { it + 1 } ?: (containingClass.textOffset + containingClass.textLength - 1)
 
             val classDescriptor = bindingContext[BindingContext.CLASS, containingClass] ?: return emptyList()
 
-            val allMembers = mutableSetOf<String>()
+            // 记录当前类已有的成员签名，避免重复重写
+            val currentMemberSignatures = mutableSetOf<String>()
             classDescriptor.unsubstitutedMemberScope.getContributedDescriptors().forEach { member ->
                 if (member is CallableMemberDescriptor) {
-                     allMembers.add(getSignature(member))
+                     currentMemberSignatures.add(getSignature(member))
                 }
             }
             
             val overridableMembers = mutableListOf<OverridableMember>()
+            // 递归分析父类及接口
             classDescriptor.typeConstructor.supertypes.forEach { supertype ->
                 val superDescriptor = supertype.constructor.declarationDescriptor as? ClassDescriptor ?: return@forEach
                 superDescriptor.unsubstitutedMemberScope.getContributedDescriptors().forEach { member ->
                      if (member is CallableMemberDescriptor && (member.modality == Modality.OPEN || member.modality == Modality.ABSTRACT)) {
                          if (member.visibility != DescriptorVisibilities.PRIVATE && member.kind != CallableMemberDescriptor.Kind.SYNTHESIZED) {
                             val signature = getSignature(member)
-                             if (!allMembers.contains(signature)) {
+                             if (!currentMemberSignatures.contains(signature)) {
                                  overridableMembers.add(OverridableMember(
                                     signature = signature,
                                     sourceClass = superDescriptor.fqNameSafe.asString(),
@@ -171,22 +237,38 @@ object PsiSymbolResolver {
             return overridableMembers.distinctBy { it.signature }.sortedBy { it.signature }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error finding overridable members", e)
+            Log.e(TAG, "查找可重写成员时发生异常: ${e.message}", e)
+            return emptyList()
+        } catch (err: Error) {
+            Log.e(TAG, "查找可重写成员时发生底层错误: ${err.message}", err)
             return emptyList()
         } finally {
             Disposer.dispose(disposable)
         }
     }
 
+    /**
+     * 针对 Android 平台修正在加载 IntelliJ 组件前需要的系统属性。
+     */
+    private fun patchEnvironmentProperties() {
+        System.setProperty("idea.io.use.nio2", "false")
+        System.setProperty("io.netty.noUnsafe", "true")
+    }
+
     private fun createConfiguration(classpaths: Set<File>): CompilerConfiguration {
         return CompilerConfiguration().apply {
-            put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, false))
+            // 适配 2.2.0：使用 CommonConfigurationKeys
+            put(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, PrintingMessageCollector(System.err, MessageRenderer.PLAIN_FULL_PATHS, false))
+            
+            // 注入 Android.jar
+            if (Environment.ANDROID_JAR != null && Environment.ANDROID_JAR.exists()) {
+                addJvmClasspathRoots(listOf(Environment.ANDROID_JAR))
+            }
+            
             System.getProperty("java.home")?.let { put(JVMConfigurationKeys.JDK_HOME, File(it)) }
             addJvmClasspathRoots(classpaths.toList())
         }
     }
-
-    // --- Extraction Logic for Go To Symbol ---
 
     private fun extractKotlinSymbols(ktFile: KtFile, code: String, symbols: MutableList<SymbolInfo>) {
         ktFile.accept(object : KtTreeVisitorVoid() {
@@ -204,7 +286,7 @@ object PsiSymbolResolver {
                 val line = getLineNumber(code, classOrObject.textOffset)
                 
                 val kind = when {
-                    classOrObject is KtObjectDeclaration -> "Object"
+                    classOrObject is org.jetbrains.kotlin.psi.KtObjectDeclaration -> "Object"
                     classOrObject is org.jetbrains.kotlin.psi.KtClass && classOrObject.isInterface() -> "Interface"
                     classOrObject is org.jetbrains.kotlin.psi.KtClass && classOrObject.isEnum() -> "Enum"
                     else -> "Class"
@@ -279,7 +361,7 @@ object PsiSymbolResolver {
         })
     }
 
-    // --- Helper Methods ---
+    // --- 签名辅助方法 ---
 
     private fun getSignature(descriptor: DeclarationDescriptor): String {
         return when (descriptor) {
@@ -297,11 +379,7 @@ object PsiSymbolResolver {
 
     private fun getKotlinClassSignature(ktClass: KtClassOrObject): String {
         val name = ktClass.name ?: ""
-        val params = ktClass.primaryConstructor?.valueParameters?.joinToString(", ") { 
-             "${it.name}: ${it.typeReference?.text ?: "Any"}" 
-        } ?: ""
-        val type = if (params.isNotEmpty()) "($params)" else ""
-        return "class $name$type"
+        return "class $name"
     }
 
     private fun getKotlinFunctionSignature(function: KtNamedFunction): String {
@@ -336,53 +414,13 @@ object PsiSymbolResolver {
 
     private fun getLineNumber(text: String, offset: Int): Int {
         if (offset < 0) return 0
-        if (offset >= text.length) return text.lines().size - 1
+        val effectiveOffset = offset.coerceAtMost(text.length)
         var line = 0
-        for (i in 0 until offset) {
+        for (i in 0 until effectiveOffset) {
             if (text[i] == '\n') {
                 line++
             }
         }
         return line
-    }
-}
-
-/**
- * Helper object to generate code for overriding methods.
- */
-object CodeGenerator {
-    fun generateOverrideMethods(members: List<OverridableMember>): String {
-        val sb = StringBuilder()
-        for (member in members) {
-            val descriptor = member.descriptor
-            if (descriptor is FunctionDescriptor) {
-                sb.append("    override fun ${descriptor.name}(")
-                val params = descriptor.valueParameters.joinToString(", ") { "${it.name}: ${it.type}" }
-                sb.append(params)
-                sb.append("): ${descriptor.returnType} {\n")
-                sb.append("        // TODO: Implement ${descriptor.name}\n")
-                if (descriptor.returnType?.toString() != "Unit") {
-                     sb.append("        return super.${descriptor.name}(")
-                     val callParams = descriptor.valueParameters.joinToString(", ") { it.name.asString() }
-                     sb.append(callParams)
-                     sb.append(")\n")
-                } else {
-                    sb.append("        super.${descriptor.name}(")
-                    val callParams = descriptor.valueParameters.joinToString(", ") { it.name.asString() }
-                    sb.append(callParams)
-                    sb.append(")\n")
-                }
-                sb.append("    }\n\n")
-            } else if (descriptor is PropertyDescriptor) {
-                val keyword = if (descriptor.isVar) "var" else "val"
-                sb.append("    override $keyword ${descriptor.name}: ${descriptor.type}\n")
-                sb.append("        get() = super.${descriptor.name}\n")
-                if (descriptor.isVar) {
-                    sb.append("        set(value) { super.${descriptor.name} = value }\n")
-                }
-                sb.append("\n")
-            }
-        }
-        return sb.toString()
     }
 }

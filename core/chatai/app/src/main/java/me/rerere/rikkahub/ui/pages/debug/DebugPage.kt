@@ -1,6 +1,7 @@
 package me.rerere.rikkahub.ui.pages.debug
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -105,7 +106,7 @@ fun DebugPage(vm: DebugVM = koinViewModel()) {
             ) { page ->
                 when (page) {
                     0 -> MainPage(vm)
-                    1 -> LoggingPage()
+                    1 -> Box {}
                 }
             }
         }
@@ -187,6 +188,24 @@ private fun MainPage(vm: DebugVM) {
             Text("崩溃")
         }
 
+        Button(
+            onClick = {
+                vm.createOversizedConversation(30)
+                toaster.show("正在创建 30MB 超大对话...")
+            }
+        ) {
+            Text("创建超大对话 (30MB)")
+        }
+
+        Button(
+            onClick = {
+                vm.createConversationWithMessages(1024)
+                toaster.show("正在创建 1024 条消息对话...")
+            }
+        ) {
+            Text("创建 1024 个消息的聊天")
+        }
+
         var markdown by remember { mutableStateOf("") }
         MarkdownBlock(markdown, modifier = Modifier.fillMaxWidth())
         MathBlock(markdown)
@@ -195,22 +214,5 @@ private fun MainPage(vm: DebugVM) {
             onValueChange = { markdown = it },
             modifier = Modifier.fillMaxWidth()
         )
-    }
-}
-
-@Composable
-private fun LoggingPage() {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = PaddingValues(16.dp),
-    ) {
-        items(Logging.getRecentLogs()) {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                fontFamily = JetbrainsMono,
-            )
-        }
     }
 }

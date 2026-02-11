@@ -1,9 +1,9 @@
 <libraries>
   <library
       name="androidx.databinding:viewbinding:8.13.0@aar"
-      jars="/root/.gradle/caches/8.13/transforms/fefad30776d4d8cb1c08eb74308346e2/transformed/jetified-viewbinding-8.13.0/jars/classes.jar"
+      jars="/root/.gradle/caches/8.13/transforms/dde8360f34aab2bd97c23a1c3bc3cbd6/transformed/jetified-viewbinding-8.13.0/jars/classes.jar"
       resolved="androidx.databinding:viewbinding:8.13.0"
-      folder="/root/.gradle/caches/8.13/transforms/fefad30776d4d8cb1c08eb74308346e2/transformed/jetified-viewbinding-8.13.0"
+      folder="/root/.gradle/caches/8.13/transforms/dde8360f34aab2bd97c23a1c3bc3cbd6/transformed/jetified-viewbinding-8.13.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"

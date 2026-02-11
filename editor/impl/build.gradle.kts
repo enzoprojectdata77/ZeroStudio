@@ -23,7 +23,6 @@ plugins {
     id("kotlin-android")
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version libs.versions.ksp
-    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 
@@ -31,12 +30,6 @@ plugins {
 android {
     namespace = "${BuildConfig.packageName}.editor"
     
-    buildFeatures {
-         compose = true
-     }
-     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.15"
-    }
 }
 
 kapt {
@@ -48,7 +41,6 @@ kapt {
 dependencies {
     ksp(projects.annotation.processorsKsp)
     kapt(projects.annotation.processors)
-    kapt(libs.androidx.compose.compiler)
     
     api(libs.androidide.ts)
     api(libs.androidide.ts.java)

@@ -105,11 +105,4 @@ object GeneralPreferences {
             prefManager.putString(PREF_LOTTIE_ANIMATION, value)
   }
 
-    //动态配色开关设置选项
-    var isDynamicColorEnabled: Boolean
-    get() = prefManager.getBoolean(DYNAMIC_COLOR_ENABLED, false)
-    set(value) {
-        prefManager.putBoolean(DYNAMIC_COLOR_ENABLED, value)
-    }
-
 }

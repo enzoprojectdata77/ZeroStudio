@@ -35,6 +35,8 @@ constructor(val setValue: ((Boolean) -> Unit)? = null, val getValue: (() -> Bool
 
   override fun onCreatePreference(context: Context): Preference {
     val pref = androidx.preference.SwitchPreference(context)
+    // 禁用自动持久化，防止 UI 状态被 SharedPreferences 覆盖
+    pref.isPersistent = false 
     pref.isChecked = prefValue()
     return pref
   }

@@ -17,8 +17,10 @@ import me.rerere.ai.provider.ModelAbility
 import me.rerere.ai.provider.ProviderSetting
 import me.rerere.rikkahub.data.datastore.Settings
 import me.rerere.rikkahub.data.datastore.SettingsStore
-import me.rerere.rikkahub.data.sync.WebDavBackupItem
-import me.rerere.rikkahub.data.sync.WebdavSync
+import me.rerere.rikkahub.data.sync.webdav.WebDavBackupItem
+import me.rerere.rikkahub.data.sync.webdav.WebDavSync
+import me.rerere.rikkahub.data.sync.S3BackupItem
+import me.rerere.rikkahub.data.sync.S3Sync
 import me.rerere.rikkahub.utils.JsonInstant
 import me.rerere.rikkahub.utils.UiState
 import java.io.File
@@ -27,7 +29,8 @@ private const val TAG = "BackupVM"
 
 class BackupVM(
     private val settingsStore: SettingsStore,
-    private val webdavSync: WebdavSync,
+    private val webDavSync: WebDavSync,
+    private val s3Sync: S3Sync,
 ) : ViewModel() {
     val settings = settingsStore.settingsFlow.stateIn(
         scope = viewModelScope,
@@ -36,9 +39,11 @@ class BackupVM(
     )
 
     val webDavBackupItems = MutableStateFlow<UiState<List<WebDavBackupItem>>>(UiState.Idle)
+    val s3BackupItems = MutableStateFlow<UiState<List<S3BackupItem>>>(UiState.Idle)
 
     init {
         loadBackupFileItems()
+        loadS3BackupFileItems()
     }
 
     fun updateSettings(settings: Settings) {
@@ -53,8 +58,8 @@ class BackupVM(
                 webDavBackupItems.emit(UiState.Loading)
                 webDavBackupItems.emit(
                     value = UiState.Success(
-                        data = webdavSync.listBackupFiles(
-                            webDavConfig = settings.value.webDavConfig
+                        data = webDavSync.listBackupFiles(
+                            config = settings.value.webDavConfig
                         ).sortedByDescending { it.lastModified }
                     )
                 )
@@ -65,27 +70,27 @@ class BackupVM(
     }
 
     suspend fun testWebDav() {
-        webdavSync.testWebdav(settings.value.webDavConfig)
+        webDavSync.testConnection(settings.value.webDavConfig)
     }
 
     suspend fun backup() {
-        webdavSync.backupToWebDav(settings.value.webDavConfig)
+        webDavSync.backup(settings.value.webDavConfig)
     }
 
     suspend fun restore(item: WebDavBackupItem) {
-        webdavSync.restoreFromWebDav(webDavConfig = settings.value.webDavConfig, item = item)
+        webDavSync.restore(config = settings.value.webDavConfig, item = item)
     }
 
     suspend fun deleteWebDavBackupFile(item: WebDavBackupItem) {
-        webdavSync.deleteWebDavBackupFile(settings.value.webDavConfig, item)
+        webDavSync.deleteBackupFile(settings.value.webDavConfig, item)
     }
 
     suspend fun exportToFile(): File {
-        return webdavSync.prepareBackupFile(settings.value.webDavConfig.copy())
+        return webDavSync.prepareBackupFile(settings.value.webDavConfig.copy())
     }
 
     suspend fun restoreFromLocalFile(file: File) {
-        webdavSync.restoreFromLocalFile(file, settings.value.webDavConfig)
+        webDavSync.restoreFromLocalFile(file, settings.value.webDavConfig)
     }
 
     fun restoreFromChatBox(file: File) {
@@ -164,5 +169,39 @@ class BackupVM(
                 providers = importProviders + settings.value.providers,
             )
         )
+    }
+
+    // S3 Backup methods
+    fun loadS3BackupFileItems() {
+        viewModelScope.launch {
+            runCatching {
+                s3BackupItems.emit(UiState.Loading)
+                s3BackupItems.emit(
+                    value = UiState.Success(
+                        data = s3Sync.listBackupFiles(
+                            config = settings.value.s3Config
+                        )
+                    )
+                )
+            }.onFailure {
+                s3BackupItems.emit(UiState.Error(it))
+            }
+        }
+    }
+
+    suspend fun testS3() {
+        s3Sync.testS3(settings.value.s3Config)
+    }
+
+    suspend fun backupToS3() {
+        s3Sync.backupToS3(settings.value.s3Config)
+    }
+
+    suspend fun restoreFromS3(item: S3BackupItem) {
+        s3Sync.restoreFromS3(config = settings.value.s3Config, item = item)
+    }
+
+    suspend fun deleteS3BackupFile(item: S3BackupItem) {
+        s3Sync.deleteS3BackupFile(settings.value.s3Config, item)
     }
 }

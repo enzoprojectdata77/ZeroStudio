@@ -47,7 +47,7 @@ abstract class TreeSitterLanguage(
 ) : IDELanguage() {
 
   private lateinit var tsTheme: TsTheme
-  private lateinit var languageSpec: TreeSitterLanguageSpec
+  internal lateinit var languageSpec: TreeSitterLanguageSpec
   private lateinit var _indentProvider: TreeSitterIndentProvider
   private val analyzer by lazy { TreeSitterAnalyzeManager(languageSpec.spec, tsTheme) }
   private val newlineHandlersLazy by lazy { createNewlineHandlers() }

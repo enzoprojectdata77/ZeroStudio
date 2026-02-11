@@ -111,7 +111,6 @@ object ProjectSearchEngine {
         }
     }
 
-    // 修复点：将返回类型和列表泛型修正为 TextMatchResult
     private fun searchFileContent(file: File, pattern: Pattern, config: SearchConfig): List<TextMatchResult> {
         val results = ArrayList<TextMatchResult>()
         if (!FileUtils.isUtf8(file)) return results // 跳过二进制文件

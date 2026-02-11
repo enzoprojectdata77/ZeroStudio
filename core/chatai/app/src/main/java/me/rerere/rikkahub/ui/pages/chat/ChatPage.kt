@@ -29,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -62,12 +61,14 @@ import me.rerere.rikkahub.data.datastore.findProvider
 import me.rerere.rikkahub.data.datastore.getCurrentAssistant
 import me.rerere.rikkahub.data.datastore.getCurrentChatModel
 import me.rerere.rikkahub.data.model.Conversation
+import me.rerere.rikkahub.service.ChatError
 import me.rerere.rikkahub.ui.components.ai.ChatInput
+import me.rerere.ai.core.MessageRole
 import me.rerere.rikkahub.ui.context.LocalNavController
+import me.rerere.rikkahub.ui.context.LocalTTSState
 import me.rerere.rikkahub.ui.context.LocalToaster
 import me.rerere.rikkahub.ui.hooks.ChatInputState
 import me.rerere.rikkahub.ui.hooks.EditStateContent
-import me.rerere.rikkahub.ui.hooks.rememberChatInputState
 import me.rerere.rikkahub.ui.hooks.useEditState
 import me.rerere.rikkahub.utils.base64Decode
 import me.rerere.rikkahub.utils.createChatFilesByContents
@@ -85,22 +86,15 @@ fun ChatPage(id: Uuid, text: String?, files: List<Uri>) {
         }
     )
     val navController = LocalNavController.current
-    val toaster = LocalToaster.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
-    // Handle Error
-    LaunchedEffect(Unit) {
-        vm.errorFlow.collect { error ->
-            toaster.show(error.message ?: "Error", type = ToastType.Error)
-        }
-    }
 
     val setting by vm.settings.collectAsStateWithLifecycle()
     val conversation by vm.conversation.collectAsStateWithLifecycle()
     val loadingJob by vm.conversationJob.collectAsStateWithLifecycle()
     val currentChatModel by vm.currentChatModel.collectAsStateWithLifecycle()
     val enableWebSearch by vm.enableWebSearch.collectAsStateWithLifecycle()
+    val errors by vm.errors.collectAsStateWithLifecycle()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
@@ -123,13 +117,16 @@ fun ChatPage(id: Uuid, text: String?, files: List<Uri>) {
     val isBigScreen =
         windowAdaptiveInfo.width > windowAdaptiveInfo.height && windowAdaptiveInfo.width >= 1100.dp
 
-    val inputState = rememberChatInputState(
-        message = remember(files) {
-            buildList {
-                val localFiles = context.createChatFilesByContents(files)
-                val contentTypes = files.mapNotNull { file ->
-                    context.getFileMimeType(file)
-                }
+    val inputState = vm.inputState
+
+    // 初始化输入状态（处理传入的 files 和 text 参数）
+    LaunchedEffect(files, text) {
+        if (files.isNotEmpty()) {
+            val localFiles = context.createChatFilesByContents(files)
+            val contentTypes = files.mapNotNull { file ->
+                context.getFileMimeType(file)
+            }
+            val parts = buildList {
                 localFiles.forEachIndexed { index, file ->
                     val type = contentTypes.getOrNull(index)
                     if (type?.startsWith("image/") == true) {
@@ -141,15 +138,18 @@ fun ChatPage(id: Uuid, text: String?, files: List<Uri>) {
                     }
                 }
             }
-        },
-        textContent = remember(text) {
-            text?.base64Decode() ?: ""
+            inputState.messageContent = parts
         }
-    )
+        text?.base64Decode()?.let { decodedText ->
+            if (decodedText.isNotEmpty()) {
+                inputState.setMessageText(decodedText)
+            }
+        }
+    }
 
     val chatListState = rememberLazyListState()
     LaunchedEffect(vm) {
-        if(!vm.chatListInitialized) {
+        if (!vm.chatListInitialized && chatListState.layoutInfo.totalItemsCount > 0) {
             chatListState.scrollToItem(chatListState.layoutInfo.totalItemsCount)
             vm.chatListInitialized = true
         }
@@ -178,7 +178,10 @@ fun ChatPage(id: Uuid, text: String?, files: List<Uri>) {
                     chatListState = chatListState,
                     enableWebSearch = enableWebSearch,
                     currentChatModel = currentChatModel,
-                    bigScreen = true
+                    bigScreen = true,
+                    errors = errors,
+                    onDismissError = { vm.dismissError(it) },
+                    onClearAllErrors = { vm.clearAllErrors() },
                 )
             }
         }
@@ -206,7 +209,10 @@ fun ChatPage(id: Uuid, text: String?, files: List<Uri>) {
                     chatListState = chatListState,
                     enableWebSearch = enableWebSearch,
                     currentChatModel = currentChatModel,
-                    bigScreen = false
+                    bigScreen = false,
+                    errors = errors,
+                    onDismissError = { vm.dismissError(it) },
+                    onClearAllErrors = { vm.clearAllErrors() },
                 )
             }
             BackHandler(drawerState.isOpen) {
@@ -229,6 +235,9 @@ private fun ChatPageContent(
     chatListState: LazyListState,
     enableWebSearch: Boolean,
     currentChatModel: Model?,
+    errors: List<ChatError>,
+    onDismissError: (Uuid) -> Unit,
+    onClearAllErrors: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val toaster = LocalToaster.current
@@ -237,6 +246,8 @@ private fun ChatPageContent(
     LaunchedEffect(loadingJob) {
         inputState.loading = loadingJob != null
     }
+
+    TTSAutoPlay(vm = vm, setting = setting, conversation = conversation)
 
     Surface(
         color = MaterialTheme.colorScheme.background,
@@ -333,6 +344,9 @@ private fun ChatPageContent(
                     onClearContext = {
                         vm.handleMessageTruncate()
                     },
+                    onCompressContext = { additionalPrompt, targetTokens, keepRecentMessages ->
+                        vm.handleCompressContext(additionalPrompt, targetTokens, keepRecentMessages)
+                    },
                 )
             },
             containerColor = Color.Transparent,
@@ -344,6 +358,9 @@ private fun ChatPageContent(
                 loading = loadingJob != null,
                 previewMode = previewMode,
                 settings = setting,
+                errors = errors,
+                onDismissError = onDismissError,
+                onClearAllErrors = onClearAllErrors,
                 onRegenerate = {
                     vm.regenerateAtMessage(it)
                 },
@@ -388,6 +405,9 @@ private fun ChatPageContent(
                     scope.launch {
                         chatListState.animateScrollToItem(index)
                     }
+                },
+                onToolApproval = { toolCallId, approved, reason ->
+                    vm.handleToolApproval(toolCallId, approved, reason)
                 },
             )
         }

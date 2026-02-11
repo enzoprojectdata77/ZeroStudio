@@ -20,8 +20,10 @@ package com.itsaky.androidide.preferences
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.preference.Preference
 import com.itsaky.androidide.R
+import com.itsaky.androidide.fragments.preferences.LspSettingsFragment
 import com.itsaky.androidide.preferences.internal.GeneralPreferences
 import com.itsaky.androidide.resources.R.drawable
 import com.itsaky.androidide.resources.R.string
@@ -30,7 +32,6 @@ import com.itsaky.androidide.ui.themes.IDETheme
 import com.itsaky.androidide.ui.themes.IThemeManager
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import com.itsaky.androidide.fragments.preferences.LspSettingsFragment
 
 @Parcelize
 class GeneralPreferencesScreen(
@@ -59,29 +60,9 @@ class InterfaceConfig(
     addPreference(UiMode())
     
     addPreference(ThemeSelector())
-    // addPreference(DynamicColorSwitch())
     addPreference(LocaleSelector())
     addPreference(lottieAnimationPreference)
   }
-}
-@Parcelize
-class DynamicColorSwitch(
-    override val key: String = GeneralPreferences.DYNAMIC_COLOR_ENABLED ,
-    override val title: Int = R.string.idepref_general_themeSelector_title,
-    override val summary: Int? = R.string.idepref_general_themeSelector_summary,
-    override val icon: Int? = R.drawable.ic_color_scheme,
-) : SwitchPreference(
-    getValue = GeneralPreferences::isDynamicColorEnabled::get,
-    setValue = { enabled ->
-        GeneralPreferences.isDynamicColorEnabled = enabled
-    }
-) {
-    override fun onPreferenceChanged(preference: Preference, newValue: Any?): Boolean {
-        val enabled = newValue as Boolean
-        GeneralPreferences.isDynamicColorEnabled = enabled
-        
-        return true
-    }
 }
 
 @Parcelize
@@ -94,28 +75,11 @@ class ProjectConfig(
   init {
     addPreference(OpenLastProject())
     addPreference(ConfirmProjectOpen())
-    addPreference(LspPreferencesEntry())
+    
   }
 }
-// @author android_zero: A preference entry that opens the LspSettingsFragment
-@Parcelize
-class LspPreferencesEntry(
-    override val key: String = "idepref_lsp_settings",
-    override val title: Int = R.string.manage_language_servers, // Ensure this string exists or use a literal
-    override val summary: Int? = R.string.info_lsp, // Ensure this string exists or use a literal
-    override val icon: Int? = R.drawable.ic_language_java // Use a generic code/server icon
-) : SimpleClickablePreference(
-    key, title, summary, icon, 
-    onClick = { pref ->
-        val context = pref.context
-        if (context is PreferencesActivity) {
-            context.loadFragment(LspSettingsFragment())
-            true
-        } else {
-            false
-        }
-    }
-)
+
+
 
 @Parcelize
 class TerminalConfig(
@@ -164,50 +128,6 @@ class UiMode(
     GeneralPreferences.uiMode = (entry?.data as? Int?) ?: AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
   }
 }
-// @Parcelize
-// class ThemeSelector(
-    // override val key: String = GeneralPreferences.SELECTED_THEME,
-    // override val title: Int = R.string.idepref_general_themeSelector_title,
-    // override val summary: Int? = R.string.idepref_general_themeSelector_summary,
-    // override val icon: Int? = R.drawable.ic_color_scheme,
-// ) : SingleChoicePreference() {
-
-  // // Filter out MATERIAL_YOU from the list if the user should use the Dynamic Color Switch instead
-  // // Or keep it, but the logic in ThemeManager handles the priority.
-  // // Here we display all themes.
-  // @IgnoredOnParcel 
-  // private val themes = IDETheme.entries.filter { it != IDETheme.MATERIAL_YOU }.toTypedArray()
-
-  // override fun onCreatePreference(context: Context): Preference {
-      // val pref = super.onCreatePreference(context)
-      // // Hide this preference if Dynamic Color is enabled
-      // pref.isVisible = !GeneralPreferences.isDynamicColorEnabled
-      // // Listen to dependency if you want auto-hiding logic
-      // pref.dependency = GeneralPreferences.DYNAMIC_COLOR_ENABLED // Note: Standard dependency hides when dependent is ON usually requires logic inversion or custom listener
-      // return pref
-  // }
-
-  // override fun getEntries(preference: Preference): Array<PreferenceChoices.Entry> {
-    // val context = preference.context
-    // val currentTheme = IThemeManager.getInstance().getCurrentTheme()
-    // return Array(themes.size) { index ->
-      // val ideTheme = themes[index]
-      // PreferenceChoices.Entry(
-          // label = ContextCompat.getString(context, ideTheme.title),
-          // _isChecked = currentTheme.name == ideTheme.name,
-          // data = ideTheme,
-      // )
-    // }
-  // }
-
-  // override fun onChoiceConfirmed(
-      // preference: Preference,
-      // entry: PreferenceChoices.Entry?,
-      // position: Int,
-  // ) {
-    // GeneralPreferences.selectedTheme = (entry?.data as? IDETheme?)?.name ?: IDETheme.DEFAULT.name
-  // }
-// }
 
 @Parcelize
 class ThemeSelector(

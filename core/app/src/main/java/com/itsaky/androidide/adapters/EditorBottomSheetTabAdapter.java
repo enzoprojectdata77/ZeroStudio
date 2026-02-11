@@ -66,6 +66,9 @@ public class EditorBottomSheetTabAdapter extends FragmentStateAdapter {
        //正则表达式可视化调试与预览
     this.fragments.add(new Tab(fragmentActivity.getString(R.string.title_regular_preview), 
        RegexPreviewFragment.class, ++index));
+       
+    this.fragments.add(new Tab(fragmentActivity.getString(R.string.title_regular_preview), 
+       com.itsaky.androidide.lsp.editor.LspEditorFragment.class, ++index));
 
     //诊断
      this.fragments.add(new Tab(fragmentActivity.getString(R.string.view_diags),

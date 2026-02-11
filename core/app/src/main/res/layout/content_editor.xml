@@ -100,7 +100,7 @@
         app:layout_constraintStart_toStartOf="@id/no_editor_title"
         app:layout_constraintTop_toBottomOf="@+id/no_editor_title"
         tools:text="Open right drawer for files\nSwipe from bottom for build output" />
-
+        
     </androidx.constraintlayout.widget.ConstraintLayout>
 
   </ViewFlipper>

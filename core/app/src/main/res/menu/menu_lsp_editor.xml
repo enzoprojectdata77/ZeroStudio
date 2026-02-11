@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- @author android_zero -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 常用快捷操作 (Toolbar) -->
+    <item
+        android:id="@+id/action_lsp_status"
+        android:title="@string/repo_label_status"
+        android:icon="@drawable/ic_save"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_save"
+        android:title="@string/save"
+        android:icon="@drawable/ic_save"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_undo"
+        android:title="@string/undo"
+        android:icon="@drawable/ic_undo"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_redo"
+        android:title="@string/redo"
+        android:icon="@drawable/ic_redo"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_search"
+        android:title="@string/search"
+        android:icon="@drawable/ic_search_find_replace"
+        app:showAsAction="ifRoom" 
+            app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
+
+    <!-- 导航 (Navigation) -->
+    <item
+        android:id="@+id/submenu_lsp"
+        android:title="LSP"
+        android:icon="@drawable/ic_language_java"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/action_goto_def"
+                android:title="Go to Definition"
+                android:icon="@drawable/ic_open_with" />
+            
+            <item
+                android:id="@+id/action_goto_implementation"
+                android:title="Go to Implementation"
+                android:icon="@drawable/ic_filetype_interface" />
+            
+            <item
+                android:id="@+id/action_goto_type_def"
+                android:title="Go to Type Definition"
+                android:icon="@drawable/ic_filetype_class" />
+            
+            <item
+                android:id="@+id/action_find_references"
+                android:title="Find References"
+                android:icon="@drawable/ic_search_file" />
+                
+            <item
+                android:id="@+id/action_document_highlight"
+                android:title="Highlight Usages"
+                android:icon="@drawable/ic_editor_text_replacing" />
+        </menu>
+    </item>
+
+    <!-- 代码操作 (Code) -->
+    <item
+        android:id="@+id/menu_code"
+        android:title="Code"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_format"
+                android:title="@string/format_document"
+                android:icon="@drawable/ic_format_code" />
+
+            <item
+                android:id="@+id/action_rename"
+                android:title="Rename Symbol"
+                android:icon="@drawable/ic_edit" />
+
+            <item
+                android:id="@+id/action_code_action"
+                android:title="Quick Fix / Code Action"
+                android:icon="@drawable/ic_codeaction" />
+            
+            <item
+                android:id="@+id/action_organize_imports"
+                android:title="Organize Imports"
+                 />
+        </menu>
+    </item>
+
+    <!-- 视图 (View) -->
+    <item
+        android:id="@+id/menu_view"
+        android:title="View"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_document_symbols"
+                android:title="Document Outline"
+                android:icon="@drawable/ic_tree" />
+            
+            <item
+                android:id="@+id/action_diagnostics_list"
+                android:title="Problems (Diagnostics)"
+                android:icon="@drawable/ic_error" />
+                
+            <item
+                android:id="@+id/action_toggle_inlay_hints"
+                android:title="Toggle Inlay Hints"
+                android:checkable="true"
+                android:checked="true"
+                android:icon="@drawable/ic_info" />
+
+                                    <item
+                android:id="@+id/action_code_actions"
+                android:title="快速修复代码" />
+        </menu>
+    </item>
+
+</menu>

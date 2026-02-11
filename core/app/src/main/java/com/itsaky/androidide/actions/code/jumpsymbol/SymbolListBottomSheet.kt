@@ -1,6 +1,9 @@
 package com.itsaky.androidide.actions.code.jumpsymbol
 
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,8 +12,10 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.itsaky.androidide.resources.R
-import android.zero.studio.kotlin.analysis.symbolic.SymbolInfo
+import android.zero.studio.symbol.SymbolInfo
+import android.zero.studio.symbol.SymbolType
+import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
 
 /**
  * A BottomSheet to display a list of code symbols for navigation.
@@ -34,6 +39,8 @@ class SymbolListBottomSheet(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            clipToPadding = false
+            setPadding(0, 20, 0, 20)
         }
         
         recyclerView.adapter = SymbolAdapter(symbols) { symbol ->
@@ -50,14 +57,36 @@ class SymbolListBottomSheet(
     ) : RecyclerView.Adapter<SymbolAdapter.ViewHolder>() {
 
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val icon: ImageView = itemView.findViewById(android.R.id.icon)
+            val iconText: TextView = itemView.findViewById(1) // 使用自定义 ID
             val title: TextView = itemView.findViewById(android.R.id.text1)
             val subtitle: TextView = itemView.findViewById(android.R.id.text2)
             
             fun bind(item: SymbolInfo) {
-                icon.setImageResource(item.iconRes)
+                // 设置图标背景色
+                val color = when(item.type) {
+                    SymbolType.CLASS -> 0xFF4CAF50.toInt() // Green
+                    SymbolType.METHOD -> 0xFF2196F3.toInt() // Blue
+                    SymbolType.FIELD -> 0xFFFF9800.toInt() // Orange
+                    SymbolType.IMPORT -> 0xFF9E9E9E.toInt() // Grey
+                    SymbolType.PACKAGE -> 0xFF795548.toInt() // Brown
+                    else -> 0xFF607D8B.toInt()
+                }
+                
+                val drawable = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(color)
+                }
+                
+                iconText.background = drawable
+                iconText.text = item.typeLetter
+                
                 title.text = item.name
                 subtitle.text = item.signature
+                
+                // 简单的缩进模拟
+                val paddingStart = 32 + (item.indentLevel * 20)
+                itemView.setPadding(paddingStart, 24, 32, 24)
+
                 itemView.setOnClickListener { onClick(item) }
             }
         }
@@ -66,9 +95,9 @@ class SymbolListBottomSheet(
              val context = parent.context
              val layout = android.widget.LinearLayout(context).apply {
                  orientation = android.widget.LinearLayout.HORIZONTAL
-                 setPadding(32, 24, 32, 24)
-                 // Add ripple effect
-                 val outValue = android.util.TypedValue()
+                 gravity = Gravity.CENTER_VERTICAL
+                 
+                 val outValue = TypedValue()
                  context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
                  setBackgroundResource(outValue.resourceId)
                  
@@ -77,28 +106,31 @@ class SymbolListBottomSheet(
                      ViewGroup.LayoutParams.WRAP_CONTENT
                  )
                  
-                 val iconView = ImageView(context).apply {
-                     id = android.R.id.icon
-                     layoutParams = android.widget.LinearLayout.LayoutParams(56, 56).apply {
-                         marginEnd = 32
-                         gravity = android.view.Gravity.CENTER_VERTICAL
-                     }
-                     scaleType = ImageView.ScaleType.FIT_CENTER
+                 // Circular Icon with Letter
+                 val iconTextView = TextView(context).apply {
+                     id = 1
+                     width = 80 // px approx
+                     height = 80
+                     gravity = Gravity.CENTER
+                     setTextColor(Color.WHITE)
+                     textSize = 14f
+                     setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
                  }
-                 addView(iconView)
+                 val iconParams = android.widget.LinearLayout.LayoutParams(80, 80).apply {
+                     marginEnd = 32
+                 }
+                 addView(iconTextView, iconParams)
                  
                  val textLayout = android.widget.LinearLayout(context).apply {
                      orientation = android.widget.LinearLayout.VERTICAL
-                     layoutParams = android.widget.LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
-                         gravity = android.view.Gravity.CENTER_VERTICAL
-                     }
+                     layoutParams = android.widget.LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                  }
                  
                  val titleView = TextView(context).apply {
                      id = android.R.id.text1
                      textSize = 16f
-                     setTextColor(android.graphics.Color.BLACK) 
-                     setTypeface(null, android.graphics.Typeface.BOLD)
+                     setTextColor(Color.BLACK) // Consider theme attribute for dark mode
+                     setTypeface(null, Typeface.BOLD)
                      maxLines = 1
                      ellipsize = android.text.TextUtils.TruncateAt.END
                  }
@@ -107,7 +139,7 @@ class SymbolListBottomSheet(
                  val subtitleView = TextView(context).apply {
                      id = android.R.id.text2
                      textSize = 12f
-                     setTextColor(android.graphics.Color.GRAY)
+                     setTextColor(Color.GRAY)
                      maxLines = 1
                      ellipsize = android.text.TextUtils.TruncateAt.MIDDLE
                  }

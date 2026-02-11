@@ -53,9 +53,14 @@ include(
   ":layoutlib-api",
   ":logback-core",
   ":compose-pullrefresh",
-  
+    "soraLanguageTextmate",
   ":editor",
+  
+    ":soraOnigurumaNative" //来自  root/:modules:soraOnigurumaNative
 )
+
+//注册项目主构建模块到复合构建内
+project(":soraOnigurumaNative").projectDir = file("../../modules/soraOnigurumaNative")
 
 rootProject.name = "build-deps"
 

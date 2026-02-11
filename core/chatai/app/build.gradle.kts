@@ -7,11 +7,11 @@ import kotlin.math.sign
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.org.jetbrains.kotlin.plugin.compose)
     alias(libs.plugins.org.jetbrains.kotlin.plugin.serialization)
     alias(libs.plugins.com.google.devtools.ksp)
-
+    // alias(libs.plugins.google.services)
+    // alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -22,8 +22,8 @@ android {
         // applicationId = "me.rerere.rikkahub"
         minSdk = 26
         // targetSdk = 36
-        // versionCode = 112
-        // versionName = "1.6.13"
+        // versionCode = 135
+        // versionName = "1.9.0-beta.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -105,18 +105,11 @@ android {
         compose = true
         buildConfig = true
     }
+    sourceSets {
+        getByName("androidTest").assets.srcDirs("$projectDir/schemas")
+    }
     // androidResources {
         // generateLocaleConfig = true
-    // }
-    // applicationVariants.all {
-        // outputs.all {
-            // this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-
-            // val variantName = name
-            // val apkName = "rikkahub_" + defaultConfig.versionName + "_" + variantName + ".apk"
-
-            // outputFileName = apkName
-        // }
     // }
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions.optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
@@ -239,11 +232,6 @@ dependencies {
     // Paging3
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
-
-    // WebDav
-    implementation(libs.dav4jvm) {
-        exclude(group = "org.ogce", module = "xpp3")
-    }
 
     // Apache Commons Text
     implementation(libs.commons.text)

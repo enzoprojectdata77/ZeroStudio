@@ -235,7 +235,7 @@ open class EditorActionsMenu(val editor: IDEEditor) :
   protected open fun applyBackground() {
     val drawable = GradientDrawable()
     drawable.shape = GradientDrawable.RECTANGLE
-    drawable.cornerRadius = SizeUtils.dp2px(8f).toFloat() //原始是28f，改为8f
+    drawable.cornerRadius = SizeUtils.dp2px(8f).toFloat() //四个角角度原始是28f，改为8f
     drawable.color = ColorStateList.valueOf(editor.context.resolveAttr(R.attr.colorSurface))
     drawable.setStroke(SizeUtils.dp2px(1f), editor.context.resolveAttr(R.attr.colorOutline))
     list.background = drawable
@@ -379,7 +379,7 @@ open class EditorActionsMenu(val editor: IDEEditor) :
     this.list.layoutManager = LinearLayoutManager(editor.context, RecyclerView.HORIZONTAL, false)
 
     fillMenu()
-
+        
     measureActionsList()
 
     val height = list.measuredHeight
@@ -393,6 +393,7 @@ open class EditorActionsMenu(val editor: IDEEditor) :
     val dp16 = dp8 * 2
     this.list.measure(
       MeasureSpec.makeMeasureSpec(editor.width - dp16 * 2, MeasureSpec.AT_MOST),
+      // MeasureSpec.makeMeasureSpec(maxWidth, MeasureSpec.AT_MOST),
       MeasureSpec.makeMeasureSpec((260 * editor.dpUnit).toInt() - dp16 * 2, MeasureSpec.AT_MOST)
     )
   }
@@ -440,6 +441,8 @@ open class EditorActionsMenu(val editor: IDEEditor) :
 
     override fun onBindViewHolder(holder: VH, position: Int) {
       val item = getItem(position) ?: return
+      
+
       holder.binding.root.text = if (forceShowTitle) item.title else ""
       holder.binding.root.tooltipText = item.title
       holder.binding.root.icon =

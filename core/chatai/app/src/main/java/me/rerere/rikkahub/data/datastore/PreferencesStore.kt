@@ -16,19 +16,25 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.Serializable
+import me.rerere.ai.core.MessageRole
 import me.rerere.ai.provider.Model
 import me.rerere.ai.provider.ProviderSetting
 import me.rerere.rikkahub.AppScope
 import me.rerere.rikkahub.data.ai.mcp.McpServerConfig
-import me.rerere.rikkahub.data.ai.prompts.DEFAULT_LEARNING_MODE_PROMPT
+import me.rerere.rikkahub.data.ai.prompts.DEFAULT_COMPRESS_PROMPT
 import me.rerere.rikkahub.data.ai.prompts.DEFAULT_OCR_PROMPT
 import me.rerere.rikkahub.data.ai.prompts.DEFAULT_SUGGESTION_PROMPT
 import me.rerere.rikkahub.data.ai.prompts.DEFAULT_TITLE_PROMPT
 import me.rerere.rikkahub.data.ai.prompts.DEFAULT_TRANSLATION_PROMPT
+import me.rerere.rikkahub.data.ai.prompts.LEARNING_MODE_PROMPT
 import me.rerere.rikkahub.data.datastore.migration.PreferenceStoreV1Migration
 import me.rerere.rikkahub.data.model.Assistant
 import me.rerere.rikkahub.data.model.Avatar
+import me.rerere.rikkahub.data.model.InjectionPosition
+import me.rerere.rikkahub.data.model.PromptInjection
 import me.rerere.rikkahub.data.model.Tag
+import me.rerere.rikkahub.data.model.Lorebook
+import me.rerere.rikkahub.data.sync.s3.S3Config
 import me.rerere.rikkahub.ui.theme.PresetThemes
 import me.rerere.rikkahub.utils.JsonInstant
 import me.rerere.rikkahub.utils.toMutableStateFlow
@@ -75,9 +81,10 @@ class SettingsStore(
         val TITLE_PROMPT = stringPreferencesKey("title_prompt")
         val TRANSLATION_PROMPT = stringPreferencesKey("translation_prompt")
         val SUGGESTION_PROMPT = stringPreferencesKey("suggestion_prompt")
-        val LEARNING_MODE_PROMPT = stringPreferencesKey("learning_mode_prompt")
         val OCR_MODEL = stringPreferencesKey("ocr_model")
         val OCR_PROMPT = stringPreferencesKey("ocr_prompt")
+        val COMPRESS_MODEL = stringPreferencesKey("compress_model")
+        val COMPRESS_PROMPT = stringPreferencesKey("compress_prompt")
 
         // 提供商
         val PROVIDERS = stringPreferencesKey("providers")
@@ -98,9 +105,16 @@ class SettingsStore(
         // WebDAV
         val WEBDAV_CONFIG = stringPreferencesKey("webdav_config")
 
+        // S3
+        val S3_CONFIG = stringPreferencesKey("s3_config")
+
         // TTS
         val TTS_PROVIDERS = stringPreferencesKey("tts_providers")
         val SELECTED_TTS_PROVIDER = stringPreferencesKey("selected_tts_provider")
+
+        // 提示词注入
+        val MODE_INJECTIONS = stringPreferencesKey("mode_injections")
+        val LOREBOOKS = stringPreferencesKey("lorebooks")
     }
 
     private val dataStore = context.settingsStore
@@ -119,20 +133,21 @@ class SettingsStore(
                     JsonInstant.decodeFromString(it)
                 } ?: emptyList(),
                 chatModelId = preferences[SELECT_MODEL]?.let { Uuid.parse(it) }
-                    ?: SILICONFLOW_QWEN3_8B_ID,
+                    ?: DEFAULT_AUTO_MODEL_ID,
                 titleModelId = preferences[TITLE_MODEL]?.let { Uuid.parse(it) }
-                    ?: SILICONFLOW_QWEN3_8B_ID,
+                    ?: DEFAULT_AUTO_MODEL_ID,
                 translateModeId = preferences[TRANSLATE_MODEL]?.let { Uuid.parse(it) }
-                    ?: SILICONFLOW_QWEN3_8B_ID,
+                    ?: DEFAULT_AUTO_MODEL_ID,
                 suggestionModelId = preferences[SUGGESTION_MODEL]?.let { Uuid.parse(it) }
-                    ?: SILICONFLOW_QWEN3_8B_ID,
+                    ?: DEFAULT_AUTO_MODEL_ID,
                 imageGenerationModelId = preferences[IMAGE_GENERATION_MODEL]?.let { Uuid.parse(it) } ?: Uuid.random(),
                 titlePrompt = preferences[TITLE_PROMPT] ?: DEFAULT_TITLE_PROMPT,
                 translatePrompt = preferences[TRANSLATION_PROMPT] ?: DEFAULT_TRANSLATION_PROMPT,
                 suggestionPrompt = preferences[SUGGESTION_PROMPT] ?: DEFAULT_SUGGESTION_PROMPT,
-                learningModePrompt = preferences[LEARNING_MODE_PROMPT] ?: DEFAULT_LEARNING_MODE_PROMPT,
                 ocrModelId = preferences[OCR_MODEL]?.let { Uuid.parse(it) } ?: Uuid.random(),
                 ocrPrompt = preferences[OCR_PROMPT] ?: DEFAULT_OCR_PROMPT,
+                compressModelId = preferences[COMPRESS_MODEL]?.let { Uuid.parse(it) } ?: DEFAULT_AUTO_MODEL_ID,
+                compressPrompt = preferences[COMPRESS_PROMPT] ?: DEFAULT_COMPRESS_PROMPT,
                 assistantId = preferences[SELECT_ASSISTANT]?.let { Uuid.parse(it) }
                     ?: DEFAULT_ASSISTANT_ID,
                 assistantTags = preferences[ASSISTANT_TAGS]?.let {
@@ -157,11 +172,20 @@ class SettingsStore(
                 webDavConfig = preferences[WEBDAV_CONFIG]?.let {
                     JsonInstant.decodeFromString(it)
                 } ?: WebDavConfig(),
+                s3Config = preferences[S3_CONFIG]?.let {
+                    JsonInstant.decodeFromString(it)
+                } ?: S3Config(),
                 ttsProviders = preferences[TTS_PROVIDERS]?.let {
                     JsonInstant.decodeFromString(it)
                 } ?: emptyList(),
                 selectedTTSProviderId = preferences[SELECTED_TTS_PROVIDER]?.let { Uuid.parse(it) }
                     ?: DEFAULT_SYSTEM_TTS_ID,
+                modeInjections = preferences[MODE_INJECTIONS]?.let {
+                    JsonInstant.decodeFromString(it)
+                } ?: emptyList(),
+                lorebooks = preferences[LOREBOOKS]?.let {
+                    JsonInstant.decodeFromString(it)
+                } ?: emptyList(),
             )
         }
         .map {
@@ -202,6 +226,8 @@ class SettingsStore(
         .map { settings ->
             // 去重并清理无效引用
             val validMcpServerIds = settings.mcpServers.map { it.id }.toSet()
+            val validModeInjectionIds = settings.modeInjections.map { it.id }.toSet()
+            val validLorebookIds = settings.lorebooks.map { it.id }.toSet()
             settings.copy(
                 providers = settings.providers.distinctBy { it.id }.map { provider ->
                     when (provider) {
@@ -223,13 +249,23 @@ class SettingsStore(
                         // 过滤掉不存在的 MCP 服务器 ID
                         mcpServers = assistant.mcpServers.filter { serverId ->
                             serverId in validMcpServerIds
+                        }.toSet(),
+                        // 过滤掉不存在的模式注入 ID
+                        modeInjectionIds = assistant.modeInjectionIds.filter { id ->
+                            id in validModeInjectionIds
+                        }.toSet(),
+                        // 过滤掉不存在的 Lorebook ID
+                        lorebookIds = assistant.lorebookIds.filter { id ->
+                            id in validLorebookIds
                         }.toSet()
                     )
                 },
                 ttsProviders = settings.ttsProviders.distinctBy { it.id },
                 favoriteModels = settings.favoriteModels.filter { uuid ->
                     settings.providers.flatMap { it.models }.any { it.id == uuid }
-                }
+                },
+                modeInjections = settings.modeInjections.distinctBy { it.id },
+                lorebooks = settings.lorebooks.distinctBy { it.id },
             )
         }
         .onEach {
@@ -262,9 +298,10 @@ class SettingsStore(
             preferences[TITLE_PROMPT] = settings.titlePrompt
             preferences[TRANSLATION_PROMPT] = settings.translatePrompt
             preferences[SUGGESTION_PROMPT] = settings.suggestionPrompt
-            preferences[LEARNING_MODE_PROMPT] = settings.learningModePrompt
             preferences[OCR_MODEL] = settings.ocrModelId.toString()
             preferences[OCR_PROMPT] = settings.ocrPrompt
+            preferences[COMPRESS_MODEL] = settings.compressModelId.toString()
+            preferences[COMPRESS_PROMPT] = settings.compressPrompt
 
             preferences[PROVIDERS] = JsonInstant.encodeToString(settings.providers)
 
@@ -278,10 +315,13 @@ class SettingsStore(
 
             preferences[MCP_SERVERS] = JsonInstant.encodeToString(settings.mcpServers)
             preferences[WEBDAV_CONFIG] = JsonInstant.encodeToString(settings.webDavConfig)
+            preferences[S3_CONFIG] = JsonInstant.encodeToString(settings.s3Config)
             preferences[TTS_PROVIDERS] = JsonInstant.encodeToString(settings.ttsProviders)
             settings.selectedTTSProviderId?.let {
                 preferences[SELECTED_TTS_PROVIDER] = it.toString()
             } ?: preferences.remove(SELECTED_TTS_PROVIDER)
+            preferences[MODE_INJECTIONS] = JsonInstant.encodeToString(settings.modeInjections)
+            preferences[LOREBOOKS] = JsonInstant.encodeToString(settings.lorebooks)
         }
     }
 
@@ -314,9 +354,10 @@ data class Settings(
     val translatePrompt: String = DEFAULT_TRANSLATION_PROMPT,
     val suggestionModelId: Uuid = Uuid.random(),
     val suggestionPrompt: String = DEFAULT_SUGGESTION_PROMPT,
-    val learningModePrompt: String = DEFAULT_LEARNING_MODE_PROMPT,
     val ocrModelId: Uuid = Uuid.random(),
     val ocrPrompt: String = DEFAULT_OCR_PROMPT,
+    val compressModelId: Uuid = Uuid.random(),
+    val compressPrompt: String = DEFAULT_COMPRESS_PROMPT,
     val assistantId: Uuid = DEFAULT_ASSISTANT_ID,
     val providers: List<ProviderSetting> = DEFAULT_PROVIDERS,
     val assistants: List<Assistant> = DEFAULT_ASSISTANTS,
@@ -326,8 +367,11 @@ data class Settings(
     val searchServiceSelected: Int = 0,
     val mcpServers: List<McpServerConfig> = emptyList(),
     val webDavConfig: WebDavConfig = WebDavConfig(),
+    val s3Config: S3Config = S3Config(),
     val ttsProviders: List<TTSProviderSetting> = DEFAULT_TTS_PROVIDERS,
-    val selectedTTSProviderId: Uuid = DEFAULT_SYSTEM_TTS_ID
+    val selectedTTSProviderId: Uuid = DEFAULT_SYSTEM_TTS_ID,
+    val modeInjections: List<PromptInjection.ModeInjection> = DEFAULT_MODE_INJECTIONS,
+    val lorebooks: List<Lorebook> = emptyList(),
 ) {
     companion object {
         // 构造一个用于初始化的settings, 但它不能用于保存，防止使用初始值存储
@@ -340,6 +384,7 @@ data class DisplaySetting(
     val userAvatar: Avatar = Avatar.Dummy,
     val userNickname: String = "",
     val showUserAvatar: Boolean = true,
+    val showAssistantBubble: Boolean = false,
     val showModelIcon: Boolean = true,
     val showModelName: Boolean = true,
     val showTokenUsage: Boolean = true,
@@ -351,8 +396,16 @@ data class DisplaySetting(
     val enableMessageGenerationHapticEffect: Boolean = false,
     val skipCropImage: Boolean = false,
     val enableNotificationOnMessageGeneration: Boolean = false,
+    val enableLiveUpdateNotification: Boolean = false,
     val codeBlockAutoWrap: Boolean = false,
     val codeBlockAutoCollapse: Boolean = false,
+    val showLineNumbers: Boolean = false,
+    val ttsOnlyReadQuoted: Boolean = false,
+    val autoPlayTTSAfterGeneration: Boolean = false,
+    val pasteLongTextAsFile: Boolean = false,
+    val pasteLongTextThreshold: Int = 1000,
+    val sendOnEnter: Boolean = false,
+    val enableAutoScroll: Boolean = true,
 )
 
 @Serializable
@@ -433,13 +486,11 @@ internal val DEFAULT_ASSISTANTS = listOf(
     Assistant(
         id = DEFAULT_ASSISTANT_ID,
         name = "",
-        temperature = 0.6f,
         systemPrompt = ""
     ),
     Assistant(
         id = Uuid.parse("3d47790c-c415-4b90-9388-751128adb0a0"),
         name = "",
-        temperature = 0.6f,
         systemPrompt = """
             You are a helpful assistant, called {{char}}, based on model {{model_name}}.
 
@@ -474,3 +525,12 @@ private val DEFAULT_TTS_PROVIDERS = listOf(
 )
 
 internal val DEFAULT_ASSISTANTS_IDS = DEFAULT_ASSISTANTS.map { it.id }
+
+val DEFAULT_MODE_INJECTIONS = listOf(
+    PromptInjection.ModeInjection(
+        id = Uuid.parse("b87eaf16-f5cd-4ac1-9e4f-b11ae3a61d74"),
+        content = LEARNING_MODE_PROMPT,
+        position = InjectionPosition.AFTER_SYSTEM_PROMPT,
+        name = "Learning Mode"
+    )
+)

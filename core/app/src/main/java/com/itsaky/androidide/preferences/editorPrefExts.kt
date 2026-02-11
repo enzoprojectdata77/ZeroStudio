@@ -56,6 +56,10 @@ import com.itsaky.androidide.preferences.internal.EditorPreferences.CURSOR_STYLE
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import kotlin.reflect.KMutableProperty0
+import com.itsaky.androidide.fragments.preferences.LspSettingsFragment
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 
 /**
  * @author android_zero
@@ -70,11 +74,42 @@ class EditorPreferencesScreen(
 ) : IPreferenceScreen() {
 
   init {
+    addPreference(LspPreferencesEntry())
     addPreference(CommonConfigurations())
     addPreference(CodeIntelligencePreferences())
     addPreference(JavaCodeConfigurations())
     addPreference(XMLPreferencesScreen())
   }
+}
+
+// @PS： A preference entry that opens the LspSettingsFragment
+@Parcelize
+class LspPreferencesEntry(
+    override val key: String = "idepref_lsp_settings",
+    override val title: Int = R.string.lsp_settings_title,
+    override val summary: Int? = R.string.lsp_settings_desc,
+    override val icon: Int? = R.drawable.ic_language_java
+) : SimplePreference() {
+    @IgnoredOnParcel
+    private val onClick: ((Preference) -> Boolean) = { pref ->
+        val context = pref.context
+        // AndroidIDE's PreferencesActivity likely inherits from AppCompatActivity/FragmentActivity.
+        if (context is FragmentActivity) {
+            context.supportFragmentManager.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out, android.R.anim.fade_in, android.R.anim.fade_out)
+                // Use android.R.id.content to replace the entire preference screen content
+                .replace(android.R.id.content, LspSettingsFragment())
+                .addToBackStack("lsp_settings")
+                .commit()
+            true
+        } else {
+            false
+        }
+    }
+
+    override fun onPreferenceClick(preference: Preference): Boolean {
+        return onClick(preference)
+    }
 }
 
 @Parcelize

@@ -41,6 +41,7 @@ class ConfigurationPreferences(
   init {
     addPreference(GeneralPreferencesScreen())
     addPreference(EditorPreferencesScreen())
+    
     addPreference(ProjectSettingPreferencesScreen())
     addPreference(BuildAndRunPreferences())
     addPreference(SdkManagerPreference())
@@ -58,6 +59,7 @@ class ProjectSettingPreferencesScreen(
 
   init {
     addPreference(TemplateSetting())
+
   }
 }
 
@@ -74,6 +76,8 @@ class SdkManagerPreference(
         return true
     }
 }
+
+
 
 @Parcelize
 class PrivacyPreferences(

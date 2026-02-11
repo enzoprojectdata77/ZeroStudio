@@ -103,8 +103,6 @@ class IDEApplication : TermuxApplication() {
     
     ToolsManager.init(this, null)
     
-    com.itsaky.androidide.lsp.LspInitializer.init(this)
-    
     if (BuildConfig.DEBUG) {
       StrictMode.setVmPolicy(
         StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy()).penaltyLog().detectAll().build()

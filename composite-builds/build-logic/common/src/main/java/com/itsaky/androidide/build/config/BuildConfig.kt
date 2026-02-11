@@ -95,9 +95,9 @@ object BuildConfig {
   const val GIT_Branch_Name = "ZeroStudio-devs"
   
   /* The Sonatype snapshots repository.*/
-  const val SONATYPE_SNAPSHOTS_REPO = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+  const val SONATYPE_SNAPSHOTS_REPO = "https://repo1.maven.org/maven2"
   /* The Sonatype release repository.*/
-  const val SONATYPE_PUBLIC_REPO = "https://s01.oss.sonatype.org/content/groups/public/"
+  const val SONATYPE_PUBLIC_REPO = "https://repo1.maven.org/maven2"
   
   /** com.itsaky.androidide.plugins.tasks.internal.WrapperDefaults*/
   const val SCRIPT_PATH = "gradlew";

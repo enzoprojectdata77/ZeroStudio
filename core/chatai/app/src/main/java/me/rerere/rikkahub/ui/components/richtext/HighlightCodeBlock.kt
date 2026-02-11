@@ -6,6 +6,7 @@ import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -58,6 +59,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import me.rerere.highlight.HighlightText
+import me.rerere.highlight.HighlightTextColorPalette
 import me.rerere.highlight.Highlighter
 import me.rerere.highlight.LocalHighlighter
 import me.rerere.highlight.buildHighlightText
@@ -101,6 +103,7 @@ fun HighlightCodeBlock(
         mutableStateOf(!settings.displaySetting.codeBlockAutoCollapse)
     }
     val autoWrap = settings.displaySetting.codeBlockAutoWrap
+    val showLineNumbers = settings.displaySetting.showLineNumbers
 
     val createDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("*/*")
@@ -121,44 +124,194 @@ fun HighlightCodeBlock(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
+            .background(MaterialTheme.colorScheme.surfaceContainer),
     ) {
-        HighlightCodeActions(
-            language = language,
-            scope = scope,
-            clipboardManager = clipboardManager,
-            code = code,
-            createDocumentLauncher = createDocumentLauncher,
-            navController = navController,
-        )
-        if (completeCodeBlock && language == "mermaid") {
-            Mermaid(
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            HighlightCodeActions(
+                language = language,
+                scope = scope,
+                clipboardManager = clipboardManager,
                 code = code,
-                modifier = Modifier.fillMaxWidth(),
+                createDocumentLauncher = createDocumentLauncher,
+                navController = navController,
             )
-            return
         }
-        Spacer(Modifier.height(8.dp))
+        Column(
+            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp)
+        ) {
+            when {
+                completeCodeBlock && language == "mermaid" -> {
+                    Mermaid(
+                        code = code,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                else -> {
+                    val textStyle = LocalTextStyle.current.merge(style)
+                    val codeLines = remember(code) { code.lines() }
+                    val collapsedCode = remember(codeLines) { codeLines.take(COLLAPSE_LINES).joinToString("\n") }
+                    val displayCode = if (isExpanded) code else collapsedCode
+                    val displayLines = remember(displayCode) { displayCode.lines() }
 
-        val textStyle = LocalTextStyle.current.merge(style)
-        val codeLines = remember(code) { code.lines() }
-        val collapsedCode = remember(codeLines) { codeLines.take(COLLAPSE_LINES).joinToString("\n") }
+                    // 如果显示行号且自动换行，需要逐行渲染以保持对齐
+                    when {
+                        showLineNumbers && autoWrap -> {
+                            CodeBlockWithLineNumbersWrapped(
+                                displayLines = displayLines,
+                                language = language,
+                                textStyle = textStyle,
+                                colorPalette = colorPalette,
+                            )
+                        }
+                        else -> {
+                            CodeBlockDefault(
+                                displayCode = displayCode,
+                                displayLines = displayLines,
+                                language = language,
+                                textStyle = textStyle,
+                                colorPalette = colorPalette,
+                                autoWrap = autoWrap,
+                                showLineNumbers = showLineNumbers,
+                                scrollState = scrollState,
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+                    // 代码折叠按钮
+                    if (settings.displaySetting.codeBlockAutoCollapse && codeLines.size > COLLAPSE_LINES) {
+                        Box(
+                            modifier = Modifier
+                                .onClick {
+                                    isExpanded = !isExpanded
+                                }
+                                .fillMaxWidth(),
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (isExpanded) Lucide.ChevronsUp else Lucide.ChevronsDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(textStyle.fontSize.toDp())
+                                )
+                                Text(
+                                    text = if (isExpanded) {
+                                        stringResource(id = R.string.code_block_collapse)
+                                    } else {
+                                        stringResource(id = R.string.code_block_expand)
+                                    },
+                                    fontSize = textStyle.fontSize,
+                                    lineHeight = textStyle.lineHeight,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CodeBlockWithLineNumbersWrapped(
+    displayLines: List<String>,
+    language: String,
+    textStyle: TextStyle,
+    colorPalette: HighlightTextColorPalette,
+) {
+    val lineNumberWidth = remember(displayLines.size) {
+        displayLines.size.toString().length
+    }
+    SelectionContainer {
+        Column {
+            displayLines.forEachIndexed { index, line ->
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = (index + 1).toString().padStart(lineNumberWidth, ' '),
+                        fontSize = textStyle.fontSize,
+                        lineHeight = textStyle.lineHeight,
+                        fontFamily = JetbrainsMono,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                        softWrap = false,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    HighlightText(
+                        code = line,
+                        language = language,
+                        fontSize = textStyle.fontSize,
+                        lineHeight = textStyle.lineHeight,
+                        colors = colorPalette,
+                        overflow = TextOverflow.Visible,
+                        softWrap = true,
+                        fontFamily = JetbrainsMono,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CodeBlockDefault(
+    displayCode: String,
+    displayLines: List<String>,
+    language: String,
+    textStyle: TextStyle,
+    colorPalette: HighlightTextColorPalette,
+    autoWrap: Boolean,
+    showLineNumbers: Boolean,
+    scrollState: ScrollState,
+) {
+    Row(
+        modifier = Modifier.then(
+            if (autoWrap) {
+                Modifier
+            } else {
+                Modifier.horizontalScroll(scrollState)
+            }
+        )
+    ) {
+        // 行号列
+        if (showLineNumbers) {
+            val lineNumberWidth = remember(displayLines.size) {
+                displayLines.size.toString().length
+            }
+            Column(
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                displayLines.forEachIndexed { index, _ ->
+                    Text(
+                        text = (index + 1).toString().padStart(lineNumberWidth, ' '),
+                        fontSize = textStyle.fontSize,
+                        lineHeight = textStyle.lineHeight,
+                        fontFamily = JetbrainsMono,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                        softWrap = false,
+                    )
+                }
+            }
+        }
+
+        // 代码列
         SelectionContainer {
             HighlightText(
-                code = if (isExpanded) code else collapsedCode,
+                code = displayCode,
                 language = language,
-                modifier = Modifier
-                    .animateContentSize()
-                    .then(
-                        if (autoWrap) {
-                            // 换行模式：不需要横向滚动
-                            Modifier
-                        } else {
-                            // 不换行模式：启用横向滚动
-                            Modifier.horizontalScroll(scrollState)
-                        }
-                    ),
+                modifier = Modifier.animateContentSize(),
                 fontSize = textStyle.fontSize,
                 lineHeight = textStyle.lineHeight,
                 colors = colorPalette,
@@ -166,42 +319,6 @@ fun HighlightCodeBlock(
                 softWrap = autoWrap,
                 fontFamily = JetbrainsMono
             )
-        }
-
-        Spacer(Modifier.height(4.dp))
-        // 代码折叠按钮
-        if (settings.displaySetting.codeBlockAutoCollapse && codeLines.size > COLLAPSE_LINES) {
-            Box(
-                modifier = Modifier
-                    .onClick {
-                        isExpanded = !isExpanded
-                    }
-                    .fillMaxWidth(),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = if (isExpanded) Lucide.ChevronsUp else Lucide.ChevronsDown,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(textStyle.fontSize.toDp())
-                    )
-                    Text(
-                        text = if (isExpanded) {
-                            stringResource(id = R.string.code_block_collapse)
-                        } else {
-                            stringResource(id = R.string.code_block_expand)
-                        },
-                        fontSize = textStyle.fontSize,
-                        lineHeight = textStyle.lineHeight,
-                    )
-                }
-            }
         }
     }
 }

@@ -159,7 +159,7 @@ dependencies {
      implementation(projects.core.resources)
      implementation(libs.common.editor)
      implementation(projects.modules.soraLanguageMonarch)
-     compileOnly(projects.modules.soraLanguageTextmate)
+     implementation(libs.common.soraLanguageTextmate)
      // implementation(projects.modules.soraLanguageTreesitter)
      implementation(projects.modules.soraOnigurumaNative)
      

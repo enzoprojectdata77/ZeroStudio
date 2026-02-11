@@ -13,23 +13,40 @@
   ~
   ~  You should have received a copy of the GNU General Public License
   ~   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+  
+  
+  ~  @PS：minWidth推荐设置区间30-40为最佳。MaterialButton最大默认是64，不建议低于区间，负责无法水平左右滑动
   -->
 <com.google.android.material.button.MaterialButton xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   style="@style/Widget.Material3.Button.TextButton.Icon"
-  android:layout_width="48dp"
-  android:layout_height="48dp"
+  android:layout_width="wrap_content" 
+  android:layout_height="40dp"
   android:clickable="true"
   android:drawablePadding="6dp"
   android:drawableTint="?attr/colorPrimary"
   android:focusable="true"
-  android:gravity="start|center_vertical"
+  android:gravity="center|center_vertical"
+
+  app:layout_constraintTop_toTopOf="parent"
+  app:layout_constraintBottom_toBottomOf="parent"
+  app:layout_constraintStart_toStartOf="parent"
+  app:layout_constraintEnd_toEndOf="parent"
+  
+  
+  android:minWidth="34dp"
+  
+  android:minHeight="0dp"
+  android:insetTop="0dp"
+  android:insetBottom="0dp"
+  android:textSize="20sp" 
   android:paddingStart="6dp"
-  android:paddingTop="4dp"
   android:paddingEnd="6dp"
+  android:paddingTop="4dp"
   android:paddingBottom="4dp"
   android:textAllCaps="false"
-  app:iconPadding="0dp"
+  app:iconPadding="4dp"
   app:iconTint="?attr/colorPrimary"
   tools:icon="@drawable/ic_code" />
+  

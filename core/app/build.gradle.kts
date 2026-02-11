@@ -127,7 +127,6 @@ configurations.all {
 
 dependencies {
 
-
   // Lottie Animation SDK
   implementation(libs.common.com.airbnb.android.lottie)
 
@@ -148,6 +147,7 @@ dependencies {
   implementation(libs.aapt2.common)
   implementation(libs.common.org.apache.commons.compress)
   implementation(libs.common.org.tukaani.tarxzip)
+  implementation(libs.common.org.eclipse.lsp4j)
   
   implementation(libs.google.auto.service.annotations)
   implementation(libs.google.gson)
@@ -187,7 +187,6 @@ dependencies {
 
   // Dependencies in composite build
   implementation(libs.composite.appintro)
-  // implementation(libs.composite.desugaringCore)
   implementation(libs.composite.javapoet)
 
   // java格式化
@@ -231,7 +230,6 @@ dependencies {
   implementation(projects.utilities.templatesApi)
   implementation(projects.utilities.templatesImpl)
   implementation(projects.utilities.treeview)
-  // implementation(projects.utilities.uidesigner) //已归档
   implementation(projects.utilities.xmlInflater)
   implementation(projects.event.eventbusAndroid)
   implementation(projects.event.eventbusEvents)
@@ -251,7 +249,9 @@ dependencies {
   // implementation(projects.core.chatai.search)
   // implementation(projects.core.chatai.tts)
   implementation(projects.modules.zeroRegularPreview)
+       implementation(libs.common.soraLanguageTextmate)
 
+  
   coreLibraryDesugaring(libs.androidx.libDesugaring) //脱糖
   testImplementation("org.conscrypt:conscrypt-openjdk:2.5.2")
   testImplementation(projects.testing.unitTest)

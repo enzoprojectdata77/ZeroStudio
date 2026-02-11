@@ -31,7 +31,6 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.collection.MutableIntObjectMap
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
-import android.zero.studio.lsp.manager.LspManager
 import com.blankj.utilcode.util.ImageUtils
 import com.itsaky.androidide.R.string
 import com.itsaky.androidide.actions.ActionData
@@ -105,20 +104,12 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
     TSLanguageRegistry.instance.destroy()
     editorViewModel.removeAllFiles()
     
-    // Shutdown LSP Manager
-    LspManager.shutdown()
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     mBuildEventListener.setActivity(this)
     super.onCreate(savedInstanceState)
     
-    // Initialize LSP for the current project
-    val projectPath = ProjectManagerImpl.getInstance().projectDirPath
-    if (projectPath.isNotEmpty()) {
-        LspManager.initProject(projectPath)
-    }
-
     editorViewModel._displayedFile.observe(
       this) { this.content.editorContainer.displayedChild = it }
     editorViewModel._startDrawerOpened.observe(this) { opened ->

@@ -7,7 +7,7 @@ import com.itsaky.androidide.actions.*
 import com.itsaky.androidide.resources.R
 import com.itsaky.androidide.actions.code.jumpsymbol.GoToSymbolAction
 import com.itsaky.androidide.actions.code.javatokotlin.JavaToKotlinAction
-
+import com.itsaky.androidide.actions.editor.OrganizeImportsAction
 /**
  * @param context The application context, used for retrieving resources.
  * @param order The order of this action in menus or toolbars.
@@ -29,6 +29,7 @@ class CodeActionsMenu(context: Context, override val order: Int) : EditorRelated
         addAction(OverrideMethodsAction(context, order++))
         addAction(JavaToKotlinAction(context, order++))
         addAction(GoToSymbolAction(context, order++))
+        addAction(OrganizeImportsAction(context, order++))
     }
 
     

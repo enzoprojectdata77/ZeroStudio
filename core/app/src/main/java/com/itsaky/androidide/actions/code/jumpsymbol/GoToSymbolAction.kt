@@ -7,16 +7,15 @@ import androidx.lifecycle.lifecycleScope
 import com.itsaky.androidide.resources.R
 import com.itsaky.androidide.actions.ActionData
 import com.itsaky.androidide.actions.EditorRelatedAction
-import com.itsaky.androidide.projects.IProjectManager
-import com.itsaky.androidide.projects.ModuleProject
 import com.itsaky.androidide.tasks.launchAsyncWithProgress
-import android.zero.studio.kotlin.analysis.symbolic.PsiSymbolResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * An action to parse the current file and display a bottom sheet with all symbols.
+ * An action to parse the current file using Tree-Sitter and display a bottom sheet with all symbols.
+ * 
+ * Supports Java, Kotlin, and can be extended.
  *
  * @author android_zero
  */
@@ -25,13 +24,12 @@ class GoToSymbolAction(private val context: Context, override val order: Int) : 
     override val id: String = "ide.editor.cursor.go_to_symbol"
 
     init {
-        label = context.getString(R.string.action_show_code_outline)
-        icon = ContextCompat.getDrawable(context, R.drawable.ic_edit_code_outline_action)
+        label = context.getString(R.string.action_show_code_outline) // 确保 strings.xml 有这个字符串
+        icon = ContextCompat.getDrawable(context, R.drawable.ic_edit_code_outline_action) // 确保有这个图标
     }
 
     override fun prepare(data: ActionData) {
         super.prepare(data)
-        // Action should be available if editor exists
         val editor = data.getEditor()
         visible = editor != null
         enabled = visible
@@ -42,27 +40,28 @@ class GoToSymbolAction(private val context: Context, override val order: Int) : 
         val activity = editor.context as? AppCompatActivity ?: return false
         val file = data.get(File::class.java) ?: return false
 
-        val workspace = IProjectManager.getInstance().getWorkspace()
-        val module = workspace?.findModuleForFile(file) as? ModuleProject
-        val classpaths = module?.getCompileClasspaths() ?: emptySet()
-
         activity.lifecycleScope.launchAsyncWithProgress(
             configureFlashbar = { builder, _ ->
-                builder.message(R.string.action_go_to_symbol_parsing)
+                builder.message("Parsing symbols...") // 建议放入 strings.xml
             }
         ) { _, _ ->
             val code = editor.text.toString()
             
+            // 使用 Tree-Sitter 解析，避免 Unsafe 崩溃
             val symbols = withContext(Dispatchers.IO) {
-                PsiSymbolResolver.parseFileSymbols(file.name, code, classpaths)
+                TreeSitterSymbolResolver.parseSymbols(context, file, code)
             }
 
             withContext(Dispatchers.Main) {
                 if (symbols.isNotEmpty()) {
                     val sheet = SymbolListBottomSheet(symbols) { symbol ->
                         // Navigate to symbol
-                        editor.setSelection(symbol.line, 0) // Navigate to line start
+                        // 使用 setSelectionRegion 确保选中整行或者高亮开始位置
+                        editor.setSelection(symbol.line, 0)
                         editor.ensurePositionVisible(symbol.line, 0)
+                        
+                        // 可选：高亮选中的行
+                        editor.cursorAnimator.start()
                     }
                     sheet.show(activity.supportFragmentManager, "SymbolListBottomSheet")
                 } else {

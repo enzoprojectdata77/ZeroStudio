@@ -57,7 +57,7 @@ dependencies {
     implementation(libs.commons.text)
     implementation(libs.common.io)
     implementation(libs.common.editor)
-    implementation(libs.common.soraeditor.language.textmate)
+    implementation(libs.common.soraLanguageTextmate)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -47,16 +47,6 @@ class ThemeManager : IThemeManager {
             AppCompatDelegate.setDefaultNightMode(nightModePref)
         }
 
-        // Check for Dynamic Color (Material You) preference
-        if (GeneralPreferences.isDynamicColorEnabled) {
-            // Apply Material You Dynamic Colors
-            if (DynamicColors.isDynamicColorAvailable()) {
-                DynamicColors.applyToActivityIfAvailable(activity)
-                // We return here because DynamicColors handles theme overlay internally
-                return 
-            }
-        }
-
         // Apply Custom Static Theme
         val theme = getCurrentTheme()
         if (theme == IDETheme.MATERIAL_YOU) {

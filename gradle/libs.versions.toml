@@ -163,6 +163,7 @@ composite-jdt = { module = "com.itsaky.androidide.build:jdt" }
 composite-layoutlibApi = { module = "com.itsaky.androidide.build:layoutlib-api" }
 composite-composePullrefresh = { module = "com.itsaky.androidide.build:compose-pullrefresh" }
 common-editor = { module = "com.itsaky.androidide.build:editor" }
+common-soraLanguageTextmate = { module = "com.itsaky.androidide.build:soraLanguageTextmate" }
 
 # AndroidIDE
 androidide-ts = { module = "com.itsaky.androidide.treesitter:android-tree-sitter", version.ref = "tree-sitter" }

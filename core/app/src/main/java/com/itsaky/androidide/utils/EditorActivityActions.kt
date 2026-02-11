@@ -42,6 +42,8 @@ import com.itsaky.androidide.actions.file.FormatCodeAction
 import com.itsaky.androidide.actions.file.SaveFileAction
 import com.itsaky.androidide.actions.filetree.CopyPathAction
 import com.itsaky.androidide.actions.filetree.DeleteAction
+import com.itsaky.androidide.actions.filetree.ConvertPathToAction
+import com.itsaky.androidide.actions.filetree.RefactorRenameAction
 import com.itsaky.androidide.actions.filetree.NewFileAction
 import com.itsaky.androidide.actions.filetree.NewFolderAction
 import com.itsaky.androidide.actions.filetree.OpenWithAction
@@ -88,12 +90,12 @@ class EditorActivityActions {
       registry.registerAction(FindInPathAction(context, order++))
 
       // editor text actions
-      registry.registerAction(ExpandSelectionAction(context, order++))
       registry.registerAction(SelectAllAction(context, order++))
-      registry.registerAction(LongSelectAction(context, order++))
       registry.registerAction(CutAction(context, order++))
       registry.registerAction(CopyAction(context, order++))
       registry.registerAction(PasteAction(context, order++))
+      registry.registerAction(LongSelectAction(context, order++))
+      registry.registerAction(ExpandSelectionAction(context, order++))
       registry.registerAction(FormatCodeAction(context, order++))
 
       // file tab actions
@@ -109,7 +111,8 @@ class EditorActivityActions {
       registry.registerAction(OpenWithAction(context, order++))
       registry.registerAction(NewFileOrFolderAction(context, order++))
       registry.registerAction(RenameAction(context, order++))
-      // registry.registerAction(FindInPathAction(context, order++))
+      registry.registerAction(ConvertPathToAction(context, order++))
+      registry.registerAction(RefactorRenameAction(context, order++))
     }
 
     @JvmStatic

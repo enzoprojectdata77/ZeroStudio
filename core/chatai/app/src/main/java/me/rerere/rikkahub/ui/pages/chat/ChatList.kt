@@ -3,8 +3,7 @@ package me.rerere.rikkahub.ui.pages.chat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -71,6 +70,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceAtLeast
+import androidx.compose.ui.zIndex
 import com.composables.icons.lucide.Check
 import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.ChevronUp
@@ -90,7 +90,9 @@ import me.rerere.rikkahub.data.datastore.findModelById
 import me.rerere.rikkahub.data.datastore.getAssistantById
 import me.rerere.rikkahub.data.model.Conversation
 import me.rerere.rikkahub.data.model.MessageNode
+import me.rerere.rikkahub.service.ChatError
 import me.rerere.rikkahub.ui.components.message.ChatMessage
+import me.rerere.rikkahub.ui.components.ui.ErrorCardsDisplay
 import me.rerere.rikkahub.ui.components.ui.ListSelectableItem
 import me.rerere.rikkahub.ui.components.ui.Tooltip
 import me.rerere.rikkahub.ui.hooks.ImeLazyListAutoScroller
@@ -109,6 +111,9 @@ fun ChatList(
     loading: Boolean,
     previewMode: Boolean,
     settings: Settings,
+    errors: List<ChatError> = emptyList(),
+    onDismissError: (Uuid) -> Unit = {},
+    onClearAllErrors: () -> Unit = {},
     onRegenerate: (UIMessage) -> Unit = {},
     onEdit: (UIMessage) -> Unit = {},
     onForkMessage: (UIMessage) -> Unit = {},
@@ -118,52 +123,58 @@ fun ChatList(
     onTranslate: ((UIMessage, java.util.Locale) -> Unit)? = null,
     onClearTranslation: (UIMessage) -> Unit = {},
     onJumpToMessage: (Int) -> Unit = {},
+    onToolApproval: ((toolCallId: String, approved: Boolean, reason: String) -> Unit)? = null,
 ) {
-    SharedTransitionLayout {
-        AnimatedContent(
-            targetState = previewMode,
-            label = "ChatListMode",
-            transitionSpec = {
-                (fadeIn() + scaleIn(initialScale = 0.8f) togetherWith fadeOut() + scaleOut(targetScale = 0.8f))
-            }
-        ) { target ->
-            if (target) {
-                ChatListPreview(
-                    innerPadding = innerPadding,
-                    conversation = conversation,
-                    settings = settings,
-                    onJumpToMessage = onJumpToMessage,
-                    animatedVisibilityScope = this@AnimatedContent,
-                )
-            } else {
-                ChatListNormal(
-                    innerPadding = innerPadding,
-                    conversation = conversation,
-                    state = state,
-                    loading = loading,
-                    settings = settings,
-                    onRegenerate = onRegenerate,
-                    onEdit = onEdit,
-                    onForkMessage = onForkMessage,
-                    onDelete = onDelete,
-                    onUpdateMessage = onUpdateMessage,
-                    onClickSuggestion = onClickSuggestion,
-                    onTranslate = onTranslate,
-                    onClearTranslation = onClearTranslation,
-                    animatedVisibilityScope = this@AnimatedContent,
-                )
-            }
+    AnimatedContent(
+        targetState = previewMode,
+        label = "ChatListMode",
+        transitionSpec = {
+            (fadeIn() + scaleIn(initialScale = 0.8f) togetherWith fadeOut() + scaleOut(targetScale = 0.8f))
+        }
+    ) { target ->
+        if (target) {
+            ChatListPreview(
+                innerPadding = innerPadding,
+                conversation = conversation,
+                settings = settings,
+                onJumpToMessage = onJumpToMessage,
+                animatedVisibilityScope = this@AnimatedContent,
+            )
+        } else {
+            ChatListNormal(
+                innerPadding = innerPadding,
+                conversation = conversation,
+                state = state,
+                loading = loading,
+                settings = settings,
+                errors = errors,
+                onDismissError = onDismissError,
+                onClearAllErrors = onClearAllErrors,
+                onRegenerate = onRegenerate,
+                onEdit = onEdit,
+                onForkMessage = onForkMessage,
+                onDelete = onDelete,
+                onUpdateMessage = onUpdateMessage,
+                onClickSuggestion = onClickSuggestion,
+                onTranslate = onTranslate,
+                onClearTranslation = onClearTranslation,
+                animatedVisibilityScope = this@AnimatedContent,
+                onToolApproval = onToolApproval,
+            )
         }
     }
 }
 
 @Composable
-private fun SharedTransitionScope.ChatListNormal(
+private fun ChatListNormal(
     innerPadding: PaddingValues,
     conversation: Conversation,
     state: LazyListState,
     loading: Boolean,
     settings: Settings,
+    errors: List<ChatError>,
+    onDismissError: (Uuid) -> Unit,
+    onClearAllErrors: () -> Unit,
     onRegenerate: (UIMessage) -> Unit,
     onEdit: (UIMessage) -> Unit,
     onForkMessage: (UIMessage) -> Unit,
@@ -173,6 +184,7 @@ private fun SharedTransitionScope.ChatListNormal(
     onTranslate: ((UIMessage, java.util.Locale) -> Unit)?,
     onClearTranslation: (UIMessage) -> Unit,
     animatedVisibilityScope: AnimatedVisibilityScope,
+    onToolApproval: ((toolCallId: String, approved: Boolean, reason: String) -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
     val loadingState by rememberUpdatedState(loading)
@@ -195,18 +207,30 @@ private fun SharedTransitionScope.ChatListNormal(
     // 自动跟随键盘滚动
     ImeLazyListAutoScroller(lazyListState = state)
 
+    // 对话大小警告对话框
+    val sizeInfo = rememberConversationSizeInfo(conversation)
+    var showSizeWarningDialog by remember { mutableStateOf(true) }
+    if (sizeInfo.showWarning && showSizeWarningDialog) {
+        ConversationSizeWarningDialog(
+            sizeInfo = sizeInfo,
+            onDismiss = { showSizeWarningDialog = false }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize(),
     ) {
         // 自动滚动到底部
-        LaunchedEffect(state) {
-            snapshotFlow { state.layoutInfo.visibleItemsInfo }.collect { visibleItemsInfo ->
-                // println("is bottom = ${visibleItemsInfo.isAtBottom()}, scroll = ${state.isScrollInProgress}, can_scroll = ${state.canScrollForward}, loading = $loading")
-                if (!state.isScrollInProgress && loadingState) {
-                    if (visibleItemsInfo.isAtBottom()) {
-                        state.requestScrollToItem(conversationUpdated.messageNodes.lastIndex + 10)
-                        // Log.i(TAG, "ChatList: scroll to ${conversationUpdated.messageNodes.lastIndex}")
+        if (settings.displaySetting.enableAutoScroll) {
+            LaunchedEffect(state) {
+                snapshotFlow { state.layoutInfo.visibleItemsInfo }.collect { visibleItemsInfo ->
+                    // println("is bottom = ${visibleItemsInfo.isAtBottom()}, scroll = ${state.isScrollInProgress}, can_scroll = ${state.canScrollForward}, loading = $loading")
+                    if (!state.isScrollInProgress && loadingState) {
+                        if (visibleItemsInfo.isAtBottom()) {
+                            state.requestScrollToItem(conversationUpdated.messageNodes.lastIndex + 10)
+                            // Log.i(TAG, "ChatList: scroll to ${conversationUpdated.messageNodes.lastIndex}")
+                        }
                     }
                 }
             }
@@ -230,10 +254,6 @@ private fun SharedTransitionScope.ChatListNormal(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
-                .sharedBounds(
-                    sharedContentState = rememberSharedContentState(key = "conversation_list"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                )
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
@@ -282,7 +302,8 @@ private fun SharedTransitionScope.ChatListNormal(
                                 onUpdateMessage(it)
                             },
                             onTranslate = onTranslate,
-                            onClearTranslation = onClearTranslation
+                            onClearTranslation = onClearTranslation,
+                            onToolApproval = onToolApproval
                         )
                     }
                     if (index == conversation.truncateIndex - 1) {
@@ -325,6 +346,16 @@ private fun SharedTransitionScope.ChatListNormal(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
+            // 错误消息卡片
+            ErrorCardsDisplay(
+                errors = errors,
+                onDismissError = onDismissError,
+                onClearAllErrors = onClearAllErrors,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .zIndex(5f)
+            )
+
             // 完成选择
             AnimatedVisibility(
                 visible = selecting,
@@ -492,7 +523,7 @@ private fun buildHighlightedText(
 }
 
 @Composable
-private fun SharedTransitionScope.ChatListPreview(
+private fun ChatListPreview(
     innerPadding: PaddingValues,
     conversation: Conversation,
     settings: Settings,
@@ -553,10 +584,6 @@ private fun SharedTransitionScope.ChatListPreview(
             contentPadding = PaddingValues(16.dp) + PaddingValues(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
-                .sharedBounds(
-                    sharedContentState = rememberSharedContentState(key = "conversation_list"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                )
                 .fillMaxWidth()
                 .weight(1f),
         ) {
@@ -568,7 +595,8 @@ private fun SharedTransitionScope.ChatListPreview(
                 val isUser = message.role == me.rerere.ai.core.MessageRole.USER
                 val originalIndex = conversation.messageNodes.indexOf(node)
                 Column(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .then(
                             if (!isUser) Modifier.padding(end = 24.dp) else Modifier
                         ),
@@ -670,7 +698,7 @@ private fun BoxScope.MessageJumper(
             Surface(
                 onClick = {
                     scope.launch {
-                        state.animateScrollToItem(0)
+                        state.scrollToItem(0)
                     }
                 },
                 shape = CircleShape,
@@ -730,7 +758,7 @@ private fun BoxScope.MessageJumper(
             Surface(
                 onClick = {
                     scope.launch {
-                        state.animateScrollToItem(state.layoutInfo.totalItemsCount - 1)
+                        state.scrollToItem(state.layoutInfo.totalItemsCount - 1)
                     }
                 },
                 shape = CircleShape,

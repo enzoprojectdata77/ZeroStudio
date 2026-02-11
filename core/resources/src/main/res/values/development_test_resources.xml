@@ -255,4 +255,50 @@
         <item name="android:windowExitAnimation">@android:anim/slide_out_right</item>
     </style>
     
+        <!-- LSP Settings General -->
+    <string name="lsp_settings_title">Language Servers</string>
+    <string name="lsp_settings_desc">Manage built-in and external language servers, configure file associations.</string>
+    
+    <!-- Groups -->
+    <string name="lsp_group_builtin">Built-in Servers</string>
+    <string name="lsp_group_external">External Servers</string>
+    <string name="lsp_group_community">Community / Plugins</string>
+
+    <!-- Actions -->
+    <string name="lsp_btn_add_external">Add External Server</string>
+    <string name="lsp_btn_edit">Edit</string>
+    <string name="lsp_btn_delete">Delete</string>
+    <string name="lsp_btn_save">Save</string>
+    <string name="lsp_btn_cancel">Cancel</string>
+
+    <!-- Dialog: External Server -->
+    <string name="lsp_ext_dialog_title">Add External Server</string>
+    <string name="lsp_ext_type_socket">Socket (TCP)</string>
+    <string name="lsp_ext_type_process">Process (Shell)</string>
+    
+    <string name="lsp_field_name">Language/Server Name</string>
+    <string name="lsp_field_extensions">File Extensions (comma separated)</string>
+    <string name="lsp_field_extensions_hint">e.g. rs, rust</string>
+    
+    <!-- Socket specific -->
+    <string name="lsp_field_host">Host</string>
+    <string name="lsp_field_port">Port</string>
+    
+    <!-- Process specific -->
+    <string name="lsp_field_command">Command</string>
+    <string name="lsp_field_args">Arguments (space separated)</string>
+    
+    <!-- Validation -->
+    <string name="lsp_err_name_required">Name is required</string>
+    <string name="lsp_err_ext_required">At least one extension is required</string>
+    <string name="lsp_err_invalid_port">Invalid port number</string>
+    <string name="lsp_err_cmd_required">Command is required</string>
+
+    <!-- Status -->
+    <string name="lsp_status_enabled">Enabled</string>
+    <string name="lsp_status_disabled">Disabled</string>
+    <string name="lsp_restart_required">Restart required to apply changes</string>
+    
+    <string name="menu_organize_imports">Organize Imports</string>
+    
 </resources>

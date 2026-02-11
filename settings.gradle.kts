@@ -49,6 +49,8 @@ dependencyResolutionManagement {
       "layoutlib-api",
       "logback-core",
       "editor",
+      "soraLanguageTextmate",
+
       "compose-pullrefresh"
     ),
 
@@ -65,6 +67,7 @@ dependencyResolutionManagement {
           substitute(module("com.itsaky.androidide.build:${module}"))
             .using(project(":${module}"))
         }
+        
       }
     }
   }
@@ -167,7 +170,7 @@ include(
   // ":core:chatai:common",
   // ":core:chatai:document",
   // ":core:chatai:highlight",
-  // ":core:chatai:i18n",
+  // ":core:chatai:locale-tui",
   // ":core:chatai:search",
   // ":core:chatai:tts",
   
@@ -229,7 +232,7 @@ include(
   
   ":modules:mt-data-files-provider",
   ":modules:soraLanguageMonarch",
-  ":modules:soraLanguageTextmate",
+
   ":modules:soraLanguageTreesitter",
   ":modules:soraOnigurumaNative",
   ":modules:deviceCompat",

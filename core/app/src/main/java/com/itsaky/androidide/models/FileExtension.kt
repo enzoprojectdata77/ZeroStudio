@@ -43,53 +43,93 @@ enum class FileExtension(
 ) {
     // Java related - keeping original colors mostly
     JAVA("java", R.drawable.ic_file_type_text_java),
-    JSP("jsp", R.drawable.ic_file_type_text_java),
+    JSP_JAVA("jsp", R.drawable.ic_file_type_text_java),
+    JAV_JAVA("jav", R.drawable.ic_file_type_text_java),
+    BSH_JAVA("bsh", R.drawable.ic_file_type_text_java),
 
     // Kotlin related
     KT("kt", R.drawable.ic_file_type_text_k_kotlins),
     KTM("ktm", R.drawable.ic_file_type_text_k_kotlins),
     KTS("kts", R.drawable.ic_file_type_text_kotlin_gradle_script_light),
 
+    //xml类型文件： xml", "xaml", "dtd", "plist", "ascx", "csproj", "wxi", "wxl", "wxs", "svg
     XML("xml", R.drawable.ic_file_type_xml),
-    GRADLE("gradle", R.drawable.ic_file_type_text_gradle),
+    XML_XAML("xaml", R.drawable.ic_file_type_xml),
+    XML_DTD("dtd", R.drawable.ic_file_type_xml),
+    XML_PLIST("plist", R.drawable.ic_file_type_xml),
+    XMLASCX("ascx", R.drawable.ic_file_type_xml),
+    XML_CSPROJ("csproj", R.drawable.ic_file_type_code),
+    XML_WXI("wxi", R.drawable.ic_file_type_xml),
+    XML_WXL("wxl", R.drawable.ic_file_type_xml),
+    XML_WXS("wxs", R.drawable.ic_file_type_xml),
+    // XML("svg", R.drawable.ic_file_type_xml),
+    
+    // Groovy：gsh", "groovy", "gradle", "gvy", "gy
+    GRADLE_GROOVY("gradle", R.drawable.ic_file_type_text_gradle),
+    GSH_GROOVY("gsh", R.drawable.ic_file_type_text_gradle),
+    GVY_GROOVY("gvy", R.drawable.ic_file_type_text_gradle),
+    GY_GROOVY("gy", R.drawable.ic_file_type_text_gradle),
     GROOVY("groovy", R.drawable.ic_file_type_text_gradle),
-
-    // Config & Data
-    JSON("json", R.drawable.ic_file_type_json),
 
     // Example: Tinting properties file with colorPrimary
     PROPERTIES("properties", R.drawable.ic_file_type_text_setting_info),
 
-    TXT("txt", R.drawable.ic_file_type_txt_document_file),
-    MD("md", R.drawable.ic_file_type_code),
+    TEXT("txt", R.drawable.ic_file_type_txt_document_file),
+    
+    //Markdown类型文件
+    MD_MARKDOWN("md", R.drawable.ic_file_type_code),
+    MARKDOWN_MARKDOWN("markdown", R.drawable.ic_file_type_code),
+    MDOWN_MARKDOWN("mdown", R.drawable.ic_file_type_code),
+    MKD_MARKDOWN("mkd", R.drawable.ic_file_type_code),
+    MKDN_MARKDOWN("mkdn", R.drawable.ic_file_type_code),
+    MDOC_MARKDOWN("mdoc", R.drawable.ic_file_type_code),
+    MDTEXT_MARKDOWN("mdtext", R.drawable.ic_file_type_code),
+    MDTXT_MARKDOWN("mdtxt", R.drawable.ic_file_type_code),
+    MDWN_MARKDOWN("mdwn", R.drawable.ic_file_type_code),
+    
+    
     LOG("log", R.drawable.ic_file_type_log),
     BACKUP_FILE("bak", R.drawable.ic_file_type_backup_files),
 
+    // Config & Data
+    JSON("json", R.drawable.ic_file_type_json),
+    JSONL("jsonl", R.drawable.ic_file_type_json),
+    JSONC("jsonc", R.drawable.ic_file_type_json),
+
     // Web Development & Scripting (Expanded)
-    HTML("html", R.drawable.ic_file_type_html),
-    HTM("htm", R.drawable.ic_file_type_html),
-    XHTML("xhtml", R.drawable.ic_file_type_html),
-    CSS("css", R.drawable.ic_file_type_css),
-    SCSS("scss", R.drawable.ic_file_type_css),
-    SASS("sass", R.drawable.ic_file_type_css),
-    LESS("less", R.drawable.ic_file_type_css),
-    STYL("styl", R.drawable.ic_file_type_css),
+    HTML_WEB("html", R.drawable.ic_file_type_html),
+    HTML_XHT_WEB("xht", R.drawable.ic_file_type_html),
+    HTM_WEB("htm", R.drawable.ic_file_type_html),
+    HTM_HTMX_WEB("htmx", R.drawable.ic_file_type_html),
+    XHTML_WEB("xhtml", R.drawable.ic_file_type_html),
+    CSS_WEB("css", R.drawable.ic_file_type_css),
+    SCSS_WEB("scss", R.drawable.ic_file_type_css),
+    SASS_WEB("sass", R.drawable.ic_file_type_css),
+    LESS_WEB("less", R.drawable.ic_file_type_css),
+    STYL_WEB("styl", R.drawable.ic_file_type_css),
     JAVASCRIPT("js", R.drawable.ic_file_type_language_golang),
-    MJS("mjs", R.drawable.ic_file_type_text_terminal_script),
-    CJS("cjs", R.drawable.ic_file_type_text_terminal_script),
-    TS("ts", R.drawable.ic_file_type_code), // TypeScript
-    TSX("tsx", R.drawable.ic_file_type_code),
-    JSX("jsx", R.drawable.ic_file_type_code),
-    VUE("vue", R.drawable.ic_file_type_html),
-    SVELTE("svelte", R.drawable.ic_file_type_html),
-    ASP("asp", R.drawable.ic_file_type_code),
-    ASPX("aspx", R.drawable.ic_file_type_code),
-    PHP_FILE("php", R.drawable.ic_file_type_php),
-    PHPSAN("php3", R.drawable.ic_file_type_php),
-    PHPSI("php4", R.drawable.ic_file_type_php),
-    PHPWU("php5", R.drawable.ic_file_type_php),
-    PHTML("phtml", R.drawable.ic_file_type_php),
-    WASM("wasm", R.drawable.ic_file_type_binary),
+    MJS_JAVASCRIPT("mjs", R.drawable.ic_file_type_text_terminal_script),
+    CJS_JAVASCRIPT("cjs", R.drawable.ic_file_type_text_terminal_script),
+    MUT_JAVASCRIPT("mut", R.drawable.ic_file_type_text_terminal_script),
+    JSCSRC_JAVASCRIPT("jscsrc", R.drawable.ic_file_type_text_terminal_script),
+    JSHINTRC_JAVASCRIPT("jshintrc", R.drawable.ic_file_type_text_terminal_script),
+    TS_TYPESCPIPT("ts", R.drawable.ic_file_type_code), // TypeScript
+    MTS_JAVASCPIPT("mts", R.drawable.ic_file_type_code), // TypeScript
+    TSX_TYPESCPIPT("tsx", R.drawable.ic_file_type_code),
+    JSX_TYPESCPIPT("jsx", R.drawable.ic_file_type_code),
+    CTS_TYPESCPIPT("cts", R.drawable.ic_file_type_code),
+    
+    
+    VUE_WEB("vue", R.drawable.ic_file_type_html),
+    SVELTE_WEB("svelte", R.drawable.ic_file_type_html),
+    ASP_WEB("asp", R.drawable.ic_file_type_code),
+    ASPX_WEB("aspx", R.drawable.ic_file_type_code),
+    PHP_FILE_WEB("php", R.drawable.ic_file_type_php),
+    PHPSAN_WEB("php3", R.drawable.ic_file_type_php),
+    PHPSI_WEB("php4", R.drawable.ic_file_type_php),
+    PHPWU_WEB("php5", R.drawable.ic_file_type_php),
+    PHTML_WEB("phtml", R.drawable.ic_file_type_php),
+    WASM_WEB("wasm", R.drawable.ic_file_type_binary),
 
     // Documents & Office Formats
     PDF("pdf", R.drawable.ic_file_type_word_document),
@@ -338,14 +378,19 @@ enum class FileExtension(
     TPL("tpl", R.drawable.ic_file_type_code),
     PREFS("prefs", R.drawable.ic_file_type_code),
     KEYS("keys", R.drawable.ic_file_type_code),
-    YML("yml", R.drawable.ic_file_type_code),
+    
+    //YAML系列：yaml", "yml", "", "", ""),
+    YML_YAML("yml", R.drawable.ic_file_type_code),
     YAML("yaml", R.drawable.ic_file_type_code),
+    EYAML_YAML("eyaml", R.drawable.ic_file_type_code),
+    EYML_YAML("eyml", R.drawable.ic_file_type_code),
+    CFF_YAML("cff", R.drawable.ic_file_type_code),
+    
     INI("ini", R.drawable.ic_file_type_code),
     CONF("conf", R.drawable.ic_file_type_code),
     CFG("cfg", R.drawable.ic_file_type_code),
     REG("reg", R.drawable.ic_file_type_code),
     tem_ft("ft", R.drawable.ic_file_type_code), //模板
-    PLIST("plist", R.drawable.ic_file_type_xml),
     ENTITLEMENTS("entitlements", R.drawable.ic_file_type_xml),
     MOBILEPROVISION("mobileprovision", R.drawable.ic_file_type_binary),
     KEYSTORE("keystore", R.drawable.ic_file_type_keystore),
@@ -394,7 +439,7 @@ enum class FileExtension(
     OBJCLANGJJ("mm", R.drawable.ic_file_type_clang_m_small), //Objective-C++ 源码文件
 
     CLANGCS("cs", R.drawable.ic_file_type_net_clang), //c#lang 源码文件
-    CLANGCSPROJ("csproj", R.drawable.ic_file_type_net_clang), //c#lang 项目文件
+    // CLANGCSPROJ("csproj", R.drawable.ic_file_type_net_clang), //c#lang 项目文件
     SLN("sln", R.drawable.ic_file_type_net_clang),
     VB("vb", R.drawable.ic_file_type_net_clang),
     FS("fs", R.drawable.ic_file_type_net_clang),
@@ -447,6 +492,7 @@ enum class FileExtension(
     VBS("vbs", R.drawable.ic_file_type_text_terminal_script),
 
     PYTHON("py", R.drawable.ic_file_type_python),
+    PYTHON_PYI("pyi", R.drawable.ic_file_type_python),
     PYTHON_W("pyw", R.drawable.ic_file_type_python),
     PYTHON_C("pyc", R.drawable.ic_file_type_binary), // Compiled
     PYTHON_D("pyd", R.drawable.ic_file_type_binary), // DLL
@@ -668,3 +714,4 @@ enum class FileExtension(
         }
     }
 }
+

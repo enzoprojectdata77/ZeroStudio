@@ -46,6 +46,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
@@ -54,13 +57,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -89,15 +97,17 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import com.composables.icons.lucide.ArrowUp
+import com.composables.icons.lucide.BookOpen
 import com.composables.icons.lucide.Camera
 import com.composables.icons.lucide.Eraser
+import com.composables.icons.lucide.FileArchive
 import com.composables.icons.lucide.FileAudio
 import com.composables.icons.lucide.Files
 import com.composables.icons.lucide.Fullscreen
-import com.composables.icons.lucide.GraduationCap
 import com.composables.icons.lucide.Image
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Music
+import com.composables.icons.lucide.Package2
 import com.composables.icons.lucide.Plus
 import com.composables.icons.lucide.Video
 import com.composables.icons.lucide.X
@@ -105,6 +115,7 @@ import com.composables.icons.lucide.Zap
 import com.dokar.sonner.ToastType
 import com.yalantis.ucrop.UCrop
 import com.yalantis.ucrop.UCropActivity
+import kotlinx.coroutines.Job
 import me.rerere.ai.provider.Model
 import me.rerere.ai.provider.ModelAbility
 import me.rerere.ai.provider.ModelType
@@ -119,7 +130,9 @@ import me.rerere.rikkahub.data.datastore.getCurrentAssistant
 import me.rerere.rikkahub.data.datastore.getCurrentChatModel
 import me.rerere.rikkahub.data.model.Assistant
 import me.rerere.rikkahub.data.model.Conversation
+import me.rerere.rikkahub.ui.components.ui.InjectionSelector
 import me.rerere.rikkahub.ui.components.ui.KeepScreenOn
+import me.rerere.rikkahub.ui.components.ui.RandomGridLoading
 import me.rerere.rikkahub.ui.components.ui.permission.PermissionCamera
 import me.rerere.rikkahub.ui.components.ui.permission.PermissionManager
 import me.rerere.rikkahub.ui.components.ui.permission.rememberPermissionState
@@ -127,6 +140,7 @@ import me.rerere.rikkahub.ui.context.LocalSettings
 import me.rerere.rikkahub.ui.context.LocalToaster
 import me.rerere.rikkahub.ui.hooks.ChatInputState
 import me.rerere.rikkahub.utils.createChatFilesByContents
+import me.rerere.rikkahub.utils.createChatTextFile
 import me.rerere.rikkahub.utils.deleteChatFiles
 import me.rerere.rikkahub.utils.getFileMimeType
 import me.rerere.rikkahub.utils.getFileNameFromUri
@@ -152,6 +166,7 @@ fun ChatInput(
     onUpdateAssistant: (Assistant) -> Unit,
     onUpdateSearchService: (Int) -> Unit,
     onClearContext: () -> Unit,
+    onCompressContext: (additionalPrompt: String, targetTokens: Int, keepRecentMessages: Int) -> Job,
     onCancelClick: () -> Unit,
     onSendClick: () -> Unit,
     onLongSendClick: () -> Unit,
@@ -173,8 +188,12 @@ fun ChatInput(
     }
 
     var expand by remember { mutableStateOf(ExpandState.Collapsed) }
+    var showInjectionSheet by remember { mutableStateOf(false) }
+    var showCompressDialog by remember { mutableStateOf(false) }
     fun dismissExpand() {
         expand = ExpandState.Collapsed
+        showInjectionSheet = false
+        showCompressDialog = false
     }
 
     fun expandToggle(type: ExpandState) {
@@ -187,9 +206,9 @@ fun ChatInput(
 
     // Collapse when ime is visible
     val imeVisile = WindowInsets.isImeVisible
-    LaunchedEffect(imeVisile) {
-        if (imeVisile) {
-            expand = ExpandState.Collapsed
+    LaunchedEffect(imeVisile, showInjectionSheet, showCompressDialog) {
+        if (imeVisile && !showInjectionSheet && !showCompressDialog) {
+            dismissExpand()
         }
     }
 
@@ -206,7 +225,11 @@ fun ChatInput(
             MediaFileInputRow(state = state, context = context)
 
             // Text Input Row
-            TextInputRow(state = state, context = context)
+            TextInputRow(
+                state = state,
+                context = context,
+                onSendMessage = { sendMessage() }
+            )
 
             // Actions Row
             Row(
@@ -302,11 +325,11 @@ fun ChatInput(
                         .combinedClickable(
                             enabled = state.loading || !state.isEmpty(),
                             onClick = {
-                                expand = ExpandState.Collapsed
+                                dismissExpand()
                                 sendMessage()
                             },
                             onLongClick = {
-                                expand = ExpandState.Collapsed
+                                dismissExpand()
                                 sendMessageWithoutAnswer()
                             }
                         )
@@ -357,7 +380,12 @@ fun ChatInput(
                             state = state,
                             assistant = assistant,
                             onClearContext = onClearContext,
+                            onCompressContext = onCompressContext,
                             onUpdateAssistant = onUpdateAssistant,
+                            showInjectionSheet = showInjectionSheet,
+                            onShowInjectionSheetChange = { showInjectionSheet = it },
+                            showCompressDialog = showCompressDialog,
+                            onShowCompressDialogChange = { showCompressDialog = it },
                             onDismiss = { dismissExpand() }
                         )
                     }
@@ -371,8 +399,10 @@ fun ChatInput(
 private fun TextInputRow(
     state: ChatInputState,
     context: Context,
+    onSendMessage: () -> Unit,
 ) {
-    val assistant = LocalSettings.current.getCurrentAssistant()
+    val settings = LocalSettings.current
+    val assistant = settings.getCurrentAssistant()
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -412,7 +442,7 @@ private fun TextInputRow(
                 }
                 var isFocused by remember { mutableStateOf(false) }
                 var isFullScreen by remember { mutableStateOf(false) }
-                val receiveContentListener = remember {
+                val receiveContentListener = remember(settings.displaySetting.pasteLongTextAsFile, settings.displaySetting.pasteLongTextThreshold) {
                     ReceiveContentListener { transferableContent ->
                         when {
                             transferableContent.hasMediaType(MediaType.Image) -> {
@@ -428,6 +458,20 @@ private fun TextInputRow(
                                         )
                                     }
                                     uri != null
+                                }
+                            }
+
+                            settings.displaySetting.pasteLongTextAsFile &&
+                                transferableContent.hasMediaType(MediaType.Text) -> {
+                                transferableContent.consume { item ->
+                                    val text = item.text?.toString()
+                                    if (text != null && text.length > settings.displaySetting.pasteLongTextThreshold) {
+                                        val document = context.createChatTextFile(text)
+                                        state.addFiles(listOf(document))
+                                        true
+                                    } else {
+                                        false
+                                    }
                                 }
                             }
 
@@ -448,6 +492,14 @@ private fun TextInputRow(
                         Text(stringResource(R.string.chat_input_placeholder))
                     },
                     lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 5),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = if (settings.displaySetting.sendOnEnter) ImeAction.Send else ImeAction.Default
+                    ),
+                    onKeyboardAction = {
+                        if (settings.displaySetting.sendOnEnter && !state.isEmpty()) {
+                            onSendMessage()
+                        }
+                    },
                     colors = TextFieldDefaults.colors().copy(
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
@@ -694,11 +746,17 @@ private fun FilesPicker(
     assistant: Assistant,
     state: ChatInputState,
     onClearContext: () -> Unit,
+    onCompressContext: (additionalPrompt: String, targetTokens: Int, keepRecentMessages: Int) -> Job,
     onUpdateAssistant: (Assistant) -> Unit,
+    showInjectionSheet: Boolean,
+    onShowInjectionSheetChange: (Boolean) -> Unit,
+    showCompressDialog: Boolean,
+    onShowCompressDialogChange: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
     val settings = LocalSettings.current
     val provider = settings.getCurrentChatModel()?.findProvider(providers = settings.providers)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -743,27 +801,52 @@ private fun FilesPicker(
             modifier = Modifier.fillMaxWidth()
         )
 
+        // Prompt Injections
+        if (settings.modeInjections.isNotEmpty() || settings.lorebooks.isNotEmpty()) {
+            val activeCount = assistant.modeInjectionIds.size + assistant.lorebookIds.size
+            ListItem(
+                leadingContent = {
+                    Icon(
+                        imageVector = Lucide.BookOpen,
+                        contentDescription = stringResource(R.string.chat_page_prompt_injections),
+                    )
+                },
+                headlineContent = {
+                    Text(stringResource(R.string.chat_page_prompt_injections))
+                },
+                trailingContent = {
+                    if (activeCount > 0) {
+                        Text(
+                            text = activeCount.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.large)
+                    .clickable {
+                        onShowInjectionSheetChange(true)
+                    },
+            )
+        }
+
+        // Compress History Button
         ListItem(
             leadingContent = {
                 Icon(
-                    imageVector = Lucide.GraduationCap,
-                    contentDescription = stringResource(R.string.chat_page_learning_mode),
+                    imageVector = Lucide.Package2,
+                    contentDescription = stringResource(R.string.chat_page_compress_context),
                 )
             },
             headlineContent = {
-                Text(stringResource(R.string.chat_page_learning_mode))
+                Text(stringResource(R.string.chat_page_compress_context))
             },
-            supportingContent = {
-                Text(stringResource(R.string.chat_page_learning_mode_desc))
-            },
-            trailingContent = {
-                Switch(
-                    checked = assistant.learningMode,
-                    onCheckedChange = {
-                        onUpdateAssistant(assistant.copy(learningMode = it))
-                    }
-                )
-            },
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.large)
+                .clickable {
+                    onShowCompressDialogChange(true)
+                },
         )
 
         ListItem(
@@ -799,6 +882,29 @@ private fun FilesPicker(
                         onClearContext()
                     }
                 ),
+        )
+    }
+
+    // Injection Bottom Sheet
+    if (showInjectionSheet) {
+        InjectionQuickConfigSheet(
+            assistant = assistant,
+            settings = settings,
+            onUpdateAssistant = onUpdateAssistant,
+            onDismiss = { onShowInjectionSheetChange(false) }
+        )
+    }
+
+    // Compress Context Dialog
+    if (showCompressDialog) {
+        CompressContextDialog(
+            onDismiss = {
+                onShowCompressDialogChange(false)
+                onDismiss()
+            },
+            onConfirm = { additionalPrompt, targetTokens, keepRecentMessages ->
+                onCompressContext(additionalPrompt, targetTokens, keepRecentMessages)
+            }
         )
     }
 }
@@ -1141,15 +1247,13 @@ fun FilePickButton(onAddFiles: (List<UIMessagePart.Document>) -> Unit = {}) {
                             mime = mime
                         )
                     } else {
+                        toaster.show("不支持的文件类型: $fileName", type = ToastType.Error)
                         null
                     }
                 }
 
                 if (documents.isNotEmpty()) {
                     onAddFiles(documents)
-                } else {
-                    // Show toast for unsupported file types
-                    toaster.show("不支持的文件类型", type = ToastType.Error)
                 }
             }
         }
@@ -1202,6 +1306,37 @@ private fun BigIconTextButton(
         }
         ProvideTextStyle(MaterialTheme.typography.bodySmall) {
             text()
+        }
+    }
+}
+
+@Composable
+private fun InjectionQuickConfigSheet(
+    assistant: Assistant,
+    settings: Settings,
+    onUpdateAssistant: (Assistant) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.75f)
+                .padding(horizontal = 16.dp),
+        ) {
+            InjectionSelector(
+                assistant = assistant,
+                settings = settings,
+                onUpdate = onUpdateAssistant,
+                modifier = Modifier.weight(1f)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

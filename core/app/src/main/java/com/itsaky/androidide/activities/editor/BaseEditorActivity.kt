@@ -333,8 +333,12 @@ abstract class BaseEditorActivity : EdgeToEdgeIDEActivity(), TabLayout.OnTabSele
     onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
     lifecycle.addObserver(mLifecycleObserver)
 
+    // 配置并初始化支持的操作栏 (Toolbar)
     setSupportActionBar(content.editorToolbar)
 
+    //取消string.app_name的标题设置，解决action menu拥挤
+    supportActionBar?.setDisplayShowTitleEnabled(false)
+    
     setupDrawers()
     content.tabs.addOnTabSelectedListener(this)
 
