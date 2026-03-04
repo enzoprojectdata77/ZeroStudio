@@ -74,6 +74,8 @@
     "@log.json",
      "@toml.json",
     "@cmake.json",
+    "@cpplang.json",
+    "@clang.json",
     "@toml.json"
   ]
 }

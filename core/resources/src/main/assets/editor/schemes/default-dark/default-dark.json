@@ -68,6 +68,8 @@
     "@xml.json",
     "@toml.json",
     "@cmake.json",
+    "@cpplang.json",
+    "@clang.json",
     "@log.json"
   ]
 }

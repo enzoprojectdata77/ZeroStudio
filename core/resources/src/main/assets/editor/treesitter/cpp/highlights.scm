@@ -36,49 +36,8 @@
 (this) @variable.builtin
 (null "nullptr" @constant)
 
-"break" @keyword
-"case" @keyword
-"const" @keyword
-"continue" @keyword
-"default" @keyword
-"do" @keyword
-"else" @keyword
-"enum" @keyword
-"extern" @keyword
-"for" @keyword
-"if" @keyword
-"inline" @keyword
-"return" @keyword
-"sizeof" @keyword
-"static" @keyword
-"struct" @keyword
-"switch" @keyword
-"typedef" @keyword
-"union" @keyword
-"volatile" @keyword
-"while" @keyword
-
-"#define" @keyword
-"#elif" @keyword
-"#else" @keyword
-"#endif" @keyword
-"#if" @keyword
-"#ifdef" @keyword
-"#ifndef" @keyword
-"#include" @myinclude
-(system_lib_string) @include.path
-(preproc_directive) @keyword
-
-[
- "{"
- "}"
- "("
- ")"
- "["
- "]"
-] @tombarckets
-
 ; Keywords
+
 [
  "catch"
  "class"
@@ -110,31 +69,6 @@
  "requires"
 ] @keyword
 
-"--" @operator
-"-" @operator
-"-=" @operator
-"->" @operator
-"=" @operator
-"!=" @operator
-"*" @operator
-"&" @operator
-"&&" @operator
-"+" @operator
-"++" @operator
-"+=" @operator
-"<" @operator
-"==" @operator
-">" @operator
-"||" @operator
-
-; "::" @scope.operator
-
-"." @delimiter
-";" @delimiter
-
 ; Strings
 
-; Strings
 (raw_string_literal) @string
-(string_literal) @string
-(char_literal) @string
