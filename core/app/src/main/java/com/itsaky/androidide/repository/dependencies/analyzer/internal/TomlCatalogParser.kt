@@ -1,22 +1,40 @@
 /*
  * @author android_zero
- * 包名：com.itsaky.androidide.repository.dependencies.analyzer.internal
- * 用途：基于 IntelliJ IDEA `org.toml.lang.psi` 的高精度 TOML AST 解析器。
- *       彻底抛弃正则，实现企业级强度的语法树分析和上下文坐标获取。
  */
 package com.itsaky.androidide.repository.dependencies.analyzer.internal
 
-import com.intellij.openapi.project.Project
-import com.itsaky.androidide.repository.dependencies.models.*
-import org.toml.lang.psi.*
-import org.toml.lang.psi.ext.TomlLiteralKt
-import org.toml.lang.psi.ext.TomlLiteralKind
+import com.itsaky.androidide.lexers.toml.TomlLexer
+import com.itsaky.androidide.lexers.toml.TomlParser
+import com.itsaky.androidide.lexers.toml.TomlParserBaseListener
+import com.itsaky.androidide.repository.dependencies.models.datas.CatalogLibrarys
+import com.itsaky.androidide.repository.dependencies.models.datas.CatalogPlugin
+import com.itsaky.androidide.repository.dependencies.models.datas.CatalogVersion
+import com.itsaky.androidide.repository.dependencies.models.datas.TextRange
+import com.itsaky.androidide.repository.dependencies.models.datas.VersionCatalog
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.io.File
 
-class TomlCatalogParser(private val project: Project) {
+/**
+ * <h1>基于 ANTLR4 的高精度 TOML 解析器</h1>
+ *
+ * <p>
+ * 该解析器使用 AndroidIDE 内置的 <code>com.itsaky.androidide.lexers.toml</code> (ANTLR4) 
+ * 对 Gradle Version Catalog 文件进行词法和语法分析。
+ * </p>
+ *
+ * <h3>核心特性:</h3>
+ * <ul>
+ *   <li><b>原生解析：</b> 直接使用 ANTLR4 生成的 Parser，无需外部依赖或复杂的 PSI 环境。</li>
+ *   <li><b>精准定位：</b> 利用 ANTLR Token 的 startIndex 和 stopIndex 计算精确的文件修改位置。</li>
+ *   <li><b>健壮性：</b> 能够正确处理 TOML 的标准表 (<code>[table]</code>)、内联表 (<code>{...}</code>) 以及各种字符串格式。</li>
+ * </ul>
+ */
+class TomlCatalogParser {
 
     /**
-     * 解析 TOML 文件为带有文件路径标识的 VersionCatalog 内存模型
+     * 解析 TOML 文件。
      */
     fun parse(file: File): VersionCatalog {
         if (!file.exists()) {
@@ -24,179 +42,223 @@ class TomlCatalogParser(private val project: Project) {
         }
 
         val text = file.readText()
-        // 使用您提供的工厂创建虚拟 PSI File
-        val psiFactory = TomlPsiFactory(project, false)
-        val tomlFile = psiFactory.createFile(text)
+        val charStream = CharStreams.fromString(text)
+        
+        // 词法分析
+        val lexer = TomlLexer(charStream)
+        val tokenStream = CommonTokenStream(lexer)
+        
+        // 语法分析
+        val parser = TomlParser(tokenStream)
+        // 移除默认的错误监听器
+        parser.removeErrorListeners() 
+        
+        val tree = parser.document() // document 是 TOML 语法的根规则
 
+        // 遍历语法树提取数据
+        val listener = CatalogListener(text)
+        ParseTreeWalker.DEFAULT.walk(listener, tree)
+
+        return VersionCatalog(listener.versions, listener.libraries, listener.plugins, file)
+    }
+
+    /**
+     * 内部监听器，用于遍历 AST 并构建内存模型
+     */
+    private class CatalogListener(private val sourceText: String) : TomlParserBaseListener() {
         val versions = mutableMapOf<String, CatalogVersion>()
-        val libraries = mutableMapOf<String, CatalogLibrary>()
+        val libraries = mutableMapOf<String, CatalogLibrarys>()
         val plugins = mutableMapOf<String, CatalogPlugin>()
 
-        // 遍历 PSI 树中的所有顶级 Table (比如 [versions], [libraries])
-        tomlFile.children.filterIsInstance<TomlTable>().forEach { table ->
-            val headerName = table.header.key?.text
-            when (headerName) {
-                "versions" -> parseVersions(table, versions)
-                "libraries" -> parseLibraries(table, libraries)
-                "plugins" -> parsePlugins(table, plugins)
-            }
+        // 当前正在处理的表名称，例如 "versions", "libraries"
+        private var currentSection: String = ""
+
+        // 进入标准表头：[xxx]
+        override fun enterStandard_table(ctx: TomlParser.Standard_tableContext) {
+            // key() 可能包含引号，需要清理
+            val rawKey = ctx.key().text
+            currentSection = cleanKey(rawKey)
         }
 
-        return VersionCatalog(versions, libraries, plugins, file)
-    }
-
-    /**
-     * 解析 [versions] 块
-     */
-    private fun parseVersions(table: TomlTable, versions: MutableMap<String, CatalogVersion>) {
-        table.entries.forEach { kv ->
-            val key = kv.key.text
-            val valueElement = kv.value
+        // 键值对：key = value
+        override fun exitKey_value(ctx: TomlParser.Key_valueContext) {
+            val keyContext = ctx.key()
+            val valueContext = ctx.value()
             
-            if (valueElement is TomlLiteral) {
-                val kind = TomlLiteralKt.getKind(valueElement)
-                if (kind is TomlLiteralKind.String) {
-                    val cleanValue = kind.value ?: return@forEach
-                    
-                    // 利用 PSI 提取的值范围偏移量（跳过引号等前缀）
-                    val offsets = kind.offsets.value
-                    if (offsets != null) {
-                        val absoluteStart = valueElement.textRange.startOffset + offsets.startOffset
-                        val absoluteEnd = absoluteStart + cleanValue.length
-                        val range = TextRange(absoluteStart, absoluteEnd)
-                        
-                        versions[key] = CatalogVersion(key, cleanValue, range)
-                    }
-                }
+            val key = cleanKey(keyContext.text)
+
+            when (currentSection) {
+                "versions" -> parseVersionEntry(key, valueContext)
+                "libraries" -> parseLibraryEntry(key, valueContext)
+                "plugins" -> parsePluginEntry(key, valueContext)
             }
         }
-    }
 
-    /**
-     * 解析 [libraries] 块 (完美支持 "g:a:v" 字符串模式 和 { module = "", version.ref = "" } 内联模式)
-     */
-    private fun parseLibraries(table: TomlTable, libraries: MutableMap<String, CatalogLibrary>) {
-        table.entries.forEach { kv ->
-            val alias = kv.key.text
-            val valueElement = kv.value
-            val kvRange = TextRange(kv.textRange.startOffset, kv.textRange.endOffset)
+        private fun parseVersionEntry(key: String, valueCtx: TomlParser.ValueContext) {
+            // versions 块下，value 必须是字符串
+            val stringCtx = valueCtx.string()
+            if (stringCtx != null) {
+                val rawText = stringCtx.text
+                val cleanValue = cleanString(rawText)
+                // 计算 cleanValue 在 rawText 中的偏移
+                // ANTLR 的 range 是 inclusive 的，TextRange 是 end exclusive 的
+                // 假设是基础字符串 "1.0.0"，起始+1，结束-1
+                val start = stringCtx.start.startIndex
+                val range = calculateStringContentRange(start, rawText, cleanValue)
+                
+                versions[key] = CatalogVersion(key, cleanValue, range)
+            }
+        }
 
-            when (valueElement) {
-                // 模式 1：alias = "com.example:lib:1.0.0"
-                is TomlLiteral -> {
-                    val kind = TomlLiteralKt.getKind(valueElement)
-                    if (kind is TomlLiteralKind.String) {
-                        val cleanContent = kind.value ?: return@forEach
-                        val parts = cleanContent.split(":")
-                        
-                        if (parts.size >= 3) {
-                            val group = parts[0]
-                            val name = parts[1]
-                            val version = parts[2]
-                            
-                            val offsets = kind.offsets.value
-                            if (offsets != null) {
-                                // 在纯字符串中定位 version 部分的最后偏移量
-                                val textContent = valueElement.text
-                                val verStartIdx = textContent.lastIndexOf(version)
-                                if (verStartIdx != -1) {
-                                    val absStart = valueElement.textRange.startOffset + verStartIdx
-                                    val verRange = TextRange(absStart, absStart + version.length)
-                                    libraries[alias] = CatalogLibrary(alias, group, name, null, version, verRange)
-                                }
-                            }
-                        }
+        private fun parseLibraryEntry(alias: String, valueCtx: TomlParser.ValueContext) {
+            // 情况 1: 字符串形式 "group:name:version"
+            val stringCtx = valueCtx.string()
+            if (stringCtx != null) {
+                val rawText = stringCtx.text
+                val cleanContent = cleanString(rawText)
+                val parts = cleanContent.split(":")
+                
+                if (parts.size >= 3) {
+                    val group = parts[0]
+                    val name = parts[1]
+                    val version = parts[2]
+                    
+                    // 计算版本号在字符串中的位置
+                    val versionIndex = rawText.lastIndexOf(version)
+                    if (versionIndex != -1) {
+                        val absStart = stringCtx.start.startIndex + versionIndex
+                        val range = TextRange(absStart, absStart + version.length)
+                        libraries[alias] = CatalogLibrarys(alias, group, name, null, version, range)
                     }
                 }
-                
-                // 模式 2：alias = { group = "com.example", name = "lib", version.ref = "xxx" }
-                is TomlInlineTable -> {
-                    var group: String? = null
-                    var name: String? = null
-                    var versionRef: String? = null
-                    var versionLiteral: String? = null
-                    var verRange: TextRange? = null
+                return
+            }
 
-                    valueElement.entries.forEach { inlineKv ->
-                        val k = inlineKv.key.text
-                        val vElem = inlineKv.value
-                        
-                        if (vElem is TomlLiteral) {
-                            val kind = TomlLiteralKt.getKind(vElem)
-                            if (kind is TomlLiteralKind.String) {
-                                val vCleanText = kind.value ?: return@forEach
-                                
-                                when (k) {
-                                    "group" -> group = vCleanText
-                                    "name" -> name = vCleanText
-                                    "module" -> {
-                                        val p = vCleanText.split(":")
-                                        if (p.size >= 2) {
-                                            group = p[0]
-                                            name = p[1]
-                                        }
-                                    }
-                                    "version" -> {
-                                        versionLiteral = vCleanText
-                                        val offsets = kind.offsets.value
-                                        if (offsets != null) {
-                                            val start = vElem.textRange.startOffset + offsets.startOffset
-                                            verRange = TextRange(start, start + vCleanText.length)
-                                        }
-                                    }
-                                    "version.ref" -> {
-                                        versionRef = vCleanText
-                                    }
-                                }
-                            }
+            // 情况 2: 内联表形式 { group = "...", name = "...", version = "..." }
+            val inlineTableCtx = valueCtx.inline_table()
+            if (inlineTableCtx != null) {
+                var group: String? = null
+                var name: String? = null
+                var versionLiteral: String? = null
+                var versionRef: String? = null
+                var verRange: TextRange? = null
+
+                // 遍历内联表中的键值对
+                // inline_table -> inline_table_keyvals -> inline_table_keyvals_non_empty -> key = value, ...
+                val keyvalsCtx = inlineTableCtx.inline_table_keyvals()?.inline_table_keyvals_non_empty()
+                
+                if (keyvalsCtx != null) {
+                    // keyvalsCtx 是递归结构，需要手动展开或者利用 ANTLR 访问器，
+                    // 这里为了简单，我们直接遍历其子节点或重新解析
+                    // 由于 ANTLR 生成的 Context 结构比较深，我们通过遍历所有 KeyValue 子节点来处理
+                    
+                    // 收集所有属性
+                    val properties = extractInlineProperties(keyvalsCtx)
+                    
+                    group = properties["group"]?.first
+                    name = properties["name"]?.first
+                    val module = properties["module"]?.first
+                    
+                    // 处理 module 简写
+                    if (module != null && group == null) {
+                        val parts = module.split(":")
+                        if (parts.size >= 2) {
+                            group = parts[0]
+                            name = parts[1]
                         }
                     }
 
-                    if (group != null && name != null) {
-                        libraries[alias] = CatalogLibrary(
-                            alias = alias,
-                            group = group!!,
-                            name = name!!,
-                            versionRef = versionRef,
-                            versionLiteral = versionLiteral,
-                            // 若是 version.ref 则 range 无意义（由 versions 块接管），这里放个兜底
-                            textRange = verRange ?: TextRange(0, 0)
-                        )
+                    val verPair = properties["version"]
+                    if (verPair != null) {
+                        versionLiteral = verPair.first
+                        verPair.second?.let { tokenRange ->
+                            // 重新计算纯版本号的 Range (去引号)
+                            verRange = calculateStringContentRange(tokenRange.startOffset, "\"$versionLiteral\"", versionLiteral!!)
+                        }
                     }
+                    
+                    versionRef = properties["version.ref"]?.first
+                }
+
+                if (group != null && name != null) {
+                    libraries[alias] = CatalogLibrarys(
+                        alias = alias,
+                        group = group,
+                        name = name,
+                        versionRef = versionRef,
+                        versionLiteral = versionLiteral,
+                        textRange = verRange ?: TextRange(0, 0)
+                    )
                 }
             }
         }
-    }
 
-    /**
-     * 解析 [plugins] 块
-     */
-    private fun parsePlugins(table: TomlTable, plugins: MutableMap<String, CatalogPlugin>) {
-        // table.entries.forEach { kv ->
-            // val alias = kv.key.text
-            // val valueElement = kv.value
+        private fun parsePluginEntry(alias: String, valueCtx: TomlParser.ValueContext) {
+             val inlineTableCtx = valueCtx.inline_table()
+             if (inlineTableCtx != null) {
+                 val keyvalsCtx = inlineTableCtx.inline_table_keyvals()?.inline_table_keyvals_non_empty()
+                 if (keyvalsCtx != null) {
+                     val properties = extractInlineProperties(keyvalsCtx)
+                     
+                     val id = properties["id"]?.first
+                     val versionRef = properties["version.ref"]?.first
+                     
+                     if (id != null) {
+                         plugins[alias] = CatalogPlugin(alias, id, versionRef)
+                     }
+                 }
+             }
+        }
+
+        // --- 辅助方法 ---
+
+        /**
+         * 提取内联表中的所有属性。
+         * 返回 Map<Key, Pair<CleanValue, RawTokenRange>>
+         */
+        private fun extractInlineProperties(ctx: TomlParser.Inline_table_keyvals_non_emptyContext): Map<String, Pair<String, TextRange>> {
+            val result = mutableMapOf<String, Pair<String, TextRange>>()
             
-            // if (valueElement is TomlInlineTable) {
-                // var id: String? = null
-                // var versionRef: String? = null
+            // 这是一个递归结构: key = value, [inline_table_keyvals_non_empty]
+            var current: TomlParser.Inline_table_keyvals_non_emptyContext? = ctx
+            while (current != null) {
+                val key = cleanKey(current.key().text)
+                val valCtx = current.value()
+                val stringCtx = valCtx.string()
                 
-                // valueElement.entries.forEach { inlineKv ->
-                    // val k = inlineKv.key.text
-                    // val vElem = inlineKv.value as? TomlLiteral
-                    // val vCleanText = vElem?.text?.trim('\"', '\'')
-                    
-                    // if (vCleanText != null) {
-                        // when (k) {
-                            // "id" -> id = vCleanText
-                            // "version.ref" -> versionRef = vCleanText
-                        // }
-                    // }
-                // }
-                
-                // if (id != null) {
-                    // plugins[alias] = CatalogPlugin(alias, id!!, versionRef)
-                // }
-            // }
-        // }
+                if (stringCtx != null) {
+                    val raw = stringCtx.text
+                    val clean = cleanString(raw)
+                    val range = TextRange(stringCtx.start.startIndex, stringCtx.stop.stopIndex + 1)
+                    result[key] = Pair(clean, range)
+                }
+
+                current = current.inline_table_keyvals_non_empty()
+            }
+            return result
+        }
+
+        private fun cleanKey(key: String): String {
+            return key.trim().replace("\"", "").replace("'", "")
+        }
+
+        private fun cleanString(str: String): String {
+            if (str.startsWith("\"\"\"") || str.startsWith("'''")) {
+                return str.substring(3, str.length - 3)
+            }
+            if (str.startsWith("\"") || str.startsWith("'")) {
+                return str.substring(1, str.length - 1)
+            }
+            return str
+        }
+
+        private fun calculateStringContentRange(tokenStartOffset: Int, rawText: String, cleanContent: String): TextRange {
+            val contentStart = rawText.indexOf(cleanContent)
+            if (contentStart != -1) {
+                val absStart = tokenStartOffset + contentStart
+                return TextRange(absStart, absStart + cleanContent.length)
+            }
+            return TextRange(tokenStartOffset, tokenStartOffset + rawText.length)
+        }
     }
 }

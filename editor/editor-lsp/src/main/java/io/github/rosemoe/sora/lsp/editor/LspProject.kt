@@ -24,11 +24,12 @@
 
 package io.github.rosemoe.sora.lsp.editor
 
+import io.github.rosemoe.sora.lsp.client.languageserver.ShutdownReason
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
 import io.github.rosemoe.sora.lsp.editor.diagnostics.DiagnosticsContainer
 import io.github.rosemoe.sora.lsp.events.EventEmitter
-import io.github.rosemoe.sora.lsp.events.code.CodeActionEventEvent
+import io.github.rosemoe.sora.lsp.events.code.CodeActionEvent
 import io.github.rosemoe.sora.lsp.events.color.DocumentColorEvent
 import io.github.rosemoe.sora.lsp.events.completion.CompletionEvent
 import io.github.rosemoe.sora.lsp.events.diagnostics.PublishDiagnosticsEvent
@@ -48,7 +49,6 @@ import io.github.rosemoe.sora.lsp.events.workspace.WorkSpaceApplyEditEvent
 import io.github.rosemoe.sora.lsp.events.workspace.WorkSpaceExecuteCommand
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.toFileUri
-import io.github.rosemoe.sora.util.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -56,13 +56,9 @@ import kotlinx.coroutines.cancelChildren
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ForkJoinPool
 
-/**
- * 管理 LSP 会话、编辑器实例和服务器包装器的核心类。
- */
 class LspProject(
     projectPath: String,
 ) {
-    private val TAG = "LspProject"
 
     val projectUri = FileUri(projectPath)
 
@@ -83,15 +79,11 @@ class LspProject(
     val coroutineScope =
         CoroutineScope(ForkJoinPool.commonPool().asCoroutineDispatcher() + SupervisorJob())
 
-    /**
-     * 注册一个语言服务器定义。
-     */
     fun addServerDefinition(definition: LanguageServerDefinition) {
         for (ext in definition.exts) {
             val key = ServerKey(ext, definition.name)
             if (definitions.containsKey(key)) {
-                Logger.instance(TAG).w("Server definition already exists for ext $ext with name ${definition.name}. Skipping.")
-                continue
+                throw IllegalArgumentException("Server definition already exists for ext $ext with name ${definition.name}")
             }
             definitions[key] = definition
         }
@@ -103,24 +95,14 @@ class LspProject(
 
     fun removeServerDefinition(ext: String, name: String? = null) {
         if (name == null) {
-            val iterator = definitions.keys.iterator()
-            while (iterator.hasNext()) {
-                if (iterator.next().ext == ext) {
-                    iterator.remove()
-                }
-            }
+            definitions.keys.removeIf { it.ext == ext }
         } else {
             definitions.remove(ServerKey(ext, name))
         }
     }
 
     fun getServerDefinition(ext: String, name: String? = null): LanguageServerDefinition? {
-        // 如果未指定 name，尝试查找该扩展名的任意一个定义
-        return if (name == null) {
-            definitions.entries.firstOrNull { it.key.ext == ext }?.value
-        } else {
-            definitions[ServerKey(ext, name)]
-        }
+        return definitions[ServerKey(ext, name ?: ext)]
     }
 
     fun getServerDefinitions(ext: String): Collection<LanguageServerDefinition> {
@@ -130,9 +112,6 @@ class LspProject(
             .distinctBy { it.name }
     }
 
-    /**
-     * 创建一个新的 LSP 编辑器实例。
-     */
     fun createEditor(path: String): LspEditor {
         val uri = FileUri(path)
         val editor = LspEditor(this, uri)
@@ -144,6 +123,10 @@ class LspProject(
         editors.remove(path.toFileUri())
     }
 
+    fun getEditors(): List<LspEditor> {
+        return editors.values.toList()
+    }
+
     fun getEditor(path: String): LspEditor? {
         return editors[path.toFileUri()]
     }
@@ -152,52 +135,47 @@ class LspProject(
         return editors[uri]
     }
 
-    /**
-     * 获取或创建编辑器实例。
-     * 修复：确保 URI 标准化，防止因路径格式不同导致创建多个实例。
-     */
     fun getOrCreateEditor(path: String): LspEditor {
-        val uri = path.toFileUri()
-        return editors.computeIfAbsent(uri) {
-            LspEditor(this, it)
-        }
+        return getEditor(path) ?: createEditor(path)
     }
 
     fun closeAllEditors() {
-        val editorsSnapshot = editors.values.toList()
+        val editorsSnapshot = getEditors()
         editorsSnapshot.forEach {
             it.dispose()
         }
         editors.clear()
     }
 
-    internal fun getLanguageServerWrapper(ext: String, name: String): LanguageServerWrapper? {
+    fun getLanguageServerWrapper(ext: String, name: String): LanguageServerWrapper? {
         return wrappers[ServerKey(ext, name)]
     }
 
     internal fun getOrCreateLanguageServerWrapper(ext: String, name: String = ext): LanguageServerWrapper {
         val key = ServerKey(ext, name)
         return wrappers.computeIfAbsent(key) {
-            createLanguageServerWrapper(ext, name)
+            val definition = getServerDefinition(ext, name)
+                ?: throw IllegalArgumentException("No server definition for extension $ext with name $name")
+            LanguageServerWrapper(definition, this)
         }
     }
 
     internal fun createLanguageServerWrapper(ext: String, name: String): LanguageServerWrapper {
         val definition = getServerDefinition(ext, name)
-            ?: throw IllegalArgumentException("No server definition found for extension '$ext' with name '$name'. definitions: ${definitions.keys}")
-        
+            ?: throw IllegalArgumentException("No server definition for extension $ext with name $name")
         val wrapper = LanguageServerWrapper(definition, this)
+        wrappers[ServerKey(ext, name)] = wrapper
         return wrapper
     }
 
-    internal fun getLanguageServerWrappers(ext: String): List<LanguageServerWrapper> {
+    fun getLanguageServerWrappers(ext: String): List<LanguageServerWrapper> {
         return wrappers.entries.filter { it.key.ext == ext }.map { it.value }
     }
 
     fun dispose() {
         closeAllEditors()
         wrappers.values.forEach {
-            it.stop(true)
+            it.stop(true, ShutdownReason.UNUSED)
         }
         wrappers.clear()
         definitions.clear()
@@ -218,7 +196,7 @@ class LspProject(
             ::ApplyEditsEvent, ::CompletionEvent,
             ::PublishDiagnosticsEvent, ::FullFormattingEvent,
             ::RangeFormattingEvent, ::QueryDocumentDiagnosticsEvent,
-            ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEventEvent,
+            ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEvent,
             ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand,
             ::InlayHintEvent, ::DocumentHighlightEvent,
             ::DocumentColorEvent

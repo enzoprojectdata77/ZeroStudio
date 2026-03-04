@@ -60,7 +60,11 @@ class MonitoringStreamProvider(
     }
 
     override val inputStream: InputStream get() = monitoredInput
+    
     override val outputStream: OutputStream get() = monitoredOutput
+
+    override val isClosed: Boolean
+        get() = delegate.isClosed
 
     override fun close() {
         LspStatusMonitor.updateStatus(serverId, serverName, LspStatusMonitor.ServerStatus.STOPPED)

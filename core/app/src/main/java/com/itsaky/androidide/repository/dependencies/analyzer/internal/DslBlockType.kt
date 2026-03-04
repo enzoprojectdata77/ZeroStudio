@@ -1,6 +1,5 @@
 /*
  * @author android_zero
- * 包名：com.itsaky.androidide.repository.dependencies.analyzer.internal
  * 用途：辅助分析 Gradle/Kotlin DSL 的语法块层级。
  */
 package com.itsaky.androidide.repository.dependencies.analyzer.internal

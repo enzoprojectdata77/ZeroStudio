@@ -99,7 +99,6 @@ class BaseLspConnector(
 
             // UI 线程：组装语言代理与功能模块
             withContext(Dispatchers.Main) {
-                // 【核心修复】不手动实例化 LspLanguage，而是将 wrapper 喂给已内建代理完成的 LspEditor！
                 editorInstance.wrapperLanguage = baseLang
                 
                 // 将真实的 codeEditor 赋给 editorInstance 即可让其内部的机制激活

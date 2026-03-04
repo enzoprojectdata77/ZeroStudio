@@ -8,8 +8,8 @@
  *
  *  AndroidIDE is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
@@ -97,6 +97,9 @@ class LuaServer : BaseLspServer() {
         private var serverThread: Future<*>? = null
         private val executorService: ExecutorService = Executors.newCachedThreadPool()
         
+        @Volatile
+        private var _isClosed = true
+
         private val clientOutputStream = PipedOutputStream()
         private val serverInputStream = PipedInputStream()
         
@@ -113,6 +116,7 @@ class LuaServer : BaseLspServer() {
         }
 
         override fun start() {
+            _isClosed = false
             serverThread = executorService.submit {
                 try {
                     LOG.info("Starting LuaLanguageServer (In-Process)...")
@@ -136,14 +140,19 @@ class LuaServer : BaseLspServer() {
                     LOG.info("LuaLanguageServer thread was interrupted.")
                 } catch (e: Exception) {
                     LOG.error("LuaLanguageServer crashed or stopped", e)
+                } finally {
+                    _isClosed = true
                 }
             }
         }
 
         override val inputStream: InputStream get() = clientInputStream
         override val outputStream: OutputStream get() = clientOutputStream
+        
+        override val isClosed: Boolean get() = _isClosed
 
         override fun close() {
+            _isClosed = true
             serverThread?.cancel(true)
             try {
                 clientInputStream.close()

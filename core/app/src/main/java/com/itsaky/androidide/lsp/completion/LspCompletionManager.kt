@@ -1,105 +1,132 @@
+/*
+ *  This file is part of AndroidIDE.
+ *
+ *  AndroidIDE is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  AndroidIDE is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.itsaky.androidide.lsp.completion
 
-import android.os.Bundle
-import com.itsaky.androidide.lsp.LspManager // 假设你有一个 LSP 管理器
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EventReceiver
 import io.github.rosemoe.sora.event.Unsubscribe
-import io.github.rosemoe.sora.lang.completion.CompletionPublisher
-import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.lsp.editor.LspEditor
+import io.github.rosemoe.sora.lsp.editor.completion.LspCompletionItem
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import kotlinx.coroutines.*
 import org.eclipse.lsp4j.CompletionParams
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.TextDocumentIdentifier
 
+/**
+ * 独立的 LSP 代码补全管理器。
+ * @author android_zero
+ */
 class LspCompletionManager(
-    private val editor: CodeEditor,
-    private val lspRequestManager: RequestManager
+    private val lspEditor: LspEditor
 ) : EventReceiver<ContentChangeEvent> {
 
-    private val scope = CoroutineScope(Dispatchers.IO + Job())
+    private val editor = lspEditor.editor ?: throw IllegalStateException("CodeEditor is not attached")
+    private val lspRequestManager = lspEditor.requestManager
+    
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var searchJob: Job? = null
+    
+    // 维护 Adapter 的局部引用，解决 adapter 字段受保护无法访问的问题
+    private val materialAdapter = MaterialCompletionAdapter(editor.context)
 
     init {
-        // 设置自定义 Adapter
+        // 为原生的补全弹窗注入 Material 风格的代码补全适配器
         val completionWindow = editor.getComponent(EditorAutoCompletion::class.java)
-        completionWindow.setAdapter(MaterialCompletionAdapter(editor.context))
+        completionWindow.setAdapter(materialAdapter)
         
-        // 注册内容变更监听
-        editor.subscribeEvent(ContentChangeEvent::class.java, this)
+        // 若要手动覆盖或完全接管原生逻辑，可取消注释。否则 LSP 语言会自动提供补全结果。
+        // editor.subscribeEvent(ContentChangeEvent::class.java, this)
     }
 
     override fun onReceive(event: ContentChangeEvent, unsubscribe: Unsubscribe) {
-        // 仅在插入文本或删除文本时触发，重置文本时忽略
+        if (lspRequestManager == null || !lspEditor.isConnected) return
+        
         if (event.action == ContentChangeEvent.ACTION_SET_NEW_TEXT) return
         
-        // 简单的 Debounce (防抖)，避免每个字符都请求
         searchJob?.cancel()
         searchJob = scope.launch {
-            delay(150) // 等待 150ms
+            delay(150) 
 
-            // 准备参数
             val cursor = editor.cursor
             val line = cursor.leftLine
             val column = cursor.leftColumn
-            val uri = "file://" + "当前文件路径" // TODO: 获取当前编辑器文件的真实 URI
+            val uri = lspEditor.uri.toString()
 
             val params = CompletionParams().apply {
                 textDocument = TextDocumentIdentifier(uri)
                 position = Position(line, column)
-                // context = CompletionContext(...) // 可以设置触发字符
             }
 
             try {
-                // 1. 发送 textDocument/completion 请求
-                val future = lspRequestManager.completion(params)
-                if (future == null) return@launch
-
-                val result = future.get() // 阻塞获取结果 (在 IO 线程)
+                val future = lspRequestManager.completion(params) ?: return@launch
+                val result = future.get() 
                 
-                // 2. 解析结果 (Either<List<CompletionItem>, CompletionList>)
-                val items = if (result.isLeft) {
-                    result.left
+                val items: List<org.eclipse.lsp4j.CompletionItem> = if (result.isLeft) {
+                    result.left ?: emptyList()
                 } else {
-                    result.right.items
+                    result.right?.items ?: emptyList()
                 }
 
-                // 3. 转换为 LspCompletionItem
+                if (items.isEmpty()) return@launch
+
+                val prefixLength = computePrefixLength(line, column)
+
                 val mappedItems = items.map { lspItem ->
-                    // 预加载 Drawable 以提高列表滑动性能
-                    val iconRes = SymbolIconMapper.getIconResId(lspItem.kind)
-                    val drawable = androidx.core.content.ContextCompat.getDrawable(editor.context, iconRes)
-                    LspCompletionItem(lspItem, drawable)
+                    LspCompletionItem(lspItem, lspEditor.eventManager, prefixLength)
                 }
 
-                // 4. 在 UI 线程更新列表
                 withContext(Dispatchers.Main) {
                     val completionWindow = editor.getComponent(EditorAutoCompletion::class.java)
                     
-                    // 这里 Sora Editor 的 API 有点特殊
-                    // 我们通常需要通过 Language 类或者直接操作 Publisher
-                    // 为了演示，这里模拟 Publisher 的行为
+                    // 使用局部维护的 materialAdapter，绕过访问权限限制
+                    materialAdapter.attachValues(completionWindow, mappedItems)
+                    materialAdapter.notifyDataSetChanged()
                     
-                    // 注意：Sora Editor 0.20+ 通常通过 setEditorLanguage 里的 requireAutoComplete 回调来处理
-                    // 如果我们是外挂式的，可能需要 hack 一下或者手动调用 adapter 的 update
-                    
-                    // 假设我们通过某种方式获取到了 Publisher (通常在 Language.requireAutoComplete 中)
-                    // 如果你是完全接管，可以直接操作 Adapter 数据源并 show
-                    
-                    /* 
-                       正确做法是：你的 Language 实现类的 requireAutoComplete 方法中，
-                       调用上述逻辑，然后 publisher.addItems(mappedItems) 
-                    */
+                    if (!completionWindow.isShowing) {
+                        completionWindow.show()
+                    }
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                if (e !is CancellationException) {
+                    e.printStackTrace()
+                }
             }
         }
     }
     
+    private fun computePrefixLength(line: Int, column: Int): Int {
+        // 获取标准的 String，避免 ContentLine 在 Kotlin 中索引重载引发的歧义报错
+        val lineText = editor.text.getLineString(line)
+        var length = 0
+        for (i in column - 1 downTo 0) {
+            val ch = lineText[i]
+            if (ch.isLetterOrDigit() || ch == '_') {
+                length++
+            } else {
+                break
+            }
+        }
+        return length
+    }
+    
     fun dispose() {
+        searchJob?.cancel()
         scope.cancel()
     }
 }

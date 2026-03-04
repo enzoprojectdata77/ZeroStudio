@@ -48,7 +48,6 @@ class SocketStreamProvider(
     /**
      * @see StreamConnectionProvider.start
      * @throws IOException if the socket connection fails.
-     * @author android_zero
      */
     @Throws(IOException::class)
     override fun start() {
@@ -82,6 +81,12 @@ class SocketStreamProvider(
      */
     override val outputStream: OutputStream
         get() = socket?.outputStream ?: throw IOException("Socket is not connected or has been closed.")
+
+    /**
+     * Returns true if the socket is null or closed.
+     */
+    override val isClosed: Boolean
+        get() = socket?.isClosed ?: true
 
     /**
      * @see StreamConnectionProvider.close

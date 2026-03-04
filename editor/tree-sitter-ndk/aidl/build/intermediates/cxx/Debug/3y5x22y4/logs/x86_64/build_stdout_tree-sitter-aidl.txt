@@ -1,0 +1,6 @@
+ninja: Entering directory `/root/android-tree-sitter/grammar-modules/aidl/.cxx/Debug/3y5x22y4/x86_64'
+[1/2] Building CXX object CMakeFiles/tree-sitter-aidl.dir/tree-sitter-aidl.cpp.o
+WARNING: linker: Warning: failed to find generated linker configuration from "/linkerconfig/ld.config.txt"
+[2/2] Linking CXX shared library /root/android-tree-sitter/grammar-modules/aidl/build/intermediates/cxx/Debug/3y5x22y4/obj/x86_64/libtree-sitter-aidl.so
+WARNING: linker: Warning: failed to find generated linker configuration from "/linkerconfig/ld.config.txt"
+WARNING: linker: Warning: failed to find generated linker configuration from "/linkerconfig/ld.config.txt"

@@ -52,7 +52,6 @@ class ProcessStreamProvider(
     /**
      * @see StreamConnectionProvider.start
      * @throws IOException if the process fails to start.
-     * @author android_zero
      */
     @Throws(IOException::class)
     override fun start() {
@@ -90,6 +89,12 @@ class ProcessStreamProvider(
      */
     override val outputStream: OutputStream
         get() = process?.outputStream ?: throw IOException("Process is not active or has already exited.")
+
+    /**
+     * Returns true if the process is null (not started/closed) or not alive.
+     */
+    override val isClosed: Boolean
+        get() = process?.isAlive != true
 
     /**
      * @see StreamConnectionProvider.close

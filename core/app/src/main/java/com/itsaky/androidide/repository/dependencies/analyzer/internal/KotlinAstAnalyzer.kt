@@ -1,12 +1,11 @@
 /*
  * @author android_zero
- * 包名：com.itsaky.androidide.repository.dependencies.analyzer.internal
- * 用途：针对 build.gradle.kts 的高精度 AST 分析器。
- * 依赖：com.itsaky.androidide.treesitter.kotlin.TSLanguageKotlin
  */
 package com.itsaky.androidide.repository.dependencies.analyzer.internal
 
-import com.itsaky.androidide.repository.dependencies.models.*
+import com.itsaky.androidide.repository.dependencies.models.datas.*
+import com.itsaky.androidide.repository.dependencies.models.interfaces.*
+import com.itsaky.androidide.repository.dependencies.models.enums.*
 import com.itsaky.androidide.treesitter.TSNode
 import com.itsaky.androidide.treesitter.TSParser
 import com.itsaky.androidide.treesitter.kotlin.TSLanguageKotlin
@@ -27,7 +26,6 @@ class KotlinAstAnalyzer : ScriptAnalyzer {
         
         val rootNode = tree.rootNode
 
-        // 递归遍历 AST
         fun traverse(node: TSNode, currentBlock: String?) {
             if (!node.canAccess()) return
             
@@ -36,7 +34,6 @@ class KotlinAstAnalyzer : ScriptAnalyzer {
             if (node.type == "call_expression") {
                 val idNode = node.getChild(0)
                 if (idNode != null && (idNode.type == "identifier" || idNode.type == "simple_identifier")) {
-                    // TreeSitter 在 AndroidIDE 中的 byte offset 需除以 2 转换为 Char index
                     val funcName = text.substring(idNode.startByte / 2, idNode.endByte / 2)
                     
                     if (funcName == "dependencies" || funcName == "repositories" || funcName == "pluginManagement") {
@@ -94,7 +91,8 @@ class KotlinAstAnalyzer : ScriptAnalyzer {
                                 version = version,
                                 declaredFile = file,
                                 declarationType = DeclarationType.STRING_LITERAL,
-                                versionTextRange = TextRange(verStart, verStart + version.length),
+                                // 修复：使用 versionDefinitionRange
+                                versionDefinitionRange = TextRange(verStart, verStart + version.length),
                                 statementTextRange = TextRange(callNode.startByte / 2, callNode.endByte / 2)
                             ))
                         }
@@ -114,7 +112,7 @@ class KotlinAstAnalyzer : ScriptAnalyzer {
                         }
                     }
                 }
-                break // 简化处理：通常只分析第一个参数
+                break 
             }
         }
     }

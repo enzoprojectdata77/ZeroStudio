@@ -66,6 +66,8 @@
     "@json.json",
     "@kotlin.json",
     "@xml.json",
+    "@toml.json",
+    "@cmake.json",
     "@log.json"
   ]
 }

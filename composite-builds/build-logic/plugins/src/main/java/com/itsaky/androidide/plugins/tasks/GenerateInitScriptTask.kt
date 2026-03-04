@@ -59,7 +59,7 @@ abstract class GenerateInitScriptTask : DefaultTask() {
     }
 
     dependencies {
-        classpath  name: "gradle-plugin-2.7.1-beta"
+        classpath  name: "zerostudio-gradle-plugin-1.0.0"
     }
 }
       

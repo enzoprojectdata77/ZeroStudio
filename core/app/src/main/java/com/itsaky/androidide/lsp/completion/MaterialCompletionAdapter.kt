@@ -1,21 +1,48 @@
+/*
+ *  This file is part of AndroidIDE.
+ *
+ *  AndroidIDE is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  AndroidIDE is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.itsaky.androidide.lsp.completion
 
 import android.content.Context
-import android.view.LayoutInflater
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.text.Spannable
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AbsListView
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContextCompat
-import com.itsaky.androidide.R
+import com.itsaky.androidide.lsp.ui.SymbolIconMapper
+import com.itsaky.androidide.syntax.colorschemes.SchemeAndroidIDE
 import io.github.rosemoe.sora.widget.component.EditorCompletionAdapter
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
+/**
+ * Material Design 3 风格的代码补全列表适配器。
+ * @author android_zero
+ */
 class MaterialCompletionAdapter(private val context: Context) : EditorCompletionAdapter() {
 
     override fun getItemHeight(): Int {
-        // 48dp 转 px，符合 M3 最小触摸目标
-        return (48 * context.resources.displayMetrics.density).toInt()
+        // 40dp 转 px，符合 M3 紧凑列表高度
+        return (40 * context.resources.displayMetrics.density).toInt()
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup, isCurrentCursorPosition: Boolean): View {
@@ -23,7 +50,7 @@ class MaterialCompletionAdapter(private val context: Context) : EditorCompletion
         val holder: ViewHolder
 
         if (convertView == null) {
-            view = LayoutInflater.from(context).inflate(R.layout.layout_completion_item_m3, parent, false)
+            view = createItemView()
             holder = ViewHolder(view)
             view.tag = holder
         } else {
@@ -31,61 +58,135 @@ class MaterialCompletionAdapter(private val context: Context) : EditorCompletion
             holder = view.tag as ViewHolder
         }
 
-        val item = getItem(position) as LspCompletionItem
-        val lspItem = item.lspItem
+        val item = getItem(position)
 
-        // 1. 设置主文本 (Label)
-        holder.tvLabel.text = item.label
+        // 设置主文本 (Label) - 支持高亮 Spannable
+        if (item.label is Spannable) {
+            holder.tvLabel.text = item.label
+        } else {
+            holder.tvLabel.text = item.label
+        }
         
-        // 2. 设置子内容 (Detail / Signature)
-        // LSP 的 detail 通常包含函数签名，如 "(a: Int): Unit"
+        // 弃用线 (Strike-through)
+        if (item.deprecated) {
+            holder.tvLabel.paintFlags = holder.tvLabel.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+        } else {
+            holder.tvLabel.paintFlags = holder.tvLabel.paintFlags and android.graphics.Paint.STRIKE_THRU_TEXT_FLAG.inv()
+        }
+        
+        // 设置子内容 (Detail / Signature)
         if (!item.desc.isNullOrEmpty()) {
             holder.tvDetail.text = item.desc
+            holder.tvDetail.visibility = View.VISIBLE
+        } else if (!item.detail.isNullOrEmpty()) {
+            holder.tvDetail.text = item.detail
             holder.tvDetail.visibility = View.VISIBLE
         } else {
             holder.tvDetail.visibility = View.GONE
         }
 
-        // 3. 设置右侧类型文本
-        holder.tvType.text = SymbolIconMapper.getKindName(item.getKind())
+        // 设置右侧类型文本
+        val kind = item.kind
+        holder.tvType.text = kind?.name ?: "Text"
 
-        // 4. 设置左侧图标
-        // 优先使用我们传递进来的 Drawable
-        if (item.getDrawble() != null) {
-            holder.imgSymbol.setImageDrawable(item.getDrawble())
+        // 设置左侧图标
+        if (item.icon != null) {
+            holder.imgSymbol.setImageDrawable(item.icon)
         } else {
-            // 如果缓存为空，实时获取资源 ID
-            holder.imgSymbol.setImageResource(SymbolIconMapper.getIconResId(item.getKind()))
+            holder.imgSymbol.setImageResource(SymbolIconMapper.getIconResId(kind))
         }
 
-        // 5. 处理高亮状态 (当前选中项)
+        // 处理高亮主题状态
         updateThemeColors(holder, view, isCurrentCursorPosition)
 
         return view
     }
 
     private fun updateThemeColors(holder: ViewHolder, view: View, isSelected: Boolean) {
-        // 这里应该从 EditorColorScheme 获取颜色，或者使用 M3 属性
-        // 为了演示，这里使用硬编码或简单的逻辑
+        val scheme = colorScheme ?: return
         
+        val labelColor = getThemeColor(EditorColorScheme.COMPLETION_WND_TEXT_PRIMARY)
+        val detailColor = getThemeColor(EditorColorScheme.COMPLETION_WND_TEXT_SECONDARY)
+        val selectedBgColor = getThemeColor(SchemeAndroidIDE.COMPLETION_WND_BG_CURRENT_ITEM)
+
         if (isSelected) {
-            // 选中状态背景 (M3 Surface Container High)
-            view.setBackgroundColor(0xFFE0E0E0.toInt()) // 示例：浅灰色
-            holder.tvLabel.setTextColor(0xFF000000.toInt()) 
+            val radius = 8 * context.resources.displayMetrics.density
+            val drawable = GradientDrawable().apply {
+                setColor(selectedBgColor)
+                cornerRadius = radius
+            }
+            view.background = drawable
         } else {
-            // 普通状态背景
-            view.setBackgroundColor(0x00000000) // 透明
-            holder.tvLabel.setTextColor(0xFF212121.toInt()) // 示例：深灰色
+            view.setBackgroundColor(Color.TRANSPARENT)
         }
         
-        // 类型文字通常稍微淡一点
-        // holder.tvType.setTextColor(...)
+        // 确保非 Span 文本保持主题色
+        if (holder.tvLabel.text !is Spannable) {
+            holder.tvLabel.setTextColor(labelColor)
+        }
+        holder.tvDetail.setTextColor(detailColor)
+        holder.tvType.setTextColor(detailColor)
     }
 
-    private class ViewHolder(view: View) {
-        val imgSymbol: ImageView = view.findViewById(R.id.imgSymbol)
-        val tvLabel: TextView = view.findViewById(R.id.tvLabel)
-        val tvDetail: TextView = view.findViewById(R.id.tvDetail)
-        val tvType: TextView = view.findViewById(R.id.tvType)
+    private class ViewHolder(val root: View) {
+        val imgSymbol: ImageView = root.findViewById(1)
+        val tvLabel: TextView = root.findViewById(2)
+        val tvDetail: TextView = root.findViewById(3)
+        val tvType: TextView = root.findViewById(4)
+    }
+
+    private fun createItemView(): View {
+        val dp = context.resources.displayMetrics.density
+        
+        val root = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding((12 * dp).toInt(), 0, (12 * dp).toInt(), 0)
+            layoutParams = AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, itemHeight)
+        }
+
+        val icon = ImageView(context).apply {
+            id = 1
+            layoutParams = LinearLayout.LayoutParams((18 * dp).toInt(), (18 * dp).toInt()).apply {
+                marginEnd = (10 * dp).toInt()
+            }
+            scaleType = ImageView.ScaleType.FIT_CENTER
+        }
+
+        val label = TextView(context).apply {
+            id = 2
+            textSize = 14f
+            typeface = Typeface.MONOSPACE
+            isSingleLine = true
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+
+        val detail = TextView(context).apply {
+            id = 3
+            textSize = 12f
+            isSingleLine = true
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginStart = (8 * dp).toInt()
+            }
+        }
+
+        val type = TextView(context).apply {
+            id = 4
+            textSize = 11f
+            isSingleLine = true
+            gravity = Gravity.END
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                marginStart = (8 * dp).toInt()
+            }
+        }
+
+        root.addView(icon)
+        root.addView(label)
+        root.addView(detail)
+        root.addView(type)
+
+        return root
     }
 }

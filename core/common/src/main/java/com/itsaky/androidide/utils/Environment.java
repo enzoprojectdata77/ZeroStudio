@@ -50,12 +50,15 @@ public final class Environment {
   public static File PREFIX;
   public static File HOME;
   public static File ANDROIDIDE_HOME;
+  public static File ANDROID_NDK_HOME;
+  public static File NDK_HOME;
   public static File ANDROIDIDE_UI;
   public static File JAVA_HOME;
   public static File ANDROID_HOME;
   public static File KOTLINC_HOME;
   public static File KOTLIN_LSP_HOME;
   public static File COMPOSE_HOME;
+  public static File PLUGIN_HOME;
   public static File TMP_DIR;
   public static File BIN_DIR;
   public static File LIB_DIR;
@@ -122,9 +125,14 @@ public final class Environment {
     LOTTIE_EXPORT_DIR = mkdirIfNotExits(new File(PROJECTS_DIR, "LottieAnimation"));
     
     ANDROID_HOME = new File(HOME, "android-sdk");
-    KOTLINC_HOME = mkdirIfNotExits(new File(HOME, "android-sdk/kotlinc"));
+    ANDROID_NDK_HOME = new File(ANDROID_HOME, "ndk"); 
+    // File ndkBaseDir = new File(ANDROID_HOME, "ndk");
+    // ANDROID_NDK_HOME = findLatestNdkVersion(ndkBaseDir);
+    NDK_HOME = ANDROID_NDK_HOME;
+    KOTLINC_HOME = mkdirIfNotExits(new File(HOME, ".kotlinc"));
     
     File idePluginDir = mkdirIfNotExits(new File(ANDROIDIDE_HOME, "ideplugin"));
+    PLUGIN_HOME = mkdirIfNotExits(new File(ANDROIDIDE_HOME, "plugin"));
     KOTLIN_LSP_HOME = mkdirIfNotExits(new File(idePluginDir, "kotlinLanguageServices"));
     KOTLIN_LSP_LAUNCHER = new File(KOTLIN_LSP_HOME, "bin/kotlin-language-server");
     KOTLIN_LSP_LIBS_JAR_DIR = new File(KOTLIN_LSP_HOME, "lib");
@@ -138,13 +146,13 @@ public final class Environment {
 
     setExecutable(JAVA);
     setExecutable(BASH_SHELL);
-    // if(SHELL_KOTLIN_LSP.exists()) {
-        // setExecutable(SHELL_KOTLIN_LSP);
-    // }
-
     // 设置 Java System Properties (供 JVM 内部使用)
     System.setProperty("user.home", HOME.getAbsolutePath());
     System.setProperty("android.home", ANDROID_HOME.getAbsolutePath());
+    System.setProperty("ANDROID_HOME", ANDROID_HOME.getAbsolutePath());
+    System.setProperty("ANDROID_NDK_ROOT", ANDROID_HOME.getAbsolutePath());
+    System.setProperty("ANDROID_NDK_HOME", ANDROID_HOME.getAbsolutePath());
+    System.setProperty("NDK_HOME", ANDROID_HOME.getAbsolutePath());
     System.setProperty("java.home", JAVA_HOME.getAbsolutePath());
     System.setProperty("gradle.user.home", GRADLE_USER_HOME.getAbsolutePath());
     System.setProperty("kotlin.home", KOTLINC_HOME.getAbsolutePath());
@@ -194,6 +202,20 @@ public final class Environment {
         LOG.error("Critical error injecting native environment", t);
     }
   }
+  
+  //因为不知道开发者会安装什么版本ndk，所以只能模糊化，通过一些技巧取得ndk版本号
+// private static File findLatestNdkVersion(File ndkBaseDir) {
+    // if (ndkBaseDir.exists() && ndkBaseDir.isDirectory()) {
+        // File[] subDirs = ndkBaseDir.listFiles(File::isDirectory);
+        // if (subDirs != null && subDirs.length > 0) {
+            // // 按名称倒序排序（通常版本号越大，字符串排序越靠后）
+            // java.util.Arrays.sort(subDirs, (f1, f2) -> f2.getName().compareTo(f1.getName()));
+            // return subDirs[0]; // 返回版本号最大的那个文件夹
+        // }
+    // }
+    // // 如果找不到子目录，回退到根目录（虽然这可能导致 Gradle 报错，但总比 null 好）
+    // return ndkBaseDir;
+// }
 
   public static File mkdirIfNotExits(File in) {
     if (in != null && !in.exists()) {
@@ -221,6 +243,8 @@ public final class Environment {
 
     env.put("HOME", HOME.getAbsolutePath());
     env.put("ANDROID_HOME", ANDROID_HOME.getAbsolutePath());
+    env.put("ANDROID_NDK_HOME", ANDROID_NDK_HOME.getAbsolutePath());
+    env.put("NDK_HOME", NDK_HOME.getAbsolutePath());
     env.put("KOTLINC_HOME", KOTLINC_HOME.getAbsolutePath());
     env.put("KOTLIN_LSP_HOME", KOTLIN_LSP_HOME.getAbsolutePath());
     env.put("ANDROID_SDK_ROOT", ANDROID_HOME.getAbsolutePath());

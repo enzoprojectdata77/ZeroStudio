@@ -72,39 +72,3 @@ object MavenMetadataCache {
         return null
     }
 }
-
-object MavenMetadataFetcher {
-    /**
-     * 对拼接后的 URL 进行网络拉取与解析。
-     * 功能：具备缓存拦截、超时设定与异常处理。
-     */
-    suspend fun fetchMetadata(gavPath: String, repoUrl: String): MavenMetadata? = withContext(Dispatchers.IO) {
-        val formattedRepo = if (repoUrl.endsWith("/")) repoUrl else "$repoUrl/"
-        val urlString = "$formattedRepo$gavPath/maven-metadata.xml"
-        val cacheKey = urlString
-
-        // 命中缓存直接返回
-        MavenMetadataCache.get(cacheKey)?.let { return@withContext it }
-
-        // 网络请求
-        try {
-            val url = URL(urlString)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 3000 // 3秒超时，快速失败以便切换下一个源
-            connection.readTimeout = 3000
-
-            if (connection.responseCode == 200) {
-                val xmlContent = connection.inputStream.bufferedReader().use { it.readText() }
-                val metadata = MavenMetadataCache.parseXmlToMetadata(xmlContent)
-                if (metadata != null) {
-                    MavenMetadataCache.put(cacheKey, xmlContent, metadata)
-                    return@withContext metadata
-                }
-            }
-        } catch (e: Exception) {
-            // 网络异常或超时
-        }
-        return@withContext null
-    }
-}

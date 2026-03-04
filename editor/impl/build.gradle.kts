@@ -48,6 +48,10 @@ dependencies {
     api(libs.androidide.ts.kotlin)
     api(libs.androidide.ts.log)
     api(libs.androidide.ts.xml)
+    api(libs.androidide.ts.c)
+    api(libs.androidide.ts.cpp)
+    api(libs.androidide.ts.python)
+    
     api(libs.androidx.collection)
     api(libs.common.editor)
     
@@ -85,14 +89,12 @@ dependencies {
     implementation(projects.java.lsp)
     implementation(projects.utilities.shared)
     implementation(projects.xml.lsp)
-
-    implementation(files("libs/tree-sitter-c-release.aar")) // c language
-    implementation(files("libs/tree-sitter-c_sharp-release.aar")) //c# language
-    implementation(files("libs/tree-sitter-cpp-release.aar")) //c++ language
-    implementation(files("libs/tree-sitter-css-release.aar")) //css language
-    implementation(files("libs/tree-sitter-html-release.aar")) //html language
-    implementation(files("libs/tree-sitter-javascript-release.aar")) //javaScript language
-
+    implementation(projects.editor.treeSitterNdk.toml)
+    implementation(projects.editor.treeSitterNdk.cmake)
+    
+    implementation(projects.editor.treeSitterNdk.treeSitterJnilibs)
+    implementation(files("libs/tree-sitter-xxx.jar"))
+    
     testImplementation(libs.tests.junit)
     testImplementation(libs.tests.google.truth)
     testImplementation(libs.tests.robolectric)

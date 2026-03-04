@@ -69,6 +69,9 @@ public class EditorBottomSheetTabAdapter extends FragmentStateAdapter {
        
     this.fragments.add(new Tab(fragmentActivity.getString(R.string.title_regular_preview), 
        com.itsaky.androidide.lsp.editor.LspEditorFragment.class, ++index));
+       
+    this.fragments.add(new Tab(fragmentActivity.getString(R.string.title_regular_preview), 
+       com.itsaky.androidide.repository.dependencies.analyzer.ui.DependencyUpdateFragment.class, ++index));
 
     //诊断
      this.fragments.add(new Tab(fragmentActivity.getString(R.string.view_diags),

@@ -137,6 +137,10 @@ abstract class BaseEditorActivity : EdgeToEdgeIDEActivity(), TabLayout.OnTabSele
   protected var editorBottomSheet: BottomSheetBehavior<out View?>? = null
   protected val memoryUsageWatcher = MemoryUsageWatcher()
   protected val pidToDatasetIdxMap = MutableIntIntMap(initialCapacity = 3)
+  private val bottomSheetHeaderHideReasons = mutableSetOf<String>()
+  private var bottomSheetCardVisibilitySnapshot: Int = View.VISIBLE
+  private var bottomSheetHeaderVisibilitySnapshot: Int = View.VISIBLE
+
 
   var isDestroying = false
     protected set
@@ -308,6 +312,38 @@ abstract class BaseEditorActivity : EdgeToEdgeIDEActivity(), TabLayout.OnTabSele
       }
     }
   }
+
+  protected fun releaseBottomSheetHeaderHide(reason: String) {
+    runOnUiThread {
+      if (_binding == null) {
+        return@runOnUiThread
+      }
+      val wasRemoved = bottomSheetHeaderHideReasons.remove(reason)
+      if (!wasRemoved || bottomSheetHeaderHideReasons.isNotEmpty()) {
+        return@runOnUiThread
+      }
+      val bottomSheetBinding = content.bottomSheet.binding
+      bottomSheetBinding.cardView.visibility = bottomSheetCardVisibilitySnapshot
+      bottomSheetBinding.headerContainer.visibility = bottomSheetHeaderVisibilitySnapshot
+    }
+  }
+  protected fun requestBottomSheetHeaderHide(reason: String) {
+    runOnUiThread {
+      if (_binding == null) {
+        return@runOnUiThread
+      }
+      val wasAdded = bottomSheetHeaderHideReasons.add(reason)
+      if (!wasAdded || bottomSheetHeaderHideReasons.size > 1) {
+        return@runOnUiThread
+      }
+      val bottomSheetBinding = content.bottomSheet.binding
+      bottomSheetCardVisibilitySnapshot = bottomSheetBinding.cardView.visibility
+      bottomSheetHeaderVisibilitySnapshot = bottomSheetBinding.headerContainer.visibility
+      bottomSheetBinding.cardView.visibility = View.INVISIBLE
+      bottomSheetBinding.headerContainer.visibility = View.INVISIBLE
+    }
+  }
+
 
   @Subscribe(threadMode = MAIN)
   open fun onInstallationResult(event: InstallationResultEvent) {

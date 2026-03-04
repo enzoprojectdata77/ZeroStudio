@@ -31,14 +31,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import kotlin.io.ConstantsKt;
 import kotlin.io.FilesKt;
@@ -66,7 +71,9 @@ public class ToolsManager {
       extractAndroidJar();
       extractColorScheme(app);
       writeInitScript();
-
+      
+      installExtraTools(); 
+      
       deleteIdeenv();
     }).whenComplete((__, error) -> {
       if (error != null) {
@@ -77,6 +84,28 @@ public class ToolsManager {
         onFinish.run();
       }
     });
+  }
+  
+    /**
+   * 专门用于集中管理 Assets 解压/安装的私有方法
+   */
+  private static void installExtraTools() {
+  
+  //解压构建所需logger插件
+  installAsset("data/common/logger-runtime.aar",
+   new File(Environment.PLUGIN_HOME , "logger"), false, 0);
+  
+  installAsset("data/common/plugin-api.jar", 
+  Environment.PLUGIN_HOME, false, 0);
+  
+  installAsset("data/common/zerostudio-gradle-plugin-1.0.0.jar", 
+  new File(Environment.ANDROIDIDE_HOME , "init"), false, 0);
+  
+  //解压compose预览所需文件
+  installAsset("compose/compose-jars.zip",
+   Environment.COMPOSE_HOME, true, 0);
+   
+  
   }
 
   private static void extractColorScheme(final BaseApplication app) {
@@ -221,4 +250,190 @@ public class ToolsManager {
     return ResourceUtils.readAssets2String(getCommonAsset("androidide.init.gradle"));
   }
 
-}
+  /**
+   * Universal method to install/extract assets to a specified destination.
+   * Handles files, directories, and zip extraction with path stripping and filtering.
+   *
+   * @param assetPath     The relative path inside the APK assets (e.g., "plugins/myplugin.zip").
+   * @param outputDir     The destination directory.
+   * @param isUnzip       If true, treats the asset as a zip file.
+   * @param unzipDepth    How many directory levels to strip from the zip entry path.
+   *                      Example: Entry is "root/sub/file.txt". Depth 2 -> "file.txt".
+   * @param zipInnerPath  (Optional) Only extract entries starting with this path inside the zip.
+   *                      Pass null or "" to extract everything.
+   *                      Example: "lib/arm64/" to only extract that folder from the zip.
+   *@author android_zero
+   */
+  public static void installAsset(String assetPath, File outputDir, boolean isUnzip, int unzipDepth, String zipInnerPath) {
+    if (outputDir == null || assetPath == null) {
+      LOG.error("installAsset: assetPath or outputDir is null");
+      return;
+    }
+
+    // Create output dir if it doesn't exist
+    if (!outputDir.exists() && !outputDir.mkdirs()) {
+      LOG.error("installAsset: Failed to create output directory: " + outputDir.getAbsolutePath());
+      return;
+    }
+
+    try {
+      if (isUnzip) {
+        // Zip Extraction Logic with Filter and Depth
+        unzipAsset(assetPath, outputDir, unzipDepth, zipInnerPath);
+      } else {
+        // Standard File/Directory Copy Logic
+        copyAssetSmart(assetPath, outputDir);
+      }
+    } catch (Exception e) {
+      LOG.error("installAsset: Failed to install " + assetPath, e);
+    }
+  }
+
+  /**
+   * Overload for convenience if no zip filtering is needed.
+   */
+  public static void installAsset(String assetPath, File outputDir, boolean isUnzip, int unzipDepth) {
+      installAsset(assetPath, outputDir, isUnzip, unzipDepth, null);
+  }
+
+  /**
+   * Helper to copy asset file or directory recursively.
+   * Checks existence: Folders skip if exist, Files skip if exist, otherwise create/copy.
+   */
+  private static void copyAssetSmart(String assetPath, File parentDir) throws IOException {
+    String[] list = BaseApplication.getBaseInstance().getAssets().list(assetPath);
+
+    if (list != null && list.length > 0) {
+      // It is a directory
+      String dirName = new File(assetPath).getName();
+      File targetDir = new File(parentDir, dirName);
+
+      // Rule: If folder exists, direct use and no operation.
+      if (targetDir.exists()) {
+        LOG.info("installAsset: Directory exists, skipping: " + targetDir.getAbsolutePath());
+        return;
+      }
+
+      if (!targetDir.mkdirs()) {
+        throw new IOException("Failed to create dir: " + targetDir);
+      }
+
+      for (String file : list) {
+        // Recursively copy contents. Passing the new targetDir as parent.
+        String childAsset = assetPath.equals("") ? file : assetPath + "/" + file;
+        // Recursive call needs to know this is an internal copy, so we implement a recursive helper
+        // But here we can just reuse ResourceUtils for simplicity if we are at leaf,
+        // however ResourceUtils doesn't handle the "Folder exists -> skip" logic for sub-folders well
+        // if we use copyFileFromAssets recursively.
+        // Let's call copyRecursiveInternal to handle the structure.
+        copyAssetRecursiveInternal(childAsset, targetDir);
+      }
+    } else {
+      // It is a file
+      String fileName = new File(assetPath).getName();
+      File targetFile = new File(parentDir, fileName);
+      
+      // Rule: 检查文件是否存在，存在则跳过，不存在则输出复制
+      if (targetFile.exists()) {
+        LOG.info("installAsset: File exists, skipping: " + targetFile.getAbsolutePath());
+      } else {
+        boolean success = ResourceUtils.copyFileFromAssets(assetPath, targetFile.getAbsolutePath());
+        if (!success) {
+          LOG.error("installAsset: Failed to copy file: " + assetPath);
+        }
+      }
+    }
+  }
+
+  private static void copyAssetRecursiveInternal(String assetPath, File parentDir) throws IOException {
+    String[] list = BaseApplication.getBaseInstance().getAssets().list(assetPath);
+    if (list != null && list.length > 0) {
+      // Directory inside recursive copy
+      String dirName = new File(assetPath).getName();
+      File targetDir = new File(parentDir, dirName);
+      if (!targetDir.exists() && !targetDir.mkdirs()) return;
+      for (String file : list) {
+        copyAssetRecursiveInternal(assetPath + "/" + file, targetDir);
+      }
+    } else {
+      // File inside recursive copy
+      String fileName = new File(assetPath).getName();
+      File targetFile = new File(parentDir, fileName);
+      
+      // Rule: 检查文件是否存在，存在则跳过，不存在则输出复制
+      if (!targetFile.exists()) {
+        ResourceUtils.copyFileFromAssets(assetPath, targetFile.getAbsolutePath());
+      }
+    }
+  }
+
+  /**
+   * Helper to unzip an asset stream with depth stripping and path filtering.
+   */
+  private static void unzipAsset(String assetPath, File destDir, int stripDepth, String targetInnerPath) throws IOException {
+    try (InputStream is = BaseApplication.getBaseInstance().getAssets().open(assetPath);
+         ZipInputStream zis = new ZipInputStream(is)) {
+
+      ZipEntry entry;
+      while ((entry = zis.getNextEntry()) != null) {
+        String entryName = entry.getName();
+
+        // 1. Filter: Check if this entry matches the targetInnerPath (if provided)
+        if (targetInnerPath != null && !targetInnerPath.isEmpty()) {
+            // Normalize path separators just in case
+            if (!entryName.startsWith(targetInnerPath)) {
+                continue; // Skip this file as it is not in the target folder
+            }
+        }
+
+        // 2. Strip Depth: Remove leading directories from the path
+        if (stripDepth > 0) {
+          String[] parts = entryName.split("/");
+          if (parts.length <= stripDepth) {
+            // Path is too shallow (e.g. it is the folder we are stripping), skip
+            continue;
+          }
+          // Reconstruct path excluding the first 'stripDepth' components
+          StringBuilder sb = new StringBuilder();
+          for (int i = stripDepth; i < parts.length; i++) {
+            sb.append(parts[i]);
+            if (i < parts.length - 1) sb.append("/");
+          }
+          entryName = sb.toString();
+        // } else if (stripDepth == 0 && entry.isDirectory()) {
+           // // If depth is 0 (root), we keep structure.
+        }
+
+        // If entryName became empty after stripping (e.g. root folder), skip
+        if (entryName.isEmpty()) continue;
+
+        File outFile = new File(destDir, entryName);
+
+        if (entry.isDirectory()) {
+          if (!outFile.exists()) outFile.mkdirs();
+          continue;
+        }
+
+        // Rule: 检查解压出的文件是否已存在，如果已存在则直接跳过，避免应用每次启动都覆盖文件
+        if (outFile.exists()) {
+          continue;
+        }
+
+        // Ensure parent exists
+        File parent = outFile.getParentFile();
+        if (parent != null && !parent.exists()) {
+          parent.mkdirs();
+        }
+
+        // Write file (Only executed if the file does not exist)
+        try (OutputStream os = new FileOutputStream(outFile)) {
+          byte[] buffer = new byte[ConstantsKt.DEFAULT_BUFFER_SIZE];
+          int length;
+          while ((length = zis.read(buffer)) > 0) {
+            os.write(buffer, 0, length);
+          }
+        }
+      }
+    }
+  }
+  }

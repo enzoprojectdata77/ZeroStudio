@@ -35,7 +35,7 @@
 - [ ] Language servers
     - [x] Java
     - [x] XML
-    - [ ] Kotlin
+    - [x ] Kotlin
     - [x] lua 
     - [ ] cmake 
     - [ ] c/c++/obj-c/obj-c++
@@ -54,7 +54,9 @@
 - [ ] String Translator
 - [ ] Asset Studio (Drawable & Icon Maker)
 - [x] Git and CD/CI
-
+- [ ] advanced images Preview
+- [x] compose Preview
+- [x] Regular expression preview
 ## Installation
 [<img src="https://github.com/Kunzisoft/Github-badge/raw/main/get-it-on-github.svg"
     alt="Get it on F-Droid"
@@ -168,20 +170,14 @@ This is a **Source-Available** license based on GNU GPLv3 but with **strict Mand
 >
 > 本项目**不是**标准的 GPLv3 项目。附加条款**严禁**任何形式的商业使用、变现或闭源分发。
 
-### 🚫 Prohibited Actions (绝对禁止行为)
+### 🚫 Prohibited Actions (绝对禁止行为) 
+：：PS：Prohibited behavior: As the name suggests, it refers to behavior that is not advocated, unusable, harmful to the interests of others, and has a significant impact.Regardless of the protocol/open source protocol of this project, as long as this project is not deleted, it has the root retention, branching, or change. Any malicious, prohibited, or illegal behavior caused by individuals shall be borne by themselves.
 
 Under this license, the following actions are **STRICTLY PROHIBITED** and will result in immediate termination of rights and potential legal action:
 
-1.  **No Monetization (严禁变现):**
-    *   Selling the software, source code, or binaries.
-    *   Charging for downloads, installation, or "speed-up" services.
-    *   Accepting donations to unlock features (Pay-walling).
-    *   Integrating advertisements (AdMob, Unity Ads, etc.).
 2.  **No Access Restrictions (严禁访问限制):**
-    *   Implementing **Key/Card Systems (卡密)**, Activation Codes, or License Keys.
-    *   Setting up VIP levels, paid memberships, or login mandates.
-3.  **No Virtual Assets (严禁虚拟资产):**
-    *   Integrating cryptocurrencies, tokens, NFTs, or point-exchange systems.
+    *   To ensure user experience, I strongly do not recommend adding advertisements, especially those that greatly affect the use of the drinking client operation
+    *   It is prohibited to add any illegal/criminal content and code within the source code, such as virtual currency, pornography, illegal intrusion/modification of devices, using high-risk permissions to write code that harms the interests/devices of others, fraud, phishing, and other Trojan behaviors. Any illegal behavior of backdoors is also prohibited
 
 ### ✅ User Freedoms (用户权利)
 
@@ -199,10 +195,7 @@ Any fork, derivative work, or modification of ZeroStudio **MUST be 100% Open Sou
 *   **No Closed Source:** You are prohibited from releasing modified versions under closed-source or proprietary licenses.
 *   **Attribution:** You must retain the original author attribution (`@author android_zero` and contributors) in all source files.
 
-### 2. Commercial Prohibition Enforcement (商业禁令执行)
-The **Commons Clause** applies to this project.
-*   "Selling" the software (including hosting fees, support fees, or bundling with paid products) is legally defined as a breach of copyright under this license.
-*   Violators will be subject to DMCA takedowns and legal pursuit.
+### 2. null
 
 ### 3. Usage Responsibility (使用责任)
 *   **Malware Prohibition:** It is strictly forbidden to use this IDE to create malicious software (Viruses, Trojans, Spyware) or software that intentionally damages user hardware.

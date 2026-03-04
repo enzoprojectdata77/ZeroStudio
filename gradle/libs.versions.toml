@@ -2,13 +2,14 @@
 agp = "8.13.0"
 
 #构建系统  >  可以从此获得com.android.tools.build版本信息和source.jar 和javadoc.jar :https://maven.google.com/web/m_index.html?q=aapt#com.android.tools.build
-agp-tooling = "9.0.0-alpha14"
+agp-tooling = "8.13.0"
 gradle-tooling = "8.9"  #从这里获得最新版本资讯：https://repo.gradle.org/ui/native/libs-releases/org/gradle/gradle-tooling-api/
 # aapt2
-aapt2-proto = "9.0.0-alpha14-14304508"
-aaptCompiler = "9.0.0-alpha14"
-androidToolsCommon = "32.0.0-alpha14"
-jetbrainsAnnotations = "26.0.2-1"
+aapt2-proto = "8.3.0-10880808"
+aaptCompiler = "8.13.0"
+androidToolsCommon = "31.4.1"
+androidToolsCommonB = "31.2.2"
+jetbrainsAnnotations = "24.1.0"
 # proto 相关
 protobufVersion = "4.33.0"
 
@@ -127,9 +128,10 @@ barcodeScanning = "17.3.0"
 metadataExtractor = "2.19.0"
 javaxAnnotation = "1.3.2"
 orgNanohttpd = "2.3.1"
+incap = "1.0.0"
 
 #语法解析分析
-tree-sitter = "4.3.1"
+tree-sitter = "4.3.2"
 antlr4 = "4.13.1"
 
 # root/build.gradle.kts > plugins || Classpaths
@@ -173,6 +175,14 @@ androidide-ts-kotlin = { module = "com.itsaky.androidide.treesitter:tree-sitter-
 androidide-ts-log = { module = "com.itsaky.androidide.treesitter:tree-sitter-log", version.ref = "tree-sitter" }
 androidide-ts-xml = { module = "com.itsaky.androidide.treesitter:tree-sitter-xml", version.ref = "tree-sitter" }
 
+androidide-ts-c = { module = "com.itsaky.androidide.treesitter:tree-sitter-c", version.ref = "tree-sitter" }
+androidide-ts-cpp = { module = "com.itsaky.androidide.treesitter:tree-sitter-cpp", version.ref = "tree-sitter" }
+androidide-ts-python = { module = "com.itsaky.androidide.treesitter:tree-sitter-python", version.ref = "tree-sitter" }
+# androidide-ts-csharp = { module = "com.itsaky.androidide.treesitter:csharp", version = "1.0" }
+# androidide-ts-css = { module = "com.itsaky.androidide.treesitter:css", version = "1.0" }
+# androidide-ts-html = { module = "com.itsaky.androidide.treesitter:html", version = "1.0" }
+# androidide-ts-javascript = { module = "com.itsaky.androidide.treesitter:javascript", version = "1.0" }
+# androidide-ts-toml = { module = "com.itsaky.androidide.treesitter:toml", version = "1.0" }
 
 # Common
 common-bcrypt = { group = "at.favre.lib", name = "bcrypt", version.ref = "bcrypt" }
@@ -232,6 +242,9 @@ common-regex-re2j = { module = "io.github.dingyi222666.regex-lib:regex-lib-re2j"
 common-com-squareup-moshi = { module = "com.squareup.moshi:moshi", version = "1.15.2" }
 common-javax-annotation-api = { module = "javax.annotation:javax.annotation-api", version.ref = "javaxAnnotation" }
 common-org-nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "orgNanohttpd" }
+common-com-squareup-javapoet = { module = "com.squareup:javapoet", version = "1.13.0" }
+common-net-ltgt-gradle-incap = { module = "net.ltgt.gradle.incap:incap", version.ref = "incap" }
+common-net-ltgt-gradle-incap-processor = { module = "net.ltgt.gradle.incap:incap-processor", version.ref = "incap" }
 
 # AndroidX 相关sdk
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxCore" }
@@ -337,7 +350,7 @@ barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref =
 
 # AAPT2
 aapt2-common = { module = "com.android.tools:common", version.ref = "androidToolsCommon" }
-aapt2-annotations = { module = "com.android.tools:annotations", version.ref = "androidToolsCommon" }
+aapt2-annotations = { module = "com.android.tools:annotations", version.ref = "androidToolsCommonB" }
 aapt2-jb-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrainsAnnotations" }
 aapt2-proto = { module = "com.android.tools.build:aapt2-proto", version.ref = "aapt2-proto" }
 aapt2-aaptcompiler = { module = "com.android.tools.build:aaptcompiler", version.ref = "aaptCompiler" }

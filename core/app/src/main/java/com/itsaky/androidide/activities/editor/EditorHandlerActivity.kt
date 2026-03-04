@@ -43,8 +43,10 @@ import com.itsaky.androidide.editor.language.treesitter.KotlinLanguage
 import com.itsaky.androidide.editor.language.treesitter.LogLanguage
 import com.itsaky.androidide.editor.language.treesitter.TSLanguageRegistry
 import com.itsaky.androidide.editor.language.treesitter.XMLLanguage
+import com.itsaky.androidide.editor.language.treesitter.TomlLanguage
 import com.itsaky.androidide.editor.language.treesitter.CppLang
 import com.itsaky.androidide.editor.language.treesitter.CLang
+import com.itsaky.androidide.editor.language.treesitter.CmakeLanguage
 import com.itsaky.androidide.editor.schemes.IDEColorSchemeProvider
 import com.itsaky.androidide.editor.ui.IDEEditor
 import com.itsaky.androidide.eventbus.events.editor.DocumentChangeEvent
@@ -146,7 +148,9 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
       TSLanguageRegistry.instance.register(LogLanguage.TS_TYPE, LogLanguage.FACTORY)
       TSLanguageRegistry.instance.register(JsonLanguage.TS_TYPE, JsonLanguage.FACTORY)
       TSLanguageRegistry.instance.register(XMLLanguage.TS_TYPE, XMLLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(TomlLanguage.TOML_TYPE, TomlLanguage.FACTORY)
       
+       //C++ language tree sitter
       TSLanguageRegistry.instance.register(CppLang.TS_TYPE_CPP, CppLang.FACTORY)
       TSLanguageRegistry.instance.register(CppLang.TS_TYPE_C, CppLang.FACTORY)
       TSLanguageRegistry.instance.register(CppLang.TS_TYPE_H_small, CppLang.FACTORY)
@@ -162,10 +166,31 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
       TSLanguageRegistry.instance.register(CppLang.TS_TYPE_CPPM, CppLang.FACTORY)
       TSLanguageRegistry.instance.register(CppLang.TS_TYPE_MPP, CppLang.FACTORY)
       TSLanguageRegistry.instance.register(CppLang.TS_TYPE_mm, CppLang.FACTORY)
-      
+       //C language tree sitter
       TSLanguageRegistry.instance.register(CLang.TS_TYPE_C, CLang.FACTORY)
       TSLanguageRegistry.instance.register(CLang.TS_TYPE_M_small, CLang.FACTORY)
       TSLanguageRegistry.instance.register(CLang.TS_TYPE_M_CAPITAL_LETTERS, CLang.FACTORY)
+      //cmake language tree sitter
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_IN, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_H_IN, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CTEST, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CPACK, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_PRESETS, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_USER_PRESETS, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_TOOLCHAIN_CMAKE, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_PATCHS, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CBPS, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CMKDARTFUIONJSON, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CMKVCPKG, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CMKCONANFILE, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CMKSETTINGS, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CMKUSERPRESETS, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CMKPRESETS, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CMCACHE, CmakeLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(CmakeLanguage.TS_TYPE_CMAKE_CMLISTSTXT, CmakeLanguage.FACTORY)
+      
+      
       IDEColorSchemeProvider.initIfNeeded()
     }
   }
@@ -366,7 +391,7 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
     editorViewModel.setCurrentFile(position, file)
 
     updateTabs()
-    onFileLoaded(editor, file)
+    // onFileLoaded(editor, file)
 
     return position
   }

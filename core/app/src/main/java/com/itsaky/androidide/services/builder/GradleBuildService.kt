@@ -260,7 +260,7 @@ class GradleBuildService : Service(), BuildService, IToolingApiClient,
 
   /** Gets or creates the logger plugin directory. */
   private fun getLoggerPluginDir(): File {
-    val dir = File(Environment.HOME, "plugins/logger")
+    val dir = File(Environment.PLUGIN_HOME , "logger")
     if (!dir.exists()) {
       dir.mkdirs()
     }

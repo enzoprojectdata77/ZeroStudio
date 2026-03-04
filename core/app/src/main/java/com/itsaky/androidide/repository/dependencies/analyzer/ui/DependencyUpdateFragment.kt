@@ -2,12 +2,11 @@
  * @author android_zero
  * 
  * 功能：依赖更新检测与管理 UI 界面 (Jetpack Compose 驱动)
- * 用途：展示从工作区解析出的具有新版本可用的依赖项列表，支持历史版本选择，以及一键修改源文件更新版本。
- * 
- * 核心优化：
- * 1. LazyColumn 性能优化：通过指定 key 和 contentType，提升列表项复用率，解决滑动卡顿。
- * 2. PopupWindow 兼容性：在原生 PopupWindow 中挂载 ComposeView，并传递完整的 Lifecycle/SavedState Owner，解决混合调用的生命周期异常。
- * 3. 内存管理：在 PopupWindow 消失时主动调用 disposeComposition()，防止 Compose 节点泄漏。
+ * 修复内容：
+ * 1. 彻底移除了对 ComposeOwnerHelper 的依赖，解决了 Unresolved reference 报错。
+ * 2. 在 Fragment 中，利用 ComposeView 自动查找父级 Owner 的特性，无需手动设置。
+ * 3. 在 PopupWindow 中，使用 [setParentCompositionContext] 替代手动设置 Owner。
+ *    这是 Compose 官方推荐的跨窗口上下文传递方式，既解决了报错，又能完美继承主题和生命周期。
  */
 package com.itsaky.androidide.repository.dependencies.analyzer.ui
 
@@ -30,14 +29,14 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewTreeLifecycleOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
 import com.itsaky.androidide.fragments.BaseFragment
 import com.itsaky.androidide.projects.IProjectManager
-import com.itsaky.androidide.repository.dependencies.analyzer.DependencyUpdater
 import com.itsaky.androidide.repository.dependencies.analyzer.ProjectAnalyzer
 import com.itsaky.androidide.repository.dependencies.analyzer.impl.GradleProjectAnalyzerImpl
-import com.itsaky.androidide.repository.dependencies.analyzer.models.UpdateReport
+import com.itsaky.androidide.repository.dependencies.analyzer.internal.DependencyUpdater
+import com.itsaky.androidide.repository.dependencies.models.datas.*
+import com.itsaky.androidide.repository.dependencies.models.interfaces.*
+import com.itsaky.androidide.repository.dependencies.models.enums.*
 import com.itsaky.androidide.utils.flashError
 import com.itsaky.androidide.utils.flashSuccess
 import kotlinx.coroutines.launch
@@ -52,8 +51,12 @@ class DependencyUpdateFragment : BaseFragment() {
         savedInstanceState: Bundle?
     ): View {
         return ComposeView(requireContext()).apply {
-            // 确保 Fragment 提供的 Lifecycle 能正确传递给 Compose
-            setViewTreeLifecycleOwner(viewLifecycleOwner)
+            // 修复说明：
+            // 在 Fragment 的 onCreateView 中创建 ComposeView 时，
+            // Android 框架会自动将 View 附加到 Fragment 的视图层级上。
+            // 因此，ComposeView 能够自动向上查找并找到 Fragment 提供的 LifecycleOwner。
+            // 不需要手动调用 setViewTreeLifecycleOwner，从而避开了缺包导致的报错。
+            
             setContent {
                 MaterialTheme {
                     Surface(
@@ -74,7 +77,6 @@ class DependencyUpdateFragment : BaseFragment() {
 
 /**
  * 依赖更新界面的主屏幕组合函数。
- * 负责协程状态调度、数据加载与更新回调逻辑。
  */
 @Composable
 fun DependencyUpdateScreen(
@@ -86,7 +88,6 @@ fun DependencyUpdateScreen(
     var isLoading by remember { mutableStateOf(true) }
     val coroutineScope = rememberCoroutineScope()
 
-    // 提取数据的核心刷新逻辑
     fun refreshData() {
         isLoading = true
         coroutineScope.launch {
@@ -95,14 +96,12 @@ fun DependencyUpdateScreen(
             if (projectDir != null) {
                 val repos = analyzer.extractRepositories(projectDir)
                 val deps = analyzer.extractDependencies(projectDir)
-                // 执行并发网络检查，比对并返回有更新的依赖
                 reports = analyzer.checkUpdates(deps, repos)
             }
             isLoading = false
         }
     }
 
-    // 页面首次渲染时自动加载数据
     LaunchedEffect(Unit) {
         refreshData()
     }
@@ -129,25 +128,23 @@ fun DependencyUpdateScreen(
                 )
             }
         } else {
-            // LazyColumn 性能优化：通过提供 key 和 contentType 提高复用率，防止重组卡顿
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                 contentPadding = PaddingValues(vertical = 16.dp)
             ) {
                 items(
                     items = reports,
-                    key = { it.dependency.gav },           // 提供唯一标示符
-                    contentType = { "dependency_item" }    // 指定内容类型用于视图高效复用
+                    key = { it.dependency.gav },
+                    contentType = { "dependency_item" }
                 ) { report ->
                     DependencyUpdateItem(
                         report = report,
                         onUpdateClicked = { selectedVersion ->
                             coroutineScope.launch {
-                                // 触发真正的文件 IO 读写与替换操作
-                                val success = DependencyUpdater.applyUpdate(report.dependency, selectedVersion)
+                                val success = DependencyUpdater.update(report.dependency, selectedVersion)
                                 if (success) {
                                     onFlashSuccess("Updated ${report.dependency.artifactId} to $selectedVersion")
-                                    refreshData() // 更新成功后重新读取并刷新列表
+                                    refreshData()
                                 } else {
                                     onFlashError("Failed to update ${report.dependency.artifactId}. No match found.")
                                 }
@@ -162,19 +159,19 @@ fun DependencyUpdateScreen(
 }
 
 /**
- * 列表中的单项依赖视图，包含：
- * 1. 依赖的 GAV 信息及当前版本展示。
- * 2. 目标版本下拉选择框（通过自定义 PopupWindow 呼出）。
- * 3. 确认更新按钮。
+ * 单项依赖视图
  */
 @Composable
 fun DependencyUpdateItem(
     report: UpdateReport, 
     onUpdateClicked: (String) -> Unit
 ) {
-    // 默认展示探测到的最新的建议版本
     var selectedVersion by remember { mutableStateOf(report.latestVersion) }
-    val currentView = LocalView.current // 获取宿主 View，作为 PopupWindow 弹出的锚点
+    val currentView = LocalView.current
+    
+    // 核心修复：获取当前的组合上下文 (CompositionContext)
+    // 这个 Context 包含了当前的 Lifecycle、SavedState 以及 Theme 信息。
+    val compositionContext = rememberCompositionContext()
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -197,12 +194,13 @@ fun DependencyUpdateItem(
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // 点击触发弹窗选择可用的历史版本
             OutlinedButton(
                 onClick = {
+                    // 将 compositionContext 传递给 PopupWindow
                     VersionSelectionPopupWindow(
-                        parentView = currentView, 
-                        versions = report.availableVersions
+                        context = currentView.context, 
+                        versions = report.availableVersions,
+                        parentCompositionContext = compositionContext // 传递上下文
                     ) { version ->
                         selectedVersion = version
                     }.showAtLocation(currentView, Gravity.CENTER, 0, 0)
@@ -212,7 +210,6 @@ fun DependencyUpdateItem(
                 Text(text = selectedVersion)
             }
             
-            // 执行文件更新
             Button(onClick = { onUpdateClicked(selectedVersion) }) {
                 Text("Update")
             }
@@ -221,23 +218,24 @@ fun DependencyUpdateItem(
 }
 
 /**
- * 严格按照需求自定义的 android.widget.PopupWindow。
+ * 修复后的 PopupWindow。
  * 
- * 架构优化说明：
- * 1. 挂载 ComposeView 需要当前上下文的 LifecycleOwner 和 SavedStateRegistryOwner 支撑，否则会由于状态异常崩溃。这里从 ParentView 强行汲取并赋予内部 ComposeView。
- * 2. PopupWindow 消失时，利用 setOnDismissListener 主动调用 composeView.disposeComposition() 回收资源，防止内存泄漏。
+ * 使用 [setParentCompositionContext] 替代了直接设置 ViewTreeLifecycleOwner。
+ * 这是一个纯 Compose 的 API，不依赖 AndroidX Lifecycle 的特定类，因此不会报 Unresolved reference。
  */
 class VersionSelectionPopupWindow(
-    private val parentView: View,
+    context: Context,
     versions: List<String>,
+    parentCompositionContext: CompositionContext,
     onVersionSelected: (String) -> Unit
-) : PopupWindow(parentView.context) {
+) : PopupWindow(context) {
 
     init {
-        val context = parentView.context
         val composeView = ComposeView(context).apply {
-            ViewTreeLifecycleOwner.set(this, ViewTreeLifecycleOwner.get(parentView))
-            ViewTreeSavedStateRegistryOwner.set(this, ViewTreeSavedStateRegistryOwner.get(parentView))
+            // 核心修复：将弹窗内的 Compose 环境连接到父级环境。
+            // 这会自动继承父级的 LifecycleOwner, SavedStateRegistryOwner 和 LocalConfiguration 等。
+            // 从而避免了找不到 ViewTreexxxOwner 类的错误。
+            setParentCompositionContext(parentCompositionContext)
             
             setContent {
                 MaterialTheme {
@@ -250,7 +248,6 @@ class VersionSelectionPopupWindow(
                         color = MaterialTheme.colorScheme.surface
                     ) {
                         Column {
-                            // 标题
                             Text(
                                 text = "Select Version",
                                 style = MaterialTheme.typography.titleMedium,
@@ -258,7 +255,6 @@ class VersionSelectionPopupWindow(
                                 modifier = Modifier.padding(16.dp)
                             )
                             Divider()
-                            // 版本列表 (倒序，最新在上)
                             LazyColumn {
                                 items(versions.reversed()) { version ->
                                     Text(
@@ -288,6 +284,7 @@ class VersionSelectionPopupWindow(
         isOutsideTouchable = true
         elevation = 16f
         
+        // 必须手动销毁 Composition，否则会内存泄漏
         setOnDismissListener {
             composeView.disposeComposition()
         }

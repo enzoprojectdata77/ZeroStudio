@@ -1,0 +1,8 @@
+com.itsaky.androidide.treesitter.aidl.tree-sitter-aidl-packaged_res-0 /root/android-tree-sitter/android-tree-sitter/build/intermediates/packaged_res/release
+com.itsaky.androidide.treesitter.aidl.tree-sitter-aidl-pngs-1 /root/android-tree-sitter/grammar-modules/aidl/build/generated/res/pngs/release
+com.itsaky.androidide.treesitter.aidl.tree-sitter-aidl-resValues-2 /root/android-tree-sitter/grammar-modules/aidl/build/generated/res/resValues/release
+com.itsaky.androidide.treesitter.aidl.tree-sitter-aidl-mergeReleaseResources-3 /root/android-tree-sitter/grammar-modules/aidl/build/intermediates/incremental/release/mergeReleaseResources/merged.dir
+com.itsaky.androidide.treesitter.aidl.tree-sitter-aidl-mergeReleaseResources-4 /root/android-tree-sitter/grammar-modules/aidl/build/intermediates/incremental/release/mergeReleaseResources/stripped.dir
+com.itsaky.androidide.treesitter.aidl.tree-sitter-aidl-merged_res-5 /root/android-tree-sitter/grammar-modules/aidl/build/intermediates/merged_res/release
+com.itsaky.androidide.treesitter.aidl.tree-sitter-aidl-main-6 /root/android-tree-sitter/grammar-modules/aidl/src/main/res
+com.itsaky.androidide.treesitter.aidl.tree-sitter-aidl-release-7 /root/android-tree-sitter/grammar-modules/aidl/src/release/res

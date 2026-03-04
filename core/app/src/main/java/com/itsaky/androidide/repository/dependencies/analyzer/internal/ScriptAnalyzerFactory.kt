@@ -5,8 +5,9 @@
  */
 package com.itsaky.androidide.repository.dependencies.analyzer.internal
 
-import com.itsaky.androidide.repository.dependencies.models.ScopedDependencyInfo
-import com.itsaky.androidide.repository.dependencies.models.ScopedRepositoryInfo
+import com.itsaky.androidide.repository.dependencies.models.datas.*
+import com.itsaky.androidide.repository.dependencies.models.interfaces.*
+import com.itsaky.androidide.repository.dependencies.models.enums.*
 import java.io.File
 
 interface ScriptAnalyzer {

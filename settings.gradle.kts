@@ -179,7 +179,11 @@ include(
   ":editor:lexers",
   ":editor:treesitter",
   ":editor:editor-lsp",
-
+  ":editor:tree-sitter-ndk:annotation-processors",
+  ":editor:tree-sitter-ndk:tree-sitter-jnilibs",
+  ":editor:tree-sitter-ndk:toml",
+  ":editor:tree-sitter-ndk:cmake",
+    
   ":event:eventbus",
   ":event:eventbus-android",
   ":event:eventbus-events",
