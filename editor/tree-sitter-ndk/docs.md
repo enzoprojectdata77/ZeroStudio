@@ -11,14 +11,8 @@ The core must extract the file.：src/tree_sitter/*.h，*.c and parser.c, scanne
 + 2. Use the standard template and import it into src/main/cpp. Take toml as an example here.
 PS: The content in the template, configuration files, etc. should be modified as appropriate.
 
-<video 
-  src="Operation_screen_recording.mp4" 
-  controls 
-  loop 
-  muted 
-  playsinline
-  width="720">
-</video>
+[![Click to play the demonstration video](Operation_screen_recording.mp4)](./Operation_screen_recording.mp4)
+
 
 
 Then in the code of the template, replace "toml" or "Toml" with the target language you need. Pay attention to the case sensitivity.
