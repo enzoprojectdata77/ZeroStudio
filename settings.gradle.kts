@@ -194,7 +194,6 @@ include(
   ":editor:tree-sitter-ndk:smali",
   ":editor:tree-sitter-ndk:sql",
   ":editor:tree-sitter-ndk:sqlite",
-  
   ":editor:tree-sitter-ndk:css",
   ":editor:tree-sitter-ndk:go",
   ":editor:tree-sitter-ndk:javascript",
@@ -203,11 +202,9 @@ include(
   ":editor:tree-sitter-ndk:objectiveCpp",
   ":editor:tree-sitter-ndk:php",
   ":editor:tree-sitter-ndk:properties",
-  ":editor:tree-sitter-ndk:python",
   ":editor:tree-sitter-ndk:rust",
   ":editor:tree-sitter-ndk:swift",
   ":editor:tree-sitter-ndk:vue",
-  ":editor:tree-sitter-ndk:javascript",
   ":editor:tree-sitter-ndk:groovy",
   ":editor:tree-sitter-ndk:dart",
   ":editor:tree-sitter-ndk:typeScript",
@@ -224,6 +221,7 @@ include(
   // ":editor:tree-sitter-ndk:kotlin",
   // ":editor:tree-sitter-ndk:log",
   // ":editor:tree-sitter-ndk:xml",
+  //  // ":editor:tree-sitter-ndk:python",
     
   ":event:eventbus",
   ":event:eventbus-android",

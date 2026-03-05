@@ -20,7 +20,7 @@ package com.itsaky.androidide.editor.language.treesitter
 import android.content.Context
 import com.itsaky.androidide.editor.language.newline.TSBracketsHandler
 import com.itsaky.androidide.editor.language.newline.TSCStyleBracketsHandler
-import com.itsaky.androidide.treesitter.cmake.TSLanguageYaml
+import com.itsaky.androidide.treesitter.yaml.TSLanguageYaml
 import io.github.rosemoe.sora.lang.Language.INTERRUPTION_LEVEL_SLIGHT
 import io.github.rosemoe.sora.util.MyCharacter
 
@@ -30,7 +30,7 @@ import io.github.rosemoe.sora.util.MyCharacter
  * @author android_zero
  */
 class YamlLanguage(context: Context) :
-    TreeSitterLanguage(context, TSLanguageCmake.getInstance(), TS_TYPE) {
+    TreeSitterLanguage(context, TSLanguageYaml.getInstance(), TS_TYPE) {
 
     companion object {
 
