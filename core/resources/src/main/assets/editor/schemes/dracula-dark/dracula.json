@@ -79,6 +79,7 @@
     "@markdown.json",
     "@Python.json",
     "@yaml.json",
+    "@TypeScript.json",
     "@properties.json",
     "@toml.json"
   ]

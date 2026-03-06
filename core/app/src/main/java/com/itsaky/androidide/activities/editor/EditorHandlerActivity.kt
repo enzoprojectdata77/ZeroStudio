@@ -51,6 +51,7 @@ import com.itsaky.androidide.editor.language.treesitter.PythonLanguage
 import com.itsaky.androidide.editor.language.treesitter.MarkdownLanguage
 import com.itsaky.androidide.editor.language.treesitter.reStructuredTextLanguage
 import com.itsaky.androidide.editor.language.treesitter.YamlLanguage
+import com.itsaky.androidide.editor.language.treesitter.TypeScriptLanguage
 import com.itsaky.androidide.editor.schemes.IDEColorSchemeProvider
 import com.itsaky.androidide.editor.ui.IDEEditor
 import com.itsaky.androidide.eventbus.events.editor.DocumentChangeEvent
@@ -154,17 +155,22 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
       TSLanguageRegistry.instance.register(TomlLanguage.TOML_TYPE, TomlLanguage.FACTORY)
 
 
+      //TypeScript Language
+      TSLanguageRegistry.instance.register(TypeScriptLanguage.TS_TYPE, TypeScriptLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(TypeScriptLanguage.TSX_TYPE, TypeScriptLanguage.TSX_FACTORY)
       //reStructuredText Language
       TSLanguageRegistry.instance.register(reStructuredTextLanguage.TS_TYPE, reStructuredTextLanguage.FACTORY)
       TSLanguageRegistry.instance.register(reStructuredTextLanguage.TS_TYPE_REST, reStructuredTextLanguage.FACTORY)
       //Markdown Language
-      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE, MarkdownLanguage.FACTORY)
-      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE_MARKDOWN, MarkdownLanguage.FACTORY)
-      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE_MKD, MarkdownLanguage.FACTORY)
-      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE_MKDN, MarkdownLanguage.FACTORY)
-      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE_MDOWN, MarkdownLanguage.FACTORY)
-      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE_MDWN, MarkdownLanguage.FACTORY)
-      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE_MDTXT, MarkdownLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE_MD, MarkdownLanguage.FACTORY_BLOCK)
+      TSLanguageRegistry.instance.register(MarkdownLanguage.EXT_MARKDOWN, MarkdownLanguage.FACTORY_BLOCK)
+      TSLanguageRegistry.instance.register(MarkdownLanguage.EXT_MKD, MarkdownLanguage.FACTORY_BLOCK)
+      TSLanguageRegistry.instance.register(MarkdownLanguage.EXT_MKDN, MarkdownLanguage.FACTORY_BLOCK)
+      TSLanguageRegistry.instance.register(MarkdownLanguage.EXT_MDOWN, MarkdownLanguage.FACTORY_BLOCK)
+      TSLanguageRegistry.instance.register(MarkdownLanguage.EXT_MDWN, MarkdownLanguage.FACTORY_BLOCK)
+      TSLanguageRegistry.instance.register(MarkdownLanguage.EXT_MDTXT, MarkdownLanguage.FACTORY_BLOCK)
+      TSLanguageRegistry.instance.register(MarkdownLanguage.TS_TYPE_INLINE, MarkdownLanguage.FACTORY_INLINE) //内联解析器 (Inline Parser)
+      
       //Yaml Language
       TSLanguageRegistry.instance.register(YamlLanguage.TS_TYPE, YamlLanguage.FACTORY)
       TSLanguageRegistry.instance.register(YamlLanguage.TS_TYPE_YML, YamlLanguage.FACTORY)
@@ -178,6 +184,8 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
       TSLanguageRegistry.instance.register(XMLLanguage.TS_TYPE_QRC, XMLLanguage.FACTORY)
       TSLanguageRegistry.instance.register(XMLLanguage.TS_TYPE_UI, XMLLanguage.FACTORY)
       TSLanguageRegistry.instance.register(XMLLanguage.TS_TYPE_POML, XMLLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(XMLLanguage.TS_TYPE_KML, XMLLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(XMLLanguage.TS_TYPE_SVG, XMLLanguage.FACTORY)
        //C++ language tree sitter
       TSLanguageRegistry.instance.register(CppLang.TS_TYPE_CPP, CppLang.FACTORY)
       TSLanguageRegistry.instance.register(CppLang.TS_TYPE_C, CppLang.FACTORY)

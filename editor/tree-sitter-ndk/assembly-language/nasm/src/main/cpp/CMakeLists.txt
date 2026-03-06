@@ -4,7 +4,7 @@ project("tree-sitter-nasm")
 
 # 从 src/main/cpp (当前目录) 向上跳 4 级到达 tree-sitter-ndk 目录
 # 路径推演: cpp -> main -> src -> nasm -> tree-sitter-ndk
-get_filename_component(NDK_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../.." ABSOLUTE)
+get_filename_component(NDK_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../.." ABSOLUTE)
 
 # 引入通用配置 (设置 TS_DIR 和 include 路径)
 include("${NDK_COMMON_DIR}/common-config.cmake")
@@ -20,7 +20,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_library(${CMAKE_PROJECT_NAME} SHARED
         "${TS_DIR}/lib/src/lib.c"
         parser.c
-        scanner.c
+#        scanner.c
         tree-sitter-nasm.cpp
 )
 

@@ -31,10 +31,10 @@ static jint JNI_VERSION = JNI_VERSION_1_6;
 static jint JNI_VERSION = JNI_VERSION_10;
 #endif
 
-extern "C" TSLanguage *tree_sitter_reStructuredText();
+extern "C" TSLanguage *tree_sitter_rst();
 
 static jlong TSLanguageReStructuredText_getInstance(JNIEnv *env, jclass clazz) {
-    return (jlong) tree_sitter_reStructuredText();
+    return (jlong) tree_sitter_rst();
 }
 
 void TSLanguageReStructuredText_Native_SetJniMethods(JNINativeMethod *methods, int count) {

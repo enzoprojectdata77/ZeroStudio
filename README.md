@@ -68,6 +68,13 @@ It doesn't require a complex construction method or a complicated installation m
 You can easily build the tree-sitter language you need into your Android project with just Gradle+cmake+ndk.
 
 + relevant documents：[Operation Document](./editor/tree-sitter-ndk/docs.md)
++ Regarding SCM central radio query files and how to create related language highlighting configuration JSON files:
+- [中文](./docs/Highlight_JSON_docs/docs-cn.md) || [English](./docs/Highlight_JSON_docs/docs-en.md)
+-' python：
+1.[Extract scm@xxx and generate a highlighted configuration JSON file using Python](./docs/Highlight_JSON_docs/generate_highlight_json2.py) or [generate_highlight_json.py](./docs/Highlight_JSON_docs/generate_highlight_json.py)
+run py：python3 generate_ts_theme.py -i typeScript/queries/highlights.scm -o TypeScript.json -l TypeScript -e ts tsx mts cts
+2.[Creating *.scm mapping files using Python](./docs/Highlight_JSON_docs/generate_ast_scm.py) 
+run python：python3 generate_scm.py -i typeScript/src/main/cpp/typescript/src/node-types.json -o highlights.scm
 
 ## Installation
 [<img src="https://github.com/Kunzisoft/Github-badge/raw/main/get-it-on-github.svg"

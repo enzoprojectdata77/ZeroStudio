@@ -117,7 +117,7 @@ dependencies {
     implementation(projects.editor.treeSitterNdk.groovy)
     implementation(projects.editor.treeSitterNdk.dart)
     implementation(projects.editor.treeSitterNdk.assemblyLanguage.arm)
-    implementation(projects.editor.treeSitterNdk.assemblyLanguagearm64)
+    implementation(projects.editor.treeSitterNdk.assemblyLanguage.arm64)
     implementation(projects.editor.treeSitterNdk.assemblyLanguage.asm)
     implementation(projects.editor.treeSitterNdk.assemblyLanguage.masm)
     implementation(projects.editor.treeSitterNdk.assemblyLanguage.nasm)

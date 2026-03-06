@@ -4,6 +4,29 @@
 The language projects within tree-sitter-ndk are completely developed in a way that is independent of the original author's approach. They use complex methods such as Rust and npm to generate and build tree-sitter-xxx.
 The tree-sitter-ndk build process is very simple. It only requires Gradle + NDK + CMake to quickly build the tree-sitter for the desired language.
 
+#Quick Build:
+gradle assembleRelease -p editor/tree-sitter-ndk
+or
+gradle :editor:tree-sitter-ndk:*:assembleRelease
+
+- Frequently Asked Questions:
+
++ 1. If you encounter build errors:
+```log
+ld.lld: error: undefined symbol: tree_sitter_{lang name}
+```
+In tree-sitter-{lang name}.cpp, go and check the following code:
+```cpp
+extern "C" TSLanguage *tree_sitter_{lang name}();
+
+static jlong TSLanguage{lang name}_getInstance(JNIEnv *env, jclass clazz) {
+    return (jlong) tree_sitter_{lang name}();
+}
+```
+The problem is usually a reference error in *tree_sitter_{lang name}.
+
+Find `TS_PUBLIC const TSLanguage *tree_sitter_{lang name}` in 'parser.c' and replace the relevant code to resolve the issue.
+
 ##Instructions for use
 + 1. Select the desired TS language, and extract all the C/C++ programming language files in the "src/" directory to the "/src/main/cpp" folder of the Gradle module.
 The core must extract the file.：src/tree_sitter/*.h，*.c and parser.c, scanner.c
@@ -11,11 +34,10 @@ The core must extract the file.：src/tree_sitter/*.h，*.c and parser.c, scanne
 + 2. Use the standard template and import it into src/main/cpp. Take toml as an example here.
 PS: The content in the template, configuration files, etc. should be modified as appropriate.
 
-[![Click to play the demonstration video](Operation_screen_recording.mp4)](./Operation_screen_recording.mp4)
-
-
-
 Then in the code of the template, replace "toml" or "Toml" with the target language you need. Pay attention to the case sensitivity.
+
++ Author of this module migration work: android_zero
+Please indicate the source and author when using, and comply with the GUN3 agreement
 
 + src/main/cpp/CMakeLists.txt：
 ```CMakeLists.txt

@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.itsaky.androidide.treesitter.GoogleSqlBigquery"
+    namespace = "com.itsaky.androidide.treesitter.googleSqlBigquery"
     ndkVersion = "27.1.12297006"
 
     defaultConfig {
@@ -18,7 +18,9 @@ android {
         }
         
     }
-
+    buildFeatures {
+        buildConfig = false
+    }
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")

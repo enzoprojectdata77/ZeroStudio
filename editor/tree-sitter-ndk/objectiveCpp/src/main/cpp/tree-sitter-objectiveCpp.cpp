@@ -31,10 +31,10 @@ static jint JNI_VERSION = JNI_VERSION_1_6;
 static jint JNI_VERSION = JNI_VERSION_10;
 #endif
 
-extern "C" TSLanguage *tree_sitter_objectiveCpp();
+extern "C" TSLanguage *tree_sitter_objcpp();
 
 static jlong TSLanguageObjectiveCpp_getInstance(JNIEnv *env, jclass clazz) {
-    return (jlong) tree_sitter_objectiveCpp();
+    return (jlong) tree_sitter_objcpp();
 }
 
 void TSLanguageObjectiveCpp_Native_SetJniMethods(JNINativeMethod *methods, int count) {

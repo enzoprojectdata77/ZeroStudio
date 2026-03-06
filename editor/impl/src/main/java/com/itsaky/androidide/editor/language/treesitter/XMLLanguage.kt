@@ -43,7 +43,11 @@ class XMLLanguage(context: Context) :
     const val TS_TYPE_POML = "poml"
     const val TS_TYPE_UI = "ui"
     const val TS_TYPE_QRC = "qrc"
-
+    const val TS_TYPE_SVG = "svg"
+    const val TS_TYPE_KML = "kml"
+ // ".xsd", ".xsl", ".xslt", ".svg", ".kml", ".pom", 
+        // ".plist", ".fxml", ".jnlp", ".wsdl", ".tld", ".dtml", ".rng", 
+        // ".rss", ".atom", ".xul", ".mxml", ".iml",".ant",".form", ".jrxml"
     @JvmField val FACTORY = Factory { XMLLanguage(it) }
   }
 

@@ -19,10 +19,8 @@ android {
         
     }
 
-    sourceSets {
-        named("main") {
-            jniLibs.srcDirs("src/main/jniLibs")
-        }
+    buildFeatures {
+        buildConfig = false
     }
 
     externalNativeBuild {

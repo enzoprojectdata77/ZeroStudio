@@ -66,7 +66,6 @@ static JNINativeMethod TSLanguageTypeScript_Native_getTsxInstance = {
 void TSLanguageTypeScript_Native_SetJniMethods(JNINativeMethod *methods, int count);
 
 // Number of elements in _TSLanguageTypeScript_Native_METHODS
-#define _TSLanguageTypeScript_Native_METHOD_COUNT 1
 #define TSLanguageTypeScript_Native_METHOD_COUNT 2
 // All native methods in class com/itsaky/androidide/treesitter/typeScript/TSLanguageTypeScript$Native
 #define TSLanguageTypeScript_Native_DefMethodsArray \
@@ -90,9 +89,9 @@ void TSLanguageTypeScript_Native_SetJniMethods(JNINativeMethod *methods, int cou
 // Registers the native methods of class com/itsaky/androidide/treesitter/typeScript/TSLanguageTypeScript$Native with the given JNIEnv
 #define TSLanguageTypeScript_Native_AutoRegisterNatives(_env) \
     int _TSLanguageTypeScript_Native_rc; \
-    TSLanguageTypeScript_Native_SetJniMethods(&_TSLanguageTypeScript_Native_METHODS[0], _TSLanguageTypeScript_Native_METHOD_COUNT); \
+    TSLanguageTypeScript_Native_SetJniMethods(&_TSLanguageTypeScript_Native_METHODS[0], TSLanguageTypeScript_Native_METHOD_COUNT); \
     if (__TS_LOG_DEBUG == 1) { \
-    for (int i = 0; i < _TSLanguageTypeScript_Native_METHOD_COUNT; ++i) { \
+    for (int i = 0; i < TSLanguageTypeScript_Native_METHOD_COUNT; ++i) { \
         JNINativeMethod mth = *(_TSLanguageTypeScript_Native_METHODS + i); \
         LOGD(LOG_TAG, "Register native method: '%s', '%s', '%p'", mth.name, mth.signature, mth.fnPtr); } \
     } \
@@ -101,7 +100,7 @@ void TSLanguageTypeScript_Native_SetJniMethods(JNINativeMethod *methods, int cou
         LOGE(LOG_TAG, "Failed to find class com/itsaky/androidide/treesitter/typeScript/TSLanguageTypeScript$Native"); \
         return JNI_ERR; \
     } \
-    _TSLanguageTypeScript_Native_rc = _env->RegisterNatives(_TSLanguageTypeScript_Native_class, _TSLanguageTypeScript_Native_METHODS, _TSLanguageTypeScript_Native_METHOD_COUNT); \
+    _TSLanguageTypeScript_Native_rc = _env->RegisterNatives(_TSLanguageTypeScript_Native_class, _TSLanguageTypeScript_Native_METHODS, TSLanguageTypeScript_Native_METHOD_COUNT); \
     if (_TSLanguageTypeScript_Native_rc != JNI_OK) { \
         LOGE(LOG_TAG, "Failed to register native methods for class 'com/itsaky/androidide/treesitter/typeScript/TSLanguageTypeScript$Native'. Result: %d", _TSLanguageTypeScript_Native_rc); \
         return _TSLanguageTypeScript_Native_rc; \

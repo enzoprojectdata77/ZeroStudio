@@ -1,18 +1,6 @@
 /*
  *  This file is part of AndroidIDE.
- *
- *  AndroidIDE is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  AndroidIDE is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+ *  @author android_zero
  */
 
 package com.itsaky.androidide.editor.language.treesitter
@@ -25,49 +13,59 @@ import io.github.rosemoe.sora.lang.Language.INTERRUPTION_LEVEL_SLIGHT
 import io.github.rosemoe.sora.util.MyCharacter
 
 /**
- * Tree Sitter language specification for markdown.
+ * Tree Sitter language specification for Markdown.
+ * Supports both Block (Structure) and Inline (Styling) parsing.
  *
  * @author android_zero
  */
-class MarkdownLanguage(context: Context) :
-    TreeSitterLanguage(context, TSLanguageMarkdown.getInstance(), TS_TYPE) {
+class MarkdownLanguage(
+    context: Context,
+    tsLanguage: com.itsaky.androidide.treesitter.TSLanguage,
+    languageId: String
+) : TreeSitterLanguage(context, tsLanguage, languageId) {
 
     companion object {
+        const val TS_TYPE_MD = "md" 
+        
+        const val TS_TYPE_INLINE = "markdown_inline" 
 
-         const val TS_TYPE = "md"
-         const val TS_TYPE_MARKDOWN = "markdown"
+        const val EXT_MARKDOWN = "markdown"
+        const val EXT_MKD = "mkd"
+        const val EXT_MKDN = "mkdn"
+        const val EXT_MDOWN = "mdown"
+        const val EXT_MDWN = "mdwn"
+        const val EXT_MDTXT = "mdtxt"
 
-         const val TS_TYPE_MKD = "mkd"
-         const val TS_TYPE_MKDN = "mkdn"
-         const val TS_TYPE_MDOWN = "mdown"
-         const val TS_TYPE_MDWN = "mdwn"
-
-         const val TS_TYPE_MDTXT = "mdtxt"
-
+        /**
+         * [FACTORY_BLOCK]
+         * 用于解析 Markdown 的整体结构（标题、代码块、列表等）。
+         * 这是用户打开 .md 文件时使用的主解析器。
+         */
         @JvmField
-        val FACTORY = Factory { MarkdownLanguage(it) }
+        val FACTORY_BLOCK = Factory { context -> 
+            MarkdownLanguage(context, TSLanguageMarkdown.getInstance(), TS_TYPE_MD) 
+        }
+
+        /**
+         * [FACTORY_INLINE]
+         * 用于解析 Markdown 的行内元素（加粗、斜体、链接等）。
+         * 这个解析器通常不直接用于打开文件，而是通过 injections.scm 被注入到 Block 解析器中。
+         */
+        @JvmField
+        val FACTORY_INLINE = Factory { context -> 
+            MarkdownLanguage(context, TSLanguageMarkdown.getInlineInstance(), TS_TYPE_INLINE) 
+        }
     }
 
-    /**
-     * Determines whether the given character should trigger code completion.
-     * CMake identifiers typically consist of letters, numbers, and underscores.
-     */
     override fun checkIsCompletionChar(c: Char): Boolean {
-        return MyCharacter.isJavaIdentifierPart(c) || c == '#' || c == '-'
+        // 允许字母、数字、点，以及 Markdown 特殊符号触发补全
+        return MyCharacter.isJavaIdentifierPart(c) || c == '#' || c == '-' || c == '[' || c == '(' || c == ':'
     }
 
-    /**
-     * Set the interruption level.
-     * Determines how aggressively the editor responds to language typing events.
-     */
     override fun getInterruptionLevel(): Int {
         return INTERRUPTION_LEVEL_SLIGHT
     }
 
-    /**
-     * Define how newlines inside brackets are handled.
-     * CMake heavily uses parentheses `()` for commands, so standard C-style handling is perfect.
-     */
     override fun createNewlineHandlers(): Array<TSBracketsHandler> {
         return arrayOf(TSCStyleBracketsHandler(this))
     }

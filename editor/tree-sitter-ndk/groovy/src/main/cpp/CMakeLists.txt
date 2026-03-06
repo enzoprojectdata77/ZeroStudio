@@ -20,7 +20,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_library(${CMAKE_PROJECT_NAME} SHARED
         "${TS_DIR}/lib/src/lib.c"
         parser.c
-        scanner.c
+#        scanner.c
         tree-sitter-groovy.cpp
 )
 

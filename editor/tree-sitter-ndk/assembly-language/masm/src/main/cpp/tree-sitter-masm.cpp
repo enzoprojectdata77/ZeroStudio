@@ -31,10 +31,10 @@ static jint JNI_VERSION = JNI_VERSION_1_6;
 static jint JNI_VERSION = JNI_VERSION_10;
 #endif
 
-extern "C" TSLanguage *tree_sitter_masm();
+extern "C" TSLanguage *tree_sitter_x86asm();
 
 static jlong TSLanguageMasm_getInstance(JNIEnv *env, jclass clazz) {
-    return (jlong) tree_sitter_masm();
+    return (jlong) tree_sitter_x86asm();
 }
 
 void TSLanguageMasm_Native_SetJniMethods(JNINativeMethod *methods, int count) {

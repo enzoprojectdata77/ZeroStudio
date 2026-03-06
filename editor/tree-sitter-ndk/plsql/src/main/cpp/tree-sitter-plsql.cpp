@@ -31,10 +31,10 @@ static jint JNI_VERSION = JNI_VERSION_1_6;
 static jint JNI_VERSION = JNI_VERSION_10;
 #endif
 
-extern "C" TSLanguage *tree_sitter_plsql();
+extern "C" TSLanguage *tree_sitter_plsqloracle();
 
 static jlong TSLanguagePlsql_getInstance(JNIEnv *env, jclass clazz) {
-    return (jlong) tree_sitter_plsql();
+    return (jlong) tree_sitter_plsqloracle();
 }
 
 void TSLanguagePlsql_Native_SetJniMethods(JNINativeMethod *methods, int count) {

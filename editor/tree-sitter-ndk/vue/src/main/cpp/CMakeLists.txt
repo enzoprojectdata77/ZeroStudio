@@ -9,6 +9,9 @@ get_filename_component(NDK_COMMON_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../.." 
 # 引入通用配置 (设置 TS_DIR 和 include 路径)
 include("${NDK_COMMON_DIR}/common-config.cmake")
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # 确保编译器能找到手动创建的 "ts_vue.h" 和 "ts__onload.h"
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/tree_sitter)
@@ -21,7 +24,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/tree_sitter_html)
 add_library(${CMAKE_PROJECT_NAME} SHARED
         "${TS_DIR}/lib/src/lib.c"
         parser.c
-        scanner.c
+        scanner.cc
         tree-sitter-vue.cpp
 )
 

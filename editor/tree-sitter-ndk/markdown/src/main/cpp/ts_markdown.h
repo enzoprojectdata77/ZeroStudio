@@ -30,6 +30,9 @@ extern "C" {
 JNIEXPORT jlong JNICALL Java_com_itsaky_androidide_treesitter_markdown_TSLanguageMarkdown_00024Native_getInstance
   (JNIEnv *env, jclass clazz);
 
+JNIEXPORT jlong JNICALL Java_com_itsaky_androidide_treesitter_markdown_TSLanguageMarkdown_00024Native_getInlineInstance
+  (JNIEnv *env, jclass clazz);
+
 #ifdef __cplusplus
 }
 #endif
@@ -39,6 +42,7 @@ JNIEXPORT jlong JNICALL Java_com_itsaky_androidide_treesitter_markdown_TSLanguag
 
 // Index of method getInstance of class com.itsaky.androidide.treesitter.markdown.TSLanguageMarkdown.Native in _TSLanguageMarkdown_Native_METHODS array
 #define TSLanguageMarkdown_Native_getInstance__ARR_IDX 0
+#define TSLanguageMarkdown_Native_getInlineInstance__ARR_IDX 1
 
 /*
  * Class:     com.itsaky.androidide.treesitter.markdown.TSLanguageMarkdown.Native
@@ -51,18 +55,24 @@ static JNINativeMethod TSLanguageMarkdown_Native_getInstance= {
     .fnPtr = nullptr
 };
 
+static JNINativeMethod TSLanguageMarkdown_Native_getInlineInstance= {
+    .name = "getInlineInstance",
+    .signature = "()J",
+    .fnPtr = nullptr
+};
 
 // This function is called in order to set the actual
 // implementations of the native methods defined in class 
 // com/itsaky/androidide/treesitter/markdown/TSLanguageMarkdown$Native
 void TSLanguageMarkdown_Native_SetJniMethods(JNINativeMethod *methods, int count);
 
-// Number of elements in _TSLanguageMarkdown_Native_METHODS
-#define _TSLanguageMarkdown_Native_METHOD_COUNT 1
-// All native methods in class com/itsaky/androidide/treesitter/markdown/TSLanguageMarkdown$Native
+// Two methods
+#define TSLanguageMarkdown_Native_METHOD_COUNT 2
+
 #define TSLanguageMarkdown_Native_DefMethodsArray \
     JNINativeMethod _TSLanguageMarkdown_Native_METHODS[] = { \
         TSLanguageMarkdown_Native_getInstance, \
+        TSLanguageMarkdown_Native_getInlineInstance, \
     };
 
 #ifndef SET_JNI_METHOD
@@ -80,9 +90,9 @@ void TSLanguageMarkdown_Native_SetJniMethods(JNINativeMethod *methods, int count
 // Registers the native methods of class com/itsaky/androidide/treesitter/markdown/TSLanguageMarkdown$Native with the given JNIEnv
 #define TSLanguageMarkdown_Native_AutoRegisterNatives(_env) \
     int _TSLanguageMarkdown_Native_rc; \
-    TSLanguageMarkdown_Native_SetJniMethods(&_TSLanguageMarkdown_Native_METHODS[0], _TSLanguageMarkdown_Native_METHOD_COUNT); \
+    TSLanguageMarkdown_Native_SetJniMethods(&_TSLanguageMarkdown_Native_METHODS[0], TSLanguageMarkdown_Native_METHOD_COUNT); \
     if (__TS_LOG_DEBUG == 1) { \
-    for (int i = 0; i < _TSLanguageMarkdown_Native_METHOD_COUNT; ++i) { \
+    for (int i = 0; i < TSLanguageMarkdown_Native_METHOD_COUNT; ++i) { \
         JNINativeMethod mth = *(_TSLanguageMarkdown_Native_METHODS + i); \
         LOGD(LOG_TAG, "Register native method: '%s', '%s', '%p'", mth.name, mth.signature, mth.fnPtr); } \
     } \
@@ -91,7 +101,7 @@ void TSLanguageMarkdown_Native_SetJniMethods(JNINativeMethod *methods, int count
         LOGE(LOG_TAG, "Failed to find class com/itsaky/androidide/treesitter/markdown/TSLanguageMarkdown$Native"); \
         return JNI_ERR; \
     } \
-    _TSLanguageMarkdown_Native_rc = _env->RegisterNatives(_TSLanguageMarkdown_Native_class, _TSLanguageMarkdown_Native_METHODS, _TSLanguageMarkdown_Native_METHOD_COUNT); \
+    _TSLanguageMarkdown_Native_rc = _env->RegisterNatives(_TSLanguageMarkdown_Native_class, _TSLanguageMarkdown_Native_METHODS, TSLanguageMarkdown_Native_METHOD_COUNT); \
     if (_TSLanguageMarkdown_Native_rc != JNI_OK) { \
         LOGE(LOG_TAG, "Failed to register native methods for class 'com/itsaky/androidide/treesitter/markdown/TSLanguageMarkdown$Native'. Result: %d", _TSLanguageMarkdown_Native_rc); \
         return _TSLanguageMarkdown_Native_rc; \

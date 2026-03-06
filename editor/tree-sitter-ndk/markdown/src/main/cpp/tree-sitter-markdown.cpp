@@ -31,14 +31,23 @@ static jint JNI_VERSION = JNI_VERSION_1_6;
 static jint JNI_VERSION = JNI_VERSION_10;
 #endif
 
+// 外部声明 Tree-sitter Markdown 和 Markdown_Inline
 extern "C" TSLanguage *tree_sitter_markdown();
+extern "C" TSLanguage *tree_sitter_markdown_inline();
 
+// 绑定 Markdown Block
 static jlong TSLanguageMarkdown_getInstance(JNIEnv *env, jclass clazz) {
     return (jlong) tree_sitter_markdown();
 }
 
+// 绑定 Markdown Inline
+static jlong TSLanguageMarkdown_getInlineInstance(JNIEnv *env, jclass clazz) {
+    return (jlong) tree_sitter_markdown_inline();
+}
+
 void TSLanguageMarkdown_Native_SetJniMethods(JNINativeMethod *methods, int count) {
   SET_JNI_METHOD(methods, TSLanguageMarkdown_Native_getInstance, TSLanguageMarkdown_getInstance);
+  SET_JNI_METHOD(methods, TSLanguageMarkdown_Native_getInlineInstance, TSLanguageMarkdown_getInlineInstance);
 }
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
