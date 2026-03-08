@@ -1,5 +1,5 @@
 {
-  "types": ["xml","pom","ui","qrc","svg","kml"],
+  "types": ["xml"],
   "styles": {
     "xml_decl": {
       "fg": "@operator",

@@ -27,6 +27,6 @@
       applicationId="com.itsaky.androidide.treesitter.xxx"
       generatedSourceFolders="build/generated/ap_generated_sources/release/out:build/generated/data_binding_base_class_source_out/release/out"
       generatedResourceFolders="build/generated/res/resValues/release"
-      desugaredMethodsFiles="/root/.gradle/caches/8.13/transforms/8c8b935985291d0816e031350e926df0/transformed/D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="/root/.gradle/caches/8.13/transforms/0fc50639162d9065d68e068df2f6bac3/transformed/D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>

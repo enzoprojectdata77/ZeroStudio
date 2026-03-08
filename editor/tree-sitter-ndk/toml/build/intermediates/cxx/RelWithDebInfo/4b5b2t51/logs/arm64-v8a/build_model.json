@@ -10,7 +10,7 @@
   },
   "cxxBuildFolder": "/root/ZeroStudio-ZeroStudio-devs/editor/tree-sitter-ndk/toml/.cxx/RelWithDebInfo/4b5b2t51/arm64-v8a",
   "soFolder": "/root/ZeroStudio-ZeroStudio-devs/editor/tree-sitter-ndk/toml/build/intermediates/cxx/RelWithDebInfo/4b5b2t51/obj/arm64-v8a",
-  "soRepublishFolder": "/root/ZeroStudio-ZeroStudio-devs/editor/tree-sitter-ndk/toml/build/intermediates/cmake/dev/obj/arm64-v8a",
+  "soRepublishFolder": "/root/ZeroStudio-ZeroStudio-devs/editor/tree-sitter-ndk/toml/build/intermediates/cmake/release/obj/arm64-v8a",
   "abiPlatformVersion": 26,
   "cmake": {
     "effectiveConfiguration": {
@@ -24,7 +24,7 @@
     ],
     "cFlagsList": [],
     "cppFlagsList": [],
-    "variantName": "dev",
+    "variantName": "release",
     "isDebuggableEnabled": false,
     "validAbiList": [
       "armeabi-v7a",

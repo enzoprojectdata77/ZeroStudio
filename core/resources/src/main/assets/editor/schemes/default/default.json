@@ -68,14 +68,9 @@
     "@kotlin.json",
     "@xml.json",
     "@toml.json",
-    "@cmake.json",
-    "@cpplang.json",
     "@clang.json",
-    "@markdown.json",
-    "@Python.json",
+    "@cmake.json",
     "@yaml.json",
-    "@TypeScript.json",
-    "@properties.json",
     "@log.json"
   ]
 }

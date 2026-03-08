@@ -52,6 +52,8 @@ import com.itsaky.androidide.editor.language.treesitter.MarkdownLanguage
 import com.itsaky.androidide.editor.language.treesitter.reStructuredTextLanguage
 import com.itsaky.androidide.editor.language.treesitter.YamlLanguage
 import com.itsaky.androidide.editor.language.treesitter.TypeScriptLanguage
+import com.itsaky.androidide.editor.language.treesitter.SqliteLanguage
+import com.itsaky.androidide.editor.language.treesitter.AidlLanguage
 import com.itsaky.androidide.editor.schemes.IDEColorSchemeProvider
 import com.itsaky.androidide.editor.ui.IDEEditor
 import com.itsaky.androidide.eventbus.events.editor.DocumentChangeEvent
@@ -153,6 +155,9 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
       TSLanguageRegistry.instance.register(LogLanguage.TS_TYPE, LogLanguage.FACTORY)
       TSLanguageRegistry.instance.register(JsonLanguage.TS_TYPE, JsonLanguage.FACTORY)
       TSLanguageRegistry.instance.register(TomlLanguage.TOML_TYPE, TomlLanguage.FACTORY)
+      
+      TSLanguageRegistry.instance.register(AidlLanguage.TS_TYPE, AidlLanguage.FACTORY)
+      TSLanguageRegistry.instance.register(SqliteLanguage.TS_TYPE, SqliteLanguage.FACTORY)
 
 
       //TypeScript Language

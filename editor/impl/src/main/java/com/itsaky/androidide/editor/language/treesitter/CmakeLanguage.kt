@@ -53,6 +53,12 @@ class CmakeLanguage(context: Context) :
         val FACTORY = Factory { CmakeLanguage(it) }
     }
 
+   fun isStandardHeader(fileName: String): Boolean {
+        val stdHeaders = setOf("CMakeLists.txt", "CMakeCache.txt")
+        return stdHeaders.contains(fileName)
+    }
+
+
     /**
      * Determines whether the given character should trigger code completion.
      * CMake identifiers typically consist of letters, numbers, and underscores.

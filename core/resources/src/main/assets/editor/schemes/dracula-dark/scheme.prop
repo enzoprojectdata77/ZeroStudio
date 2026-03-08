@@ -1,5 +1,5 @@
 #https://github.com/kaicsm/dracula-androidide
-scheme.name=Dracula Clean - dark
+scheme.name=Dracula dark
 scheme.version=2
 scheme.isDark=true
 scheme.file=dracula.json

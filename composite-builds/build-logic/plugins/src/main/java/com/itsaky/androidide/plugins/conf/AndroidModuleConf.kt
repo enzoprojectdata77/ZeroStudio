@@ -191,10 +191,10 @@ tasks.withType(KotlinCompile::class.java).configureEach {
     // similar to 'release', but disables proguard/r8
     // this build type can be used to gain release-like performance at runtime
     // the build are faster for this build type as compared to 'release'
-    buildTypes.register("dev") {
-      initWith(buildTypes.getByName("release"))
-      isMinifyEnabled = false
-    }
+    // buildTypes.register("dev") {
+      // initWith(buildTypes.getByName("release"))
+      // isMinifyEnabled = false
+    // }
 
     testOptions { unitTests.isIncludeAndroidResources = true }
 

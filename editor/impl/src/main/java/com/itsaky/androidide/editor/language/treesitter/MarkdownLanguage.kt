@@ -43,7 +43,7 @@ class MarkdownLanguage(
          */
         @JvmField
         val FACTORY_BLOCK = Factory { context -> 
-            MarkdownLanguage(context, TSLanguageMarkdown.getInstance(), TS_TYPE_MD) 
+            MarkdownLanguage(context, TSLanguageMarkdown.getInstance(), EXT_MARKDOWN) 
         }
 
         /**

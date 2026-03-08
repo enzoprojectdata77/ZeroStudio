@@ -33,11 +33,6 @@
     "kt.constructor": "#bd93f9",
     "kt.string.esc": "#8be9fd",
 
-    "toml.table": "#ff79c6",
-    "toml.key": "#50fa7b",
-    "toml.boolean": "#bd93f9",
-    "toml.datetime": "#f1fa8c" 
-    
     "xml.tag": "#ff79c6",
     "xml.ref": "#bd93f9",
     "ns_prefix": "#ff79c6",
@@ -71,16 +66,6 @@
     "@json.json",
     "@kotlin.json",
     "@xml.json",
-    "@log.json",
-    "@toml.json",
-    "@cmake.json",
-    "@cpplang.json",
-    "@clang.json",
-    "@markdown.json",
-    "@Python.json",
-    "@yaml.json",
-    "@TypeScript.json",
-    "@properties.json",
-    "@toml.json"
+    "@log.json"
   ]
 }

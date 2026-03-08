@@ -64,6 +64,7 @@ Here is the decorated version:
 
 ---
 
+<details close>
 # 🌿 About Android Tree-Sitter
 
 A streamlined port of the Tree-Sitter parser generator, specifically optimized for the Android NDK environment.
@@ -104,11 +105,10 @@ Extract `@capture` groups from `.scm` files and generate compatible configuratio
 *   **Scripts:** [`generate_highlight_json2.py`](./docs/Highlight_JSON_docs/generate_highlight_json2.py) or [`generate_highlight_json.py`](./docs/Highlight_JSON_docs/generate_highlight_json.py)
 *   **Usage:**
 ```bash
-python3 generate_highlight_json2.py \
-  -i typeScript/queries/highlights.scm \
-  -o TypeScript.json \
-  -l TypeScript \
-  -e ts tsx mts cts
+python3 docs/Highlight_JSON_docs/generate_highlight_json2.py \               ─╯
+  -i core/resources/src/main/assets/editor/treesitter/cpp/highlights.scm \
+  -o cpp.json \
+  -e cpp cxx hxx h.in
 ```
 
 ### 2. SCM Mapping Generator
@@ -120,6 +120,7 @@ python3 generate_structured_scm.py \
   -i typeScript/src/main/cpp/typescript/src/node-types.json \
   -o highlights.scm
 ```
+</details>
 
 ## Installation
 [<img src="https://github.com/Kunzisoft/Github-badge/raw/main/get-it-on-github.svg"
@@ -180,7 +181,7 @@ Thanks to all the developers who have contributed to this project.
 </p>
 
 
-<details open>
+<details close>
 <summary>⚖️ <strong>IMPORTANT DISCLAIMER / 重要免责声明 (CLICK TO READ)</strong></summary>
 
 ### 🛡️ Legal Disclaimer & Liability Waiver (免责声明与责任豁免)

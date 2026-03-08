@@ -37,7 +37,7 @@ PS: The content in the template, configuration files, etc. should be modified as
 Then in the code of the template, replace "toml" or "Toml" with the target language you need. Pay attention to the case sensitivity.
 
 + Author of this module migration work: android_zero
-Please indicate the source and author when using, and comply with the GUN3 agreement
+Please indicate the source and author when using
 
 + src/main/cpp/CMakeLists.txt：
 ```CMakeLists.txt
