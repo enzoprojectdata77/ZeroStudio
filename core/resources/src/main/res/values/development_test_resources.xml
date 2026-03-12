@@ -316,6 +316,9 @@
 	<string name="preview_initializing">Initializing Compose preview…</string>
 
   <string name="msg_use_ndk">Add C++ template for this project</string>
-
+<string name="wizard_ndk_version">NDK Version</string>
+    <string name="wizard_cmake_version">CMake Version</string>
+    <string name="msg_use_ndk">Include C/C++ Native Support</string>
+    <string name="msg_use_toml">Use Version Catalog (TOML)</string>
 
 </resources>

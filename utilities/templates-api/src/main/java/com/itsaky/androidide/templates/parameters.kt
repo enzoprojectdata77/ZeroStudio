@@ -95,6 +95,14 @@ abstract class Parameter<T>(
   private var actionBeforeCreateView: ((Parameter<T>) -> Unit)? = null
   private var actionAfterCreateView: ((Parameter<T>) -> Unit)? = null
 
+  var isVisible: Boolean = true
+    set(value) {
+      field = value
+      onVisibilityChanged?.invoke(value)
+    }
+
+  var onVisibilityChanged: ((Boolean) -> Unit)? = null
+  
   /**
    * The value of this parameter.
    */
@@ -407,31 +415,30 @@ inline fun projectLanguageParameter(
     }
 
 enum class NdkVersion(val version: String) {
-  NDK_21E("21.4.7075529"),
-  NDK_22B("22.1.7171670"),
-  NDK_23C("23.2.8568313"),
-  NDK_24("24.0.8215888"),
-  NDK_25C("25.2.9519653"),
-  NDK_26D("26.3.11579264"),
-  NDK_27B("27.0.12077973"),
-  NDK_27D("27.2.12479018"),
-  NDK_28C("28.0.12674087"),
-  NDK_29B("29.0.12682434");
-
-  fun displayName(): String = version
+    R29("29.0.14206865"),
+    R29_BETA4("29.0.14033849-beta4"),
+    R28C("28.2.13676358"),
+    R27D("27.3.13750724"),
+    R26D("26.3.11579264"),
+    // R25C("25.2.9519653"),
+    R24("24.0.8215888"),
+    R23B("23.2.8568313"),
+    R22B("22.1.7171670"),
+    R21E("21.4.7075529");
+    fun displayName(): String = version
 }
 
-inline fun projectNdkVersionParameter(
-    crossinline configure: EnumParameterBuilder<NdkVersion>.() -> Unit = {}
-) =
-    enumParameter<NdkVersion> {
-      name = string.minimum_sdk // You'll need to add this string resource
-      default = NdkVersion.NDK_26D
-      displayName = NdkVersion::displayName
-      startIcon = { R.drawable.ic_min_sdk } // You'll need to add this icon
+enum class CmakeVersion(val version: String) {
+    V3_10_2("3.10.2"), 
+    V3_18_1("3.18.1"), 
+    V3_22_1("3.22.1"), 
+    V3_25_1("3.25.1"), 
+    V3_30("3.30.0"), 
+    V3_31_1("3.31.1");
+    fun displayName(): String = version
+}
 
-      configure()
-    }
+
 
 inline fun minSdkParameter(crossinline configure: EnumParameterBuilder<Sdk>.() -> Unit = {}) =
     enumParameter<Sdk> {
@@ -454,7 +461,7 @@ inline fun useKtsParameter(crossinline configure: BooleanParameterBuilder.() -> 
 inline fun projectNdkVersionParameter(crossinline configure: EnumParameterBuilder<NdkVersion>.() -> Unit = {}) =
     enumParameter<NdkVersion> {
         name = R.string.wizard_ndk_version
-        default = NdkVersion.R27D
+        default = NdkVersion.R29
         displayName = NdkVersion::displayName
         configure()
     }

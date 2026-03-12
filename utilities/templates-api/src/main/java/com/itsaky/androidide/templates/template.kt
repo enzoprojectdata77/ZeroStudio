@@ -213,7 +213,7 @@ class ProjectTemplateData(
     ndkVersion: String,
     cmakeVersion: String,
     useToml: Boolean,
-) : BaseTemplateData(name, projectDir, language, useKts, useNdk)
+) : BaseTemplateData(name, projectDir, language, useKts, useNdk, ndkVersion, cmakeVersion, useToml)
 
 /**
  * Data for creating module projects.
@@ -236,7 +236,7 @@ open class ModuleTemplateData(
     useToml: Boolean = true,
     minSdk: Sdk,
     val versions: ModuleVersionData = ModuleVersionData(minSdk),
-) : BaseTemplateData(name, projectDir, language, useKts, useNdk) {
+) : BaseTemplateData(name, projectDir, language, useKts, useNdk, ndkVersion, cmakeVersion, useToml) {
 
   private val srcDirs = mutableMapOf<SrcSet, File>()
 

@@ -74,18 +74,50 @@ class TemplateWidgetViewProviderImpl : ITemplateWidgetViewProvider {
         setValue(value, false)
       }
     }
-
-    return when (widget) {
+    
+    // 获取生成的 View
+    val view = when (widget) {
       is TextFieldWidget -> createTextField(context, widget)
       is CheckBoxWidget -> createCheckBox(context, widget)
       is SpinnerWidget -> createSpinner(context, widget)
       else -> throw IllegalArgumentException("Unknown widget type : $widget")
-    }.also {
-      if (widget is ParameterWidget<T>) {
-        widget.parameter.afterCreateView()
-      }
     }
+    
+    if (widget is ParameterWidget<T>) {
+      val param = widget.parameter
+      
+      param.onVisibilityChanged = { visible ->
+          view.visibility = if (visible) View.VISIBLE else View.GONE
+          val lp = view.layoutParams ?: android.widget.LinearLayout.LayoutParams(
+              android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+              android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+          )
+    if (visible) {
+              lp.height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+          } else {
+              lp.height = 0
+          }
+          view.layoutParams = lp
+      }
+      param.onVisibilityChanged?.invoke(param.isVisible)
+
+      param.afterCreateView()
+    }
+    
+    return view
   }
+  
+    // return when (widget) {
+      // is TextFieldWidget -> createTextField(context, widget)
+      // is CheckBoxWidget -> createCheckBox(context, widget)
+      // is SpinnerWidget -> createSpinner(context, widget)
+      // else -> throw IllegalArgumentException("Unknown widget type : $widget")
+    // }.also {
+      // if (widget is ParameterWidget<T>) {
+        // widget.parameter.afterCreateView()
+      // }
+    // }
+  // }
 
   private fun createCheckBox(context: Context, widget: CheckBoxWidget): View {
     return LayoutCheckboxBinding.inflate(LayoutInflater.from(context)).apply {
