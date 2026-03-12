@@ -35,9 +35,10 @@ fun AndroidModuleTemplateBuilder.proguardRules() {
   executor.copyAsset(baseAsset(file.name), file)
 }
 
-/** `.gitignore` file source for android modules. */
-fun AndroidModuleTemplateBuilder.androidGitignoreSrc() =
-    """
-    /build
-    """
-        .trimIndent()
+/**
+ * `.gitignore` file source for android modules.
+ */
+fun AndroidModuleTemplateBuilder.androidGitignoreSrc()
+= """
+/build
+""".trimIndent()

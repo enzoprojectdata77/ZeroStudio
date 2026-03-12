@@ -315,5 +315,7 @@
 	<string name="preview_building_project">Building project…</string>
 	<string name="preview_initializing">Initializing Compose preview…</string>
 
+  <string name="msg_use_ndk">Add C++ template for this project</string>
+
 
 </resources>

@@ -19,8 +19,7 @@ package com.itsaky.androidide.templates.impl.navDrawerActivity
 
 import com.itsaky.androidide.templates.base.AndroidModuleTemplateBuilder
 
-internal fun AndroidModuleTemplateBuilder.homeModelSrcJava() =
-    """
+internal fun AndroidModuleTemplateBuilder.homeModelSrcJava() = """
 package ${data.packageName}.ui.home;
 
 import androidx.lifecycle.LiveData;
@@ -40,11 +39,9 @@ public class HomeViewModel extends ViewModel {
         return mText;
     }
 }
-"""
-        .trim()
+""".trim()
 
-internal fun AndroidModuleTemplateBuilder.homeModelSrcKt() =
-    """
+internal fun AndroidModuleTemplateBuilder.homeModelSrcKt() = """
 package ${data.packageName}.ui.home
 
 import androidx.lifecycle.LiveData
@@ -58,5 +55,4 @@ class HomeViewModel : ViewModel() {
     }
     val text: LiveData<String> = _text
 }
-"""
-        .trim()
+""".trim()

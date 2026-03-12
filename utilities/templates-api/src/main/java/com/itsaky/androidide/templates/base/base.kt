@@ -18,6 +18,7 @@
 package com.itsaky.androidide.templates.base
 
 import android.content.Context
+import androidx.annotation.StringRes
 import android.view.View
 import com.itsaky.androidide.templates.BooleanParameter
 import com.itsaky.androidide.templates.CheckBoxWidget
@@ -46,6 +47,7 @@ import com.itsaky.androidide.templates.TextFieldWidget
 import com.itsaky.androidide.templates.base.util.getNewProjectName
 import com.itsaky.androidide.templates.base.util.moduleNameToDir
 import com.itsaky.androidide.templates.enumParameter
+import com.itsaky.androidide.templates.*
 import com.itsaky.androidide.templates.minSdkParameter
 import com.itsaky.androidide.templates.packageNameParameter
 import com.itsaky.androidide.templates.projectLanguageParameter
@@ -61,52 +63,52 @@ import java.io.File
 typealias AndroidModuleTemplateConfigurator = AndroidModuleTemplateBuilder.() -> Unit
 
 internal const val PREFS_NAME = "project_template_prefs"
-internal const val ACSIDE_KEY_LAST_SAVE_LOCATION = "last_save_location"
+internal const val ANDROIDIDE_KEY_LAST_SAVE_LOCATION = "last_save_location"
 
-/** Get the last saved location from acside.properties */
+/** Get the last saved location from androidide.properties */
 @PublishedApi
 internal fun getLastSaveLocation(context: Context?): String {
-  val acsideFile = Environment.ACSIDE
-  if (acsideFile?.exists() == true) {
-    try {
-      val props = java.util.Properties()
-      acsideFile.inputStream().use { props.load(it) }
-      val savedLocation = props.getProperty(ACSIDE_KEY_LAST_SAVE_LOCATION)
-      if (savedLocation != null && File(savedLocation).exists()) {
-        return savedLocation
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
+    val androidideFile = Environment.ANDROIDIDE
+    if (androidideFile?.exists() == true) {
+        try {
+            val props = java.util.Properties()
+            androidideFile.inputStream().use { props.load(it) }
+            val savedLocation = props.getProperty(ANDROIDIDE_KEY_LAST_SAVE_LOCATION)
+            if (savedLocation != null && File(savedLocation).exists()) {
+                return savedLocation
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
-  }
-  return Environment.PROJECTS_DIR.absolutePath
+    return Environment.PROJECTS_DIR.absolutePath
 }
 
-/** Save the last save location to acside.properties */
+/** Save the last save location to androidide.properties */
 @PublishedApi
 internal fun saveLastSaveLocation(context: Context?, location: String) {
-  val acsideFile = Environment.ACSIDE ?: return
-  try {
-    val props = java.util.Properties()
+    val androidideFile = Environment.ANDROIDIDE ?: return
+    try {
+        val props = java.util.Properties()
 
-    // Load existing properties if file exists
-    if (acsideFile.exists()) {
-      acsideFile.inputStream().use { props.load(it) }
+        // Load existing properties if file exists
+        if (androidideFile.exists()) {
+            androidideFile.inputStream().use { props.load(it) }
+        }
+
+        // Update the location
+        props.setProperty(ANDROIDIDE_KEY_LAST_SAVE_LOCATION, location)
+
+        // Save back to file
+        androidideFile.outputStream().use { props.store(it, "AndroidCS Configuration") }
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
-
-    // Update the location
-    props.setProperty(ACSIDE_KEY_LAST_SAVE_LOCATION, location)
-
-    // Save back to file
-    acsideFile.outputStream().use { props.store(it, "AndroidCS Configuration") }
-  } catch (e: Exception) {
-    e.printStackTrace()
-  }
 }
 
 /** File browser callback interface that should be implemented by the UI layer */
 interface FileBrowserCallback {
-  fun openFileBrowser(currentPath: String, parameter: StringParameter)
+    fun openFileBrowser(currentPath: String, parameter: StringParameter)
 }
 
 @PublishedApi internal var _fileBrowserCallback: FileBrowserCallback? = null
@@ -115,23 +117,23 @@ interface FileBrowserCallback {
 
 /** Set the file browser callback. This should be called from the UI layer. */
 fun setFileBrowserCallback(callback: FileBrowserCallback?) {
-  _fileBrowserCallback = callback
+    _fileBrowserCallback = callback
 }
 
 /** Create a click listener for the browse button */
 @PublishedApi
 internal fun createBrowseClickListener(): View.OnClickListener {
-  return View.OnClickListener {
-    _currentBrowseParameter?.let { param ->
-      _fileBrowserCallback?.openFileBrowser(param.value, param)
+    return View.OnClickListener {
+        _currentBrowseParameter?.let { param ->
+            _fileBrowserCallback?.openFileBrowser(param.value, param)
+        }
     }
-  }
 }
 
 /** Update the browse click listener with the parameter reference */
 @PublishedApi
 internal fun updateBrowseClickListener(parameter: StringParameter) {
-  _currentBrowseParameter = parameter
+    _currentBrowseParameter = parameter
 }
 
 /**
@@ -146,20 +148,24 @@ inline fun baseProject(
     packageName: StringParameter = packageNameParameter(),
     useKts: BooleanParameter = useKtsParameter(),
     useNdk: BooleanParameter = useNdkParameter(),
+    useToml: BooleanParameter = useTomlParameter(), // 新增 TOML 参数
     minSdk: EnumParameter<Sdk> = minSdkParameter(),
     language: EnumParameter<Language> = projectLanguageParameter(),
     ndkVersion: EnumParameter<NdkVersion> = projectNdkVersionParameter(),
     projectVersionData: ProjectVersionData = ProjectVersionData(),
     context: Context? = null,
-    crossinline block: ProjectTemplateBuilder.() -> Unit,
+    @StringRes description: Int? = null,
+    crossinline block: ProjectTemplateBuilder.() -> Unit
 ): ProjectTemplate {
-  return ProjectTemplateBuilder()
-      .apply {
+    return ProjectTemplateBuilder().apply {
+
+        // Pass the description to the builder
+        this.description = description
 
         // When project name is changed, change the package name accordingly
         projectName.observe { name ->
-          val newPackage = AndroidUtils.appNameToPackageName(name.value, packageName.value)
-          packageName.setValue(newPackage)
+            val newPackage = AndroidUtils.appNameToPackageName(name.value, packageName.value)
+            packageName.setValue(newPackage)
         }
 
         Environment.mkdirIfNotExits(Environment.PROJECTS_DIR)
@@ -167,26 +173,27 @@ inline fun baseProject(
         // Create the click listener that will be used
         val browseClickListener =
             View.OnClickListener {
-              _currentBrowseParameter?.let { param ->
-                _fileBrowserCallback?.openFileBrowser(param.value, param)
-              }
+                _currentBrowseParameter?.let { param ->
+                    _fileBrowserCallback?.openFileBrowser(param.value, param)
+                }
             }
 
         val saveLocation = stringParameter {
-          name = R.string.wizard_save_location
-          default = getLastSaveLocation(context)
-          constraints = listOf(NONEMPTY, DIRECTORY, EXISTS)
-          endIcon = { R.drawable.ic_folder }
-          onEndIconClick = browseClickListener
+            name = R.string.wizard_save_location
+            default = Environment.PROJECTS_DIR.absolutePath
+            // default = getLastSaveLocation(context)
+            constraints = listOf(NONEMPTY, DIRECTORY, EXISTS)
+            endIcon = { R.drawable.ic_folder }
+            onEndIconClick = browseClickListener
         }
 
         // Store reference to saveLocation for the click listener
         saveLocation.doAfterCreateView { param ->
-          updateBrowseClickListener(param as StringParameter)
+            updateBrowseClickListener(param as StringParameter)
         }
 
         projectName.doBeforeCreateView {
-          it.setValue(getNewProjectName(saveLocation.value, projectName.value))
+            it.setValue(getNewProjectName(saveLocation.value, projectName.value))
         }
 
         widgets(
@@ -197,72 +204,85 @@ inline fun baseProject(
             SpinnerWidget(minSdk),
             CheckBoxWidget(useKts),
             CheckBoxWidget(useNdk),
+            SpinnerWidget(ndkVersion),
+            SpinnerWidget(cmakeVersion),
+            CheckBoxWidget(useToml)
         )
+
+        // ---------------- 联动逻辑 (根据 NDK 勾选状态隐藏/显示 NDK 版本选择框) ----------------
+        // 注意：要在 UI 层真正实现隐藏，需要修改 TemplateWidgetViewProviderImpl
+        // 这里提供数据层面的观察。你可以将 ndkVersion.enabled 设为 useNdk.value
+        useNdk.observe { ndkParam ->
+            // 这里可以通知 UI 更新
+            // 如果你的架构支持禁用/隐藏 Parameter，可以在这里操作
+        }
 
         // Setup the required properties before executing the recipe
         preRecipe = {
-          this@apply._executor = this
+            this@apply._executor = this
 
-          // Save the selected location for future use
-          saveLastSaveLocation(context, saveLocation.value)
+            this@apply._data = ProjectTemplateData(
+                name = projectName.value,
+                projectDir = File(saveLocation.value, projectName.value),
+                version = projectVersionData,
+                language = language.value,
+                useKts = useKts.value,
+                useNdk = useNdk.value,
+                ndkVersion = ndkVersion.value.version,
+                cmakeVersion = cmakeVersion.value.version,
+                useToml = useToml.value
+            )
 
-          this@apply._data =
-              ProjectTemplateData(
-                  projectName.value,
-                  File(saveLocation.value, projectName.value),
-                  projectVersionData,
-                  language = language.value,
-                  useKts = useKts.value,
-                  useNdk = useNdk.value,
-              )
+            if (data.projectDir.exists() && data.projectDir.listFiles()?.isNotEmpty() == true) {
+                throw IllegalArgumentException("Project directory already exists")
+            }
 
-          if (data.projectDir.exists() && data.projectDir.listFiles()?.isNotEmpty() == true) {
-            throw IllegalArgumentException("Project directory already exists")
-          }
-
-          setDefaultModuleData(
-              ModuleTemplateData(
-                  ":app",
-                  appName = data.name,
-                  packageName.value,
-                  data.moduleNameToDir(":app"),
-                  type = AndroidApp,
-                  language = language.value,
-                  minSdk = minSdk.value,
-                  useKts = data.useKts,
-                  useNdk = data.useNdk,
-              )
-          )
+            setDefaultModuleData(
+                ModuleTemplateData(
+                    name = ":app",
+                    appName = data.name,
+                    packageName = packageName.value,
+                    projectDir = data.moduleNameToDir(":app"),
+                    type = AndroidApp,
+                    language = language.value,
+                    minSdk = minSdk.value,
+                    useKts = data.useKts,
+                    useNdk = data.useNdk,
+                    ndkVersion = data.ndkVersion,
+                    cmakeVersion = data.cmakeVersion,
+                    useToml = data.useToml
+                )
+            )
         }
 
         // After the recipe is executed, finalize the project creation
-        // In this phase, we write the build scripts as they may need additional data based on the
-        // previous recipe
-        // For example, writing settings.gradle[.kts] needs to know the name of the modules so that
-        // those can be included
         postRecipe = {
-          // settings.gradle[.kts]
-          settingsGradle()
+            // build.gradle[.kts]
+            buildGradle()
 
-          // gradle.properties
-          gradleProps()
+            // settings.gradle[.kts]
+            settingsGradle()
 
-          // gradlew
-          // gradlew.bat
-          // gradle/wrapper/gradle-wrapper.jar
-          // gradle/wrapper/gradle-wrapper.properties
-          gradleWrapper()
+            // gradle.properties
+            gradleProps()
 
-          // .gitignore
-          gitignore()
+            // gradlew
+            // gradlew.bat
+            // gradle/wrapper/gradle-wrapper.jar
+            // gradle/wrapper/gradle-wrapper.properties
+            gradleWrapper()
 
-          // build.gradle[.kts] - Call this LAST after modules have been processed
-          buildGradle()
+            // .gitignore
+            gitignore()
+            
+            if (data.useToml) {
+                generateTomlFile()
+            }
         }
 
         block()
-      }
-      .build() as ProjectTemplate
+
+    }.build() as ProjectTemplate
 }
 
 /**
@@ -274,66 +294,69 @@ inline fun baseAndroidModule(
     isLibrary: Boolean = false,
     context: Context? = null,
     projectBuilder: ProjectTemplateBuilder? = null,
-    crossinline block: AndroidModuleTemplateConfigurator,
+    crossinline block: AndroidModuleTemplateConfigurator
 ): ModuleTemplate {
-  return AndroidModuleTemplateBuilder()
-      .apply {
-        this.context = context
-        this.projectBuilder = projectBuilder
+    return AndroidModuleTemplateBuilder()
+        .apply {
 
-        val appName = if (isLibrary) null else projectNameParameter()
-        val language = projectLanguageParameter()
-        val ndkVersion = projectNdkVersionParameter()
-        val minSdk = minSdkParameter()
-        val packageName = packageNameParameter()
-        val useKts = useKtsParameter()
-        val useNdk = useNdkParameter()
+            val appName = if (isLibrary) null else projectNameParameter()
+            val language = projectLanguageParameter()
+            val ndkVersion = projectNdkVersionParameter()
+            val minSdk = minSdkParameter()
+            val packageName = packageNameParameter()
+            val useKts = useKtsParameter()
+            val useNdk = useNdkParameter()
+            val useToml = useTomlParameter()
 
-        val moduleName = stringParameter {
-          name = R.string.wizard_module_name
-          default = ":app"
-          constraints = listOf(NONEMPTY, MODULE_NAME)
-        }
-
-        val type =
-            enumParameter<ModuleType> {
-              name = R.string.wizard_module_type
-              default = AndroidLibrary
-              startIcon = { R.drawable.ic_android }
-              displayName = ModuleType::typeName
+            val moduleName = stringParameter {
+                name = R.string.wizard_module_name
+                default = ":app"
+                constraints = listOf(NONEMPTY, MODULE_NAME)
             }
 
-        widgets(TextFieldWidget(moduleName))
+            val type = enumParameter<ModuleType> {
+                name = R.string.wizard_module_type
+                default = AndroidLibrary
+                startIcon = { R.drawable.ic_android }
+                displayName = ModuleType::typeName
+            }
 
-        appName?.let { widgets(TextFieldWidget(it)) }
+            widgets(TextFieldWidget(moduleName))
 
-        widgets(
-            TextFieldWidget(packageName),
-            SpinnerWidget(minSdk),
-            SpinnerWidget(type),
-            SpinnerWidget(language),
-            CheckBoxWidget(useKts),
-            CheckBoxWidget(useNdk),
-        )
+            appName?.let { widgets(TextFieldWidget(it)) }
 
-        preRecipe = commonPreRecipe {
-          ModuleTemplateData(
-              name = moduleName.value,
-              appName = appName?.value,
-              packageName = packageName.value,
-              projectDir = requireProjectData().moduleNameToDir(moduleName.value),
-              type = type.value,
-              language = language.value,
-              minSdk = minSdk.value,
-              useKts = useKts.value,
-              useNdk = useNdk.value,
-          )
-        }
-        postRecipe = commonPostRecipe()
+            widgets(
+                TextFieldWidget(packageName),
+                SpinnerWidget(minSdk),
+                SpinnerWidget(type),
+                SpinnerWidget(language),
+                CheckBoxWidget(useKts),
+                CheckBoxWidget(useNdk),
+                CheckBoxWidget(useToml)
+            )
 
-        block()
-      }
-      .build() as ModuleTemplate
+            preRecipe = commonPreRecipe {
+                ModuleTemplateData(
+                    name = moduleName.value,
+                    appName = appName?.value,
+                    packageName = packageName.value,
+                    projectDir = requireProjectData().moduleNameToDir(moduleName.value),
+                    type = type.value,
+                    language = language.value,
+                    minSdk = minSdk.value,
+                    useKts = useKts.value,
+                    useNdk = useNdk.value,
+                    useToml = useToml.value
+                )
+            }
+            
+            postRecipe = commonPostRecipe {
+                // 自动检查 useNdk 并在需要时生成 C++ 模板
+                generateNdkFiles()
+            }
+
+            block()
+        }.build() as ModuleTemplate
 }
 
 /**
@@ -341,11 +364,37 @@ inline fun baseAndroidModule(
  *
  * @param dir The directory in which the file will be created.
  * @param configurator The configurator to configure the template.
- * @return The [FileTemplate].
+ * @return The[FileTemplate].
  */
 inline fun <R : FileTemplateRecipeResult> baseFile(
     dir: File,
-    crossinline configurator: FileTemplateBuilder<R>.() -> Unit,
+    crossinline configurator: FileTemplateBuilder<R>.() -> Unit
 ): FileTemplate<R> {
-  return FileTemplateBuilder<R>(dir).apply(configurator).build() as FileTemplate<R>
+    return FileTemplateBuilder<R>(dir).apply(configurator)
+        .build() as FileTemplate<R>
+}
+
+
+    
+enum class NdkVersion(val version: String) {
+    R29("29.0.14206865"),
+    R29_BETA4("29.0.14033849-beta4"),
+    R28C("28.2.13676358"),
+    R27D("27.3.13750724"),
+    R26D("26.3.11579264"),
+    R24("24.0.8215888"),
+    R23B("23.2.8568313"),
+    R22B("22.1.7171670"),
+    R21E("21.4.7075529");
+    fun displayName(): String = version
+}
+
+enum class CmakeVersion(val version: String) {
+    V3_10_2("3.10.2"), 
+    V3_18_1("3.18.1"), 
+    V3_22_1("3.22.1"), 
+    V3_25_1("3.25.1"), 
+    V3_30("3.30.0"), 
+    V3_31_1("3.31.1");
+    fun displayName(): String = version
 }

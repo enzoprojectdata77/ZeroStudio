@@ -17,9 +17,8 @@
 
 package com.itsaky.androidide.templates.base
 
-import android.content.Context
+// import android.content.Context
 import com.android.SdkConstants.ANDROID_MANIFEST_XML
-import com.squareup.javapoet.TypeSpec
 import com.itsaky.androidide.templates.ModuleType.AndroidLibrary
 import com.itsaky.androidide.templates.RecipeExecutor
 import com.itsaky.androidide.templates.SrcSet
@@ -29,6 +28,7 @@ import com.itsaky.androidide.templates.base.modules.android.proguardRules
 import com.itsaky.androidide.templates.base.util.AndroidManifestBuilder
 import com.itsaky.androidide.templates.base.util.AndroidModuleResManager
 import com.itsaky.androidide.templates.base.util.stringRes
+import com.squareup.javapoet.TypeSpec
 import java.io.File
 
 /**
@@ -40,31 +40,28 @@ class AndroidModuleTemplateBuilder : ModuleTemplateBuilder() {
   /**
    * Set whether this Android module is a Jetpack Compose module or not.
    *
-   * If this is set to `true`, then compose-specific configurations will be added to the
-   * `build.gradle[.kts]` file.
+   * If this is set to `true`, then compose-specific configurations will be
+   * added to the `build.gradle[.kts]` file.
    */
-  // In AndroidModuleTemplateBuilder.kt - Update the isComposeModule setter
   var isComposeModule = false
-    set(value) {
-      field = value
-      // Automatically enable Compose support in the project builder if available
-      if (value && projectBuilder != null) {
-        projectBuilder?.enableComposeSupport()
-      }
-    }
-
-  var context: Context? = null
-  var projectBuilder: ProjectTemplateBuilder? = null
-
+    
+ 
+  // var context: Context? = null
+  
   val manifest = AndroidManifestBuilder()
   val res = AndroidModuleResManager()
 
-  /** Return the file path to `AndroidManifest.xml`. */
+  /**
+   * Return the file path to `AndroidManifest.xml`.
+   */
   fun manifestFile(): File {
-    return File(srcFolder(SrcSet.Main), ANDROID_MANIFEST_XML).also { it.parentFile!!.mkdirs() }
+    return File(srcFolder(SrcSet.Main),
+      ANDROID_MANIFEST_XML).also { it.parentFile!!.mkdirs() }
   }
 
-  /** Configure the properties for `AndroidManifest.xml` file. */
+  /**
+   * Configure the properties for `AndroidManifest.xml` file.
+   */
   inline fun manifest(crossinline block: AndroidManifestBuilder.() -> Unit) {
     manifest.apply(block)
   }
@@ -108,11 +105,12 @@ class AndroidModuleTemplateBuilder : ModuleTemplateBuilder() {
    *
    * @param name The name of the class.
    */
-  inline fun RecipeExecutor.createActivity(
-      name: String = "MainActivity",
-      crossinline configure: TypeSpec.Builder.() -> Unit,
+  inline fun RecipeExecutor.createActivity(name: String = "MainActivity",
+                                    crossinline configure: TypeSpec.Builder.() -> Unit
   ) {
-    sources { createClass(data.packageName, name, configure) }
+    sources {
+      createClass(data.packageName, name, configure)
+    }
   }
 
   override fun baseAsset(path: String): String {
@@ -134,7 +132,9 @@ class AndroidModuleTemplateBuilder : ModuleTemplateBuilder() {
     // Write .gitignore
     gitignore()
 
-    manifest.apply { generate(manifestFile()) }
+    manifest.apply {
+      generate(manifestFile())
+    }
 
     res {
       data.appName?.let { putStringRes(manifest.appLabelRes, it) }
@@ -142,32 +142,90 @@ class AndroidModuleTemplateBuilder : ModuleTemplateBuilder() {
       if (strings.isNotEmpty()) {
         createValuesResource("strings") {
           linefeed()
-          strings.forEach { (name, value) -> stringRes(name, value) }
+          strings.forEach { (name, value) ->
+            stringRes(name, value)
+          }
           linefeed()
         }
       }
     }
   }
 
-  // Also update the buildGradle function to ensure the flag is set
   override fun RecipeExecutor.buildGradle() {
-    // Ensure project builder knows about compose usage
-    if (isComposeModule && projectBuilder != null) {
-      projectBuilder?.enableComposeSupport()
-    }
-
-    save(buildGradleSrc(isComposeModule, context), buildGradleFile())
-
-    // Create marker file if this is a compose module
-    if (isComposeModule) {
-      val markerFile = File(data.projectDir.parentFile, ".compose_enabled")
-      markerFile.createNewFile()
-    }
+    save(buildGradleSrc(isComposeModule), buildGradleFile())
   }
 
-  /** Writes the `.gitignore` file in the mdoule directory. */
+  /**
+   * Writes the `.gitignore` file in the mdoule directory.
+   */
   fun RecipeExecutor.gitignore() {
     val gitignore = File(data.projectDir, ".gitignore")
     save(androidGitignoreSrc(), gitignore)
   }
+}
+
+/**
+ * 动态生成 NDK 标准示范模板的 C++ 文件与 CMakeLists.txt
+ */
+fun AndroidModuleTemplateBuilder.generateNdkFiles() {
+
+    if (!data.useNdk) return
+
+    val cppDir = File(data.projectDir, "src/main/cpp")
+    cppDir.mkdirs()
+
+    val cmakeFile = File(cppDir, "CMakeLists.txt")
+    val cppFile = File(cppDir, "native-lib.cpp")
+
+    // 获取模块的纯名称（去掉前面的冒号，比如 ":app" -> "app"）
+    val moduleCleanName = data.name.substringAfterLast(":").ifEmpty { "app" }
+
+    // 生成 CMakeLists.txt
+    val cmakeContent = """
+        cmake_minimum_required(VERSION ${data.cmakeVersion})
+
+        # Declare project name
+        project("$moduleCleanName")
+
+        # Compiling the native library: Compile native-lib.cpp into a SHARED dynamic link library.
+        add_library(
+                ${'$'}{CMAKE_PROJECT_NAME}
+                SHARED
+                native-lib.cpp)
+
+        # Find the Android system's built-in log library for printing Logcat.
+        find_library(
+                log-lib
+                log)
+
+        # Link the target library with the log library.
+        target_link_libraries(
+                ${'$'}{CMAKE_PROJECT_NAME}
+                ${'$'}{log-lib})
+    """.trimIndent()
+
+    // 动态计算 JNI 方法签名的包名前缀 (如 com.example.myapp -> com_example_myapp)
+    val jniPackageName = data.packageName.replace(".", "_")
+
+    // 生成 C++ 源文件示例
+    val cppContent = """
+        #include <jni.h>
+        #include <string>
+        
+        // In Kotlin/Java, it can be called using the following code:
+        // System.loadLibrary("$moduleCleanName");
+        // external fun stringFromJNI(): String
+        
+        extern "C" JNIEXPORT jstring JNICALL
+        Java_${jniPackageName}_MainActivity_stringFromJNI(
+                JNIEnv* env,
+                jobject /* this */) {
+            std::string hello = "Hello from C++ (AndroidIDE)";
+            return env->NewStringUTF(hello.c_str());
+        }
+    """.trimIndent()
+
+    // 写入文件
+    executor.save(cmakeContent, cmakeFile)
+    executor.save(cppContent, cppFile)
 }

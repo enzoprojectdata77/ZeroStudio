@@ -17,8 +17,7 @@
 
 package com.itsaky.androidide.templates.impl.noAndroidXActivity
 
-internal fun noAndroidXActivityLayout() =
-    """
+internal fun noAndroidXActivityLayout() = """
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -34,5 +33,4 @@ internal fun noAndroidXActivityLayout() =
         android:gravity="center"/>
     
 </LinearLayout>
-"""
-        .trim()
+""".trim()

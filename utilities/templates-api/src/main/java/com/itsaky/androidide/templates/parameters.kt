@@ -26,6 +26,7 @@ import com.itsaky.androidide.templates.ParameterConstraint.PACKAGE
 import com.itsaky.androidide.templates.R.string
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import com.itsaky.androidide.preferences.internal.ProjectsPreferences
 
 enum class ParameterConstraint {
 
@@ -74,15 +75,17 @@ enum class ParameterConstraint {
    */
   DIRECTORY,
 
-  /** Used with [FILE] and [DIRECTORY]. Asserts that the file/directory at the given path exists. */
-  EXISTS,
+  /**
+   * Used with [FILE] and [DIRECTORY]. Asserts that the file/directory at the given path exists.
+   */
+  EXISTS
 }
 
 abstract class Parameter<T>(
     @StringRes val name: Int,
     @StringRes val description: Int?,
     val default: T,
-    var constraints: List<ParameterConstraint>,
+    var constraints: List<ParameterConstraint>
 ) {
 
   private val observers = hashSetOf<Observer<T>>()
@@ -176,7 +179,7 @@ abstract class Parameter<T>(
    * @see afterCreateView
    */
   fun doAfterCreateView(action: (Parameter<T>) -> Unit) {
-    this.actionAfterCreateView = action
+    this.actionBeforeCreateView = action
   }
 
   /**
@@ -255,11 +258,8 @@ abstract class ParameterBuilder<T> {
   abstract fun build(): Parameter<T>
 }
 
-class BooleanParameter(
-    @StringRes name: Int,
-    @StringRes description: Int?,
-    default: Boolean,
-    constraints: List<ParameterConstraint>,
+class BooleanParameter(@StringRes name: Int, @StringRes description: Int?,
+  default: Boolean, constraints: List<ParameterConstraint>
 ) : Parameter<Boolean>(name, description, default, constraints)
 
 class BooleanParameterBuilder : ParameterBuilder<Boolean>() {
@@ -275,88 +275,58 @@ class BooleanParameterBuilder : ParameterBuilder<Boolean>() {
  *
  * @property startIcon The drawable resource that will be used as the start icon.
  * @property endIcon The drawable resource that will be used as the end icon.
- * @property onStartIconClick Function which will be used when the start icon is clicked. Click
- *   listener to the icon will be set on if this is non-null.
- * @property onEndIconClick Function which will be used when the end icon is clicked. Click listener
- *   to the icon will be set on if this is non-null.
+ * @property onStartIconClick Function which will be used when the start icon
+ *     is clicked. Click listener to the icon will be set on if this is non-null.
+ * @property onEndIconClick Function which will be used when the end icon is
+ *     clicked. Click listener to the icon will be set on if this is non-null.
  */
-abstract class TextFieldParameter<T>(
-    @StringRes name: Int,
-    @StringRes description: Int?,
-    default: T,
-    val startIcon: ((TextFieldParameter<T>) -> Int)?,
-    val endIcon: ((TextFieldParameter<T>) -> Int)?,
-    val onStartIconClick: View.OnClickListener?,
-    val onEndIconClick: View.OnClickListener?,
-    constraints: List<ParameterConstraint>,
+abstract class TextFieldParameter<T>(@StringRes name: Int,
+  @StringRes description: Int?, default: T,
+  val startIcon: ((TextFieldParameter<T>) -> Int)?,
+  val endIcon: ((TextFieldParameter<T>) -> Int)?,
+  val onStartIconClick: View.OnClickListener?,
+  val onEndIconClick: View.OnClickListener?,
+  constraints: List<ParameterConstraint>
 ) : Parameter<T>(name, description, default, constraints)
 
 abstract class TextFieldParameterBuilder<T>(
-    var startIcon: ((TextFieldParameter<T>) -> Int)? = null,
-    var endIcon: ((TextFieldParameter<T>) -> Int)? = null,
-    var onStartIconClick: View.OnClickListener? = null,
-    var onEndIconClick: View.OnClickListener? = null,
+  var startIcon: ((TextFieldParameter<T>) -> Int)? = null,
+  var endIcon: ((TextFieldParameter<T>) -> Int)? = null,
+  var onStartIconClick: View.OnClickListener? = null,
+  var onEndIconClick: View.OnClickListener? = null
 ) : ParameterBuilder<T>()
 
-class StringParameter(
-    @StringRes name: Int,
-    @StringRes description: Int?,
-    default: String,
-    startIcon: ((TextFieldParameter<String>) -> Int)?,
-    endIcon: ((TextFieldParameter<String>) -> Int)?,
-    onStartIconClick: View.OnClickListener?,
-    onEndIconClick: View.OnClickListener?,
-    constraints: List<ParameterConstraint>,
-) :
-    TextFieldParameter<String>(
-        name,
-        description,
-        default,
-        startIcon,
-        endIcon,
-        onStartIconClick,
-        onEndIconClick,
-        constraints,
-    )
+class StringParameter(@StringRes name: Int, @StringRes description: Int?,
+  default: String,
+  startIcon: ((TextFieldParameter<String>) -> Int)?,
+  endIcon: ((TextFieldParameter<String>) -> Int)?,
+  onStartIconClick: View.OnClickListener?,
+  onEndIconClick: View.OnClickListener?,
+  constraints: List<ParameterConstraint>
+) : TextFieldParameter<String>(name, description, default, startIcon, endIcon,
+  onStartIconClick, onEndIconClick, constraints)
 
 class StringParameterBuilder : TextFieldParameterBuilder<String>() {
 
   override fun build(): StringParameter {
-    return StringParameter(
-        name = name!!,
-        description = description,
-        default = default!!,
-        startIcon = startIcon,
-        endIcon = endIcon,
-        onStartIconClick = onStartIconClick,
-        onEndIconClick = onEndIconClick,
-        constraints = constraints,
-    )
+    return StringParameter(name = name!!, description = description,
+      default = default!!, startIcon = startIcon, endIcon = endIcon,
+      onStartIconClick = onStartIconClick, onEndIconClick = onEndIconClick,
+      constraints = constraints)
   }
 }
 
-class EnumParameter<T : Enum<*>>(
-    @StringRes name: Int,
-    @StringRes description: Int?,
-    default: T,
-    startIcon: ((TextFieldParameter<T>) -> Int)?,
-    endIcon: ((TextFieldParameter<T>) -> Int)?,
-    onStartIconClick: View.OnClickListener?,
-    onEndIconClick: View.OnClickListener?,
-    constraints: List<ParameterConstraint>,
-    val displayName: ((T) -> String)? = null,
-    val filter: ((T) -> Boolean)? = null,
-) :
-    TextFieldParameter<T>(
-        name,
-        description,
-        default,
-        startIcon,
-        endIcon,
-        onStartIconClick,
-        onEndIconClick,
-        constraints,
-    ) {
+class EnumParameter<T : Enum<*>>(@StringRes name: Int,
+  @StringRes description: Int?, default: T,
+  startIcon: ((TextFieldParameter<T>) -> Int)?,
+  endIcon: ((TextFieldParameter<T>) -> Int)?,
+  onStartIconClick: View.OnClickListener?,
+  onEndIconClick: View.OnClickListener?,
+  constraints: List<ParameterConstraint>,
+  val displayName: ((T) -> String)? = null,
+  val filter: ((T) -> Boolean)? = null
+) : TextFieldParameter<T>(name, description, default, startIcon, endIcon,
+  onStartIconClick, onEndIconClick, constraints) {
 
   /**
    * Get the display name for this [EnumParameter].
@@ -372,48 +342,50 @@ class EnumParameterBuilder<T : Enum<*>> : TextFieldParameterBuilder<T>() {
   var filter: ((T) -> Boolean)? = null
 
   override fun build(): EnumParameter<T> {
-    return EnumParameter(
-        name = name!!,
-        description = description,
-        default = default!!,
-        startIcon = startIcon,
-        endIcon = endIcon,
-        onStartIconClick = onStartIconClick,
-        onEndIconClick = onEndIconClick,
-        constraints = constraints,
-        displayName = displayName,
-        filter = filter,
-    )
+    return EnumParameter(name = name!!, description = description,
+      default = default!!, startIcon = startIcon, endIcon = endIcon,
+      onStartIconClick = onStartIconClick, onEndIconClick = onEndIconClick,
+      constraints = constraints, displayName = displayName, filter = filter)
   }
 }
 
-/** Create a new [StringParameter] for accepting string input. */
-inline fun stringParameter(crossinline block: StringParameterBuilder.() -> Unit): StringParameter =
-    StringParameterBuilder().apply(block).build()
+/**
+ * Create a new [StringParameter] for accepting string input.
+ */
+inline fun stringParameter(crossinline block: StringParameterBuilder.() -> Unit
+): StringParameter = StringParameterBuilder().apply(block).build()
 
-/** Create a new [BooleanParameter] for accepting boolean input. */
-inline fun booleanParameter(
-    crossinline block: BooleanParameterBuilder.() -> Unit
+/**
+ * Create a new [BooleanParameter] for accepting boolean input.
+ */
+inline fun booleanParameter(crossinline block: BooleanParameterBuilder.() -> Unit
 ): BooleanParameter = BooleanParameterBuilder().apply(block).build()
 
-inline fun <T : Enum<*>> enumParameter(
-    crossinline block: EnumParameterBuilder<T>.() -> Unit
+inline fun <T : Enum<*>> enumParameter(crossinline block: EnumParameterBuilder<T>.() -> Unit
 ): EnumParameter<T> = EnumParameterBuilder<T>().apply(block).build()
 
+/**
+ * 获取项目名称输入框参数
+ * @author android_zero 优化：支持从偏好设置读取默认值
+ */
 inline fun projectNameParameter(crossinline configure: StringParameterBuilder.() -> Unit = {}) =
     stringParameter {
       name = string.project_app_name
-      default = "My Application"
+      default = ProjectsPreferences.defaultProjectName
       startIcon = { R.drawable.ic_android }
       constraints = listOf(NONEMPTY)
 
       configure()
     }
 
+/**
+ * 获取包名输入框参数
+ * @author android_zero 优化：支持从偏好设置读取默认值
+ */
 inline fun packageNameParameter(crossinline configure: StringParameterBuilder.() -> Unit = {}) =
     stringParameter {
       name = string.package_name
-      default = "com.example.myapplication"
+      default = ProjectsPreferences.defaultPackageName
       startIcon = { R.drawable.ic_package }
       constraints = listOf(NONEMPTY, PACKAGE)
 
@@ -479,10 +451,32 @@ inline fun useKtsParameter(crossinline configure: BooleanParameterBuilder.() -> 
       configure()
     }
 
+inline fun projectNdkVersionParameter(crossinline configure: EnumParameterBuilder<NdkVersion>.() -> Unit = {}) =
+    enumParameter<NdkVersion> {
+        name = R.string.wizard_ndk_version
+        default = NdkVersion.R27D
+        displayName = NdkVersion::displayName
+        configure()
+    }
+
+inline fun projectCmakeVersionParameter(crossinline configure: EnumParameterBuilder<CmakeVersion>.() -> Unit = {}) =
+    enumParameter<CmakeVersion> {
+        name = R.string.wizard_cmake_version
+        default = CmakeVersion.V3_22_1
+        displayName = CmakeVersion::displayName
+        configure()
+    }
+
 inline fun useNdkParameter(crossinline configure: BooleanParameterBuilder.() -> Unit = {}) =
     booleanParameter {
-      name = string.msg_use_ndk
-      default = false
+        name = R.string.msg_use_ndk
+        default = false
+        configure()
+    }
 
-      configure()
+inline fun useTomlParameter(crossinline configure: BooleanParameterBuilder.() -> Unit = {}) =
+    booleanParameter {
+        name = R.string.msg_use_toml 
+        default = true 
+        configure()
     }

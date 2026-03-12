@@ -38,29 +38,38 @@ private fun composeLanguageParameter() = projectLanguageParameter {
 
 // Compose template is available only in Kotlin
 fun composeActivityProject() =
-    baseProjectImpl(
-        language = composeLanguageParameter(),
-        projectVersionData = ProjectVersionData(kotlin = composeKotlinVersion),
-    ) {
-      templateName = R.string.template_compose
-      thumb = R.drawable.compose_empty_activity
+  baseProjectImpl(language = composeLanguageParameter(),
+    projectVersionData = ProjectVersionData(kotlin = composeKotlinVersion)) {
 
-      defaultAppModule(addAndroidX = false) {
-        isComposeModule = true
+    templateName = R.string.template_compose
+    thumb = R.drawable.template_compose_empty_activity
+    description = string.test_test
 
-        recipe = createRecipe {
-          require(data.language == Kotlin) { "Compose activity requires Kotlin language" }
+    defaultAppModule(addAndroidX = false) {
 
-          composeDependencies()
+      isComposeModule = true
 
-          res { writeXmlResource("themes", VALUES, source = ::composeThemesXml) }
+      recipe = createRecipe {
 
-          sources {
-            writeMainActivity(this, ktSrc = ::composeActivitySrc, javaSrc = { "" })
-            writeKtSrc("${data.packageName}.ui.theme", "Color", source = ::themeColorSrc)
-            writeKtSrc("${data.packageName}.ui.theme", "Theme", source = ::themeThemeSrc)
-            writeKtSrc("${data.packageName}.ui.theme", "Type", source = ::themeTypeSrc)
-          }
+        require(
+          data.language == Kotlin) { "Compose activity requires Kotlin language" }
+
+        composeDependencies()
+
+        res {
+          writeXmlResource("themes", VALUES, source = ::composeThemesXml)
+        }
+
+        sources {
+          writeMainActivity(this, ktSrc = ::composeActivitySrc,
+            javaSrc = { "" })
+          writeKtSrc("${data.packageName}.ui.theme", "Color",
+            source = ::themeColorSrc)
+          writeKtSrc("${data.packageName}.ui.theme", "Theme",
+            source = ::themeThemeSrc)
+          writeKtSrc("${data.packageName}.ui.theme", "Type",
+            source = ::themeTypeSrc)
         }
       }
     }
+  }

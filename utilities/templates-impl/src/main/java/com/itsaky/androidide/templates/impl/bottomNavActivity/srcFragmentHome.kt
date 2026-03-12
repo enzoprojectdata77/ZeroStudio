@@ -19,8 +19,7 @@ package com.itsaky.androidide.templates.impl.bottomNavActivity
 
 import com.itsaky.androidide.templates.base.AndroidModuleTemplateBuilder
 
-internal fun AndroidModuleTemplateBuilder.bottomNavFragmentHomeSrcKt() =
-    """
+internal fun AndroidModuleTemplateBuilder.bottomNavFragmentHomeSrcKt() = """
 package ${data.packageName}.ui.home
 
 import android.os.Bundle
@@ -63,11 +62,9 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 }
-"""
-        .trim()
+""".trim()
 
-internal fun AndroidModuleTemplateBuilder.bottomNavFragmentHomeSrcJava() =
-    """
+internal fun AndroidModuleTemplateBuilder.bottomNavFragmentHomeSrcJava() = """
 package ${data.packageName}.ui.home;
 
 import android.os.Bundle;
@@ -105,5 +102,4 @@ public class HomeFragment extends Fragment {
         binding = null;
     }
 }
-"""
-        .trim()
+""".trim()

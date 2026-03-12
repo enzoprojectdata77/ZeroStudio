@@ -23,19 +23,7 @@ package com.itsaky.androidide.templates
  * It can be viewed here Android api levels：https://apilevels.com/
  *
  * @author Akash Yadav (Historical contributors)
- *
- *更新日志：  @author android_zero
- *2025.10.3：
- 1.新增VANILLA_ICE_CREAM（API36）和BAKLAVA（API36）。
- 2.预留CinnamonBun，待2026年启用
- *
  */
- 
-// API Version     dessert code                  release date
-// 15       香草冰淇淋 Vanilla Ice Cream	2024
-// 16       巴克拉瓦 Baklava	               2025
-// 17	    肉桂卷 Cinnamon Bun	     2026
-
 
 enum class Sdk(val codename: String, val version: String, val api: Int) {
 

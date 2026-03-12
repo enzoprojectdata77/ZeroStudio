@@ -19,8 +19,7 @@ package com.itsaky.androidide.templates.impl.bottomNavActivity
 
 import com.itsaky.androidide.templates.base.AndroidModuleTemplateBuilder
 
-internal fun AndroidModuleTemplateBuilder.bottomNavFragmentDashSrcKt() =
-    """
+internal fun AndroidModuleTemplateBuilder.bottomNavFragmentDashSrcKt() = """
 package ${data.packageName}.ui.dashboard
 
 import android.os.Bundle
@@ -63,11 +62,9 @@ class DashboardFragment : Fragment() {
         _binding = null
     }
 }
-"""
-        .trim()
+""".trim()
 
-internal fun AndroidModuleTemplateBuilder.bottomNavFragmentDashSrcJava() =
-    """
+internal fun AndroidModuleTemplateBuilder.bottomNavFragmentDashSrcJava() = """
 package ${data.packageName}.ui.dashboard;
 
 import android.os.Bundle;
@@ -105,5 +102,4 @@ public class DashboardFragment extends Fragment {
         binding = null;
     }
 }
-"""
-        .trim()
+""".trim()

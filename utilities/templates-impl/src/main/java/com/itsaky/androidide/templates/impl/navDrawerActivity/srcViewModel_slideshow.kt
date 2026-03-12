@@ -19,8 +19,7 @@ package com.itsaky.androidide.templates.impl.navDrawerActivity
 
 import com.itsaky.androidide.templates.base.AndroidModuleTemplateBuilder
 
-internal fun AndroidModuleTemplateBuilder.slideshowModelSrcJava() =
-    """
+internal fun AndroidModuleTemplateBuilder.slideshowModelSrcJava() = """
 package ${data.packageName}.ui.slideshow;
 
 import androidx.lifecycle.LiveData;
@@ -40,11 +39,9 @@ public class SlideshowViewModel extends ViewModel {
         return mText;
     }
 }
-"""
-        .trim()
+""".trim()
 
-internal fun AndroidModuleTemplateBuilder.slideshowModelSrcKt() =
-    """
+internal fun AndroidModuleTemplateBuilder.slideshowModelSrcKt() = """
 package ${data.packageName}.ui.slideshow
 
 import androidx.lifecycle.LiveData
@@ -58,5 +55,4 @@ class SlideshowViewModel : ViewModel() {
     }
     val text: LiveData<String> = _text
 }
-"""
-        .trim()
+""".trim()

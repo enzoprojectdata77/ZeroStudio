@@ -1,0 +1,77 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Choose the compilation type (assembleDebug or assembleRelease)'
+        required: true
+        default: 'assemble'
+        type: choice
+        options:
+          - assemble
+          - assembleDebug
+          - assembleRelease
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install basic system dependency packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip protobuf-compiler python3 python3-pip wget curl
+
+      - name: Configure JDK 21 (Zulu 21.0.9)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Configuring a Gradle 8.13 environment
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Install the specified NDK and Android SDK CMake
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.1.12297006" "cmake;3.22.1"
+          
+        run: |
+          pip3 install cmake==3.31.1 --break-system-packages
+          
+          cmake --version
+          protoc --version
+          python3 --version
+
+      - name: Grant execution permissions to the Gradle wrapper
+        run: chmod +x ./gradlew
+
+      - name: Compile APK
+        run: |
+          gradle ${{ github.event.inputs.build_type }} --stacktrace
+          
+          # 或者如果你想强制使用项目自带的 gradlew，可以改为：
+          # ./gradlew ${{ github.event.inputs.build_type }} --stacktrace
+
+      - name: Find and rename APK
+        run: |
+          mkdir -p output_apks
+          find core/app/build/outputs/apk/ -name "*.apk" -exec cp {} output_apks/ \;
+
+      - name: 上传 APK 作为 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-APK-${{ github.event.inputs.build_type }}
+          path: output_apks/*.apk
+          # 如果不需要上面那步重命名，可以直接使用原始路径：
+          # path: app/build/outputs/apk/**/*.apk
+          compression-level: 0

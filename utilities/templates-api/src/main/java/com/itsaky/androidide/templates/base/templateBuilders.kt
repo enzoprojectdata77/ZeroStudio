@@ -26,11 +26,14 @@ import com.itsaky.androidide.templates.TemplateRecipeConfigurator
 import com.itsaky.androidide.templates.TemplateRecipeFinalizer
 import com.itsaky.androidide.templates.TemplateRecipeResult
 
-sealed class PrePostRecipeTemplateBuilder<R : TemplateRecipeResult> : TemplateBuilder<R>() {
+sealed class PrePostRecipeTemplateBuilder<R : TemplateRecipeResult> :
+  TemplateBuilder<R>() {
 
-  @PublishedApi internal var preRecipe: TemplateRecipeConfigurator = {}
+  @PublishedApi
+  internal var preRecipe: TemplateRecipeConfigurator = {}
 
-  @PublishedApi internal var postRecipe: TemplateRecipeFinalizer = {}
+  @PublishedApi
+  internal var postRecipe: TemplateRecipeFinalizer = {}
 
   private var _recipe: TemplateRecipe<R>? = null
 
@@ -54,11 +57,13 @@ sealed class PrePostRecipeTemplateBuilder<R : TemplateRecipeResult> : TemplateBu
  * @property data The project template data.
  */
 sealed class ExecutorDataTemplateBuilder<R : TemplateRecipeResult, D : TemplateData> :
-    PrePostRecipeTemplateBuilder<R>() {
+  PrePostRecipeTemplateBuilder<R>() {
 
-  @PublishedApi internal var _executor: RecipeExecutor? = null
+  @PublishedApi
+  internal var _executor: RecipeExecutor? = null
 
-  @PublishedApi internal var _data: D? = null
+  @PublishedApi
+  internal var _data: D? = null
 
   val executor: RecipeExecutor
     get() = checkNotNull(_executor)

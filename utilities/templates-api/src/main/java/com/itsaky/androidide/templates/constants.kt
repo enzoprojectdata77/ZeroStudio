@@ -15,17 +15,13 @@
  *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.tom.rv2ide.templates
+package com.itsaky.androidide.templates
 
 /** @author Akash Yadav */
 const val ANDROID_GRADLE_PLUGIN_VERSION = "8.13.0"
 const val GRADLE_DISTRIBUTION_VERSION = "8.13.0"
 const val GRADLE_WRAPPER_DISTRIBUTION_VERSION = "8.13"
 const val KOTLIN_VERSION = "2.1.0"
-
-// Template creation has been migrated to ATC as of v1.0.0+gh.r2.
-// The following dependency versions are recommended for use in sample templates.
-// These versions have been thoroughly tested and perform optimally in ACS.
 
 // AndroidX
 const val ANDROIDX_CORE_KTEXT_VERSION = "1.17.0"

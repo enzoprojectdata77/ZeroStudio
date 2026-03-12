@@ -92,6 +92,8 @@ public final class Environment {
   public static File KOTLIN_LSP_LIBS_JAR_DIR;
   public static File KOTLIN_LSP_LAUNCHER;
 
+  public static File ANDROIDIDE;
+
   /**
    * Initializes the environment paths, system properties, and injects variables into the native OS environment.
    * This ensures that subprocesses (like Runtime.exec or ProcessBuilder) inherit the JDK environment.
@@ -124,6 +126,10 @@ public final class Environment {
     LOTTIE_ANIMATION_DIR = mkdirIfNotExits(new File(ANDROIDIDE_HOME, "LottieAnimation"));
     LOTTIE_EXPORT_DIR = mkdirIfNotExits(new File(PROJECTS_DIR, "LottieAnimation"));
     
+     File java17Home = new File(PREFIX, "lib/jvm/java-17-openjdk");
+     File java21Home = new File(PREFIX, "lib/jvm/java-21-openjdk");
+
+    
     ANDROID_HOME = new File(HOME, "android-sdk");
     ANDROID_NDK_HOME = new File(ANDROID_HOME, "ndk"); 
     // File ndkBaseDir = new File(ANDROID_HOME, "ndk");
@@ -138,7 +144,8 @@ public final class Environment {
     KOTLIN_LSP_LIBS_JAR_DIR = new File(KOTLIN_LSP_HOME, "lib");
     
     JAVA_HOME = new File(PREFIX, "opt/openjdk");
-    
+    ANDROIDIDE = createFileIfNotExists(new File(PREFIX, "share/AndroidIDE.properties"));
+
          // SHELL_KOTLIN_LSP = new File(KOTLIN_LSP_HOME, "bin/kotlin-language-server");
     JAVA = new File(JAVA_HOME, "bin/java");
     BASH_SHELL = new File(BIN_DIR, "bash");
@@ -225,6 +232,13 @@ public final class Environment {
     return in;
   }
 
+    public static File createFileIfNotExists(File in) {
+        if (in != null && !in.exists()) {
+            FileUtils.createOrExistsFile(in);
+        }
+        return in;
+    }
+
   public static void setExecutable(@NonNull final File file) {
     if (!file.setExecutable(true)) {
       LOG.error("Unable to set executable permissions to file: {}", file);
@@ -256,8 +270,9 @@ public final class Environment {
     env.put("TMPDIR", TMP_DIR.getAbsolutePath());
     
     // LD_LIBRARY_PATH is crucial for binaries linked against libs in usr/lib
-    env.put("LD_LIBRARY_PATH", LIB_DIR.getAbsolutePath());
-
+    env.put("LD_LIBRARY_PATH", LIB_DIR.getAbsolutePath() + ":" + 
+                new File(JAVA_HOME, "lib").getAbsolutePath());
+ 
     // add user envs for non-failsafe sessions
     if (!forFailsafe) {
       // No mirror select

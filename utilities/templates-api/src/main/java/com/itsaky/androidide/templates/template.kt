@@ -103,6 +103,9 @@ abstract class BaseTemplateData(
     val language: Language,
     val useKts: Boolean,
     val useNdk: Boolean,
+    val ndkVersion: String,
+    val cmakeVersion: String,
+    val useToml: Boolean
 ) : TemplateData() {
 
   /**
@@ -119,7 +122,7 @@ abstract class BaseTemplateData(
 enum class Language(val lang: String, val ext: String) {
 
   Java("Java", "java"),
-  Kotlin("Kotlin", "kt"),
+   Kotlin("Kotlin", "kt");
 }
 
 /**
@@ -131,7 +134,7 @@ enum class ModuleType(val typeName: String) {
 
   AndroidApp("Android Application"),
   AndroidLibrary("Android Library"),
-  JavaLibrary("Java library"),
+  JavaLibrary("Java library")
 }
 
 /**
@@ -152,7 +155,7 @@ enum class SrcSet(val folder: String) {
   Test("test"),
 
   /** `src/androidTest`. */
-  AndroidTest("androidTest"),
+  AndroidTest("androidTest")
 }
 
 /**
@@ -165,7 +168,7 @@ enum class SrcSet(val folder: String) {
 data class ProjectVersionData(
     val gradlePlugin: String = ANDROID_GRADLE_PLUGIN_VERSION,
     val gradle: String = GRADLE_DISTRIBUTION_VERSION,
-    val kotlin: String = KOTLIN_VERSION,
+    val kotlin: String = KOTLIN_VERSION
 )
 
 /**
@@ -179,7 +182,7 @@ data class ModuleVersionData(
     val targetSdk: Sdk = TARGET_SDK_VERSION,
     val compileSdk: Sdk = COMPILE_SDK_VERSION,
     val javaSource: String = JAVA_SOURCE_VERSION,
-    val javaTarget: String = JAVA_TARGET_VERSION,
+    val javaTarget: String = JAVA_TARGET_VERSION
 ) {
 
   /**
@@ -207,6 +210,9 @@ class ProjectTemplateData(
     language: Language,
     useKts: Boolean,
     useNdk: Boolean,
+    ndkVersion: String,
+    cmakeVersion: String,
+    useToml: Boolean,
 ) : BaseTemplateData(name, projectDir, language, useKts, useNdk)
 
 /**
@@ -225,6 +231,9 @@ open class ModuleTemplateData(
     language: Language,
     useKts: Boolean = true,
     useNdk: Boolean = false,
+    ndkVersion: String,
+    cmakeVersion: String,
+    useToml: Boolean = true,
     minSdk: Sdk,
     val versions: ModuleVersionData = ModuleVersionData(minSdk),
 ) : BaseTemplateData(name, projectDir, language, useKts, useNdk) {
@@ -247,11 +256,11 @@ open class ModuleTemplateData(
  * @author android_zero
  */
 open class Template<R : TemplateRecipeResult>(
-  @StringRes open val templateName: Int,
-  @DrawableRes open val thumb: Int,
-  @StringRes open val description: Int? = null,
-  open val widgets: List<Widget<*>>,
-  open val recipe: TemplateRecipe<R>,
+    @StringRes open val templateName: Int,
+    @DrawableRes open val thumb: Int,
+    @StringRes open val description: Int? = null,
+    open val widgets: List<Widget<*>>,
+    open val recipe: TemplateRecipe<R>
 ) {
 
   /**
@@ -277,33 +286,38 @@ open class Template<R : TemplateRecipeResult>(
 
 
 open class ProjectTemplate(
-  val moduleTemplates: List<Template<*>>,
-  @StringRes templateName: Int,
-  @DrawableRes thumb: Int,
-  @StringRes description: Int? = null,
-  widgets: List<Widget<*>>,
-  recipe: TemplateRecipe<ProjectTemplateRecipeResult>,
+    val moduleTemplates: List<Template<*>>,
+    @StringRes templateName: Int,
+    @DrawableRes thumb: Int,
+    @StringRes description: Int? = null,
+    widgets: List<Widget<*>>,
+    recipe: TemplateRecipe<ProjectTemplateRecipeResult>
 ) : Template<ProjectTemplateRecipeResult>(templateName, thumb, description, widgets, recipe) {
 
   override val parameters: Collection<Parameter<*>>
-    get() = if (moduleTemplates.isEmpty()) super.parameters else super.parameters.toMutableList()
-      .apply {
-        addAll(moduleTemplates.flatMap { it.parameters })
-      }
+    get() =
+        if (moduleTemplates.isEmpty()) super.parameters
+        else
+            super.parameters.toMutableList().apply {
+              addAll(moduleTemplates.flatMap { it.parameters })
+            }
 
   override val widgets: List<Widget<*>>
-    get() = if (moduleTemplates.isEmpty()) super.widgets else super.widgets.toMutableList().apply {
-      addAll(moduleTemplates.flatMap { it.widgets })
-    }
+    get() =
+        if (moduleTemplates.isEmpty()) super.widgets
+        else super.widgets.toMutableList().apply { addAll(moduleTemplates.flatMap { it.widgets }) }
 
   override val recipe: TemplateRecipe<ProjectTemplateRecipeResult>
-    get() = if (moduleTemplates.isEmpty()) super.recipe else super.recipe.let { projectRecipe ->
-      TemplateRecipe {
-        val result = projectRecipe.execute(it)
-        moduleTemplates.forEach { module -> module.recipe.execute(it) }
-        result
-      }
-    }
+    get() =
+        if (moduleTemplates.isEmpty()) super.recipe
+        else
+            super.recipe.let { projectRecipe ->
+              TemplateRecipe {
+                val result = projectRecipe.execute(it)
+                moduleTemplates.forEach { module -> module.recipe.execute(it) }
+                result
+              }
+            }
 
   override fun release() {
     super.release()
@@ -317,23 +331,23 @@ open class ProjectTemplate(
  * @property name The mdoule name (gradle format, e.g. ':app').
  */
 open class ModuleTemplate(
-  val name: String,
-  @StringRes templateName: Int,
-  @DrawableRes thumb: Int,
-  @StringRes description: Int? = null,
-  widgets: List<Widget<*>>,
-  recipe: TemplateRecipe<ModuleTemplateRecipeResult>,
+    val name: String,
+    @StringRes templateName: Int,
+    @DrawableRes thumb: Int,
+    @StringRes description: Int? = null,
+    widgets: List<Widget<*>>,
+    recipe: TemplateRecipe<ModuleTemplateRecipeResult>
 ) : Template<ModuleTemplateRecipeResult>(templateName, thumb, description, widgets, recipe)
 
 /**
  * Template for creating a file.
  */
 open class FileTemplate<R : FileTemplateRecipeResult>(
-  @StringRes name: Int,
-  @DrawableRes thumb: Int,
-  @StringRes description: Int? = null,
-  widgets: List<Widget<*>>,
-  recipe: TemplateRecipe<R>,
+    @StringRes name: Int,
+    @DrawableRes thumb: Int,
+    @StringRes description: Int? = null,
+    widgets: List<Widget<*>>,
+    recipe: TemplateRecipe<R>
 ) : Template<R>(name, thumb, description, widgets, recipe)
 
 
@@ -348,11 +362,11 @@ open class FileTemplate<R : FileTemplateRecipeResult>(
  * @author android_zero
  */
 abstract class TemplateBuilder<R : TemplateRecipeResult>(
-  @StringRes open var templateName: Int? = null,
-  @DrawableRes open var thumb: Int? = null,
-  @StringRes open var description: Int? = null,
-  open var widgets: List<Widget<*>>? = null,
-  open var recipe: TemplateRecipe<R>? = null,
+    @StringRes open var templateName: Int? = null,
+    @DrawableRes open var thumb: Int? = null,
+    @StringRes open var description: Int? = null,
+    open var widgets: List<Widget<*>>? = null,
+    open var recipe: TemplateRecipe<R>? = null
 ) {
 
   /**

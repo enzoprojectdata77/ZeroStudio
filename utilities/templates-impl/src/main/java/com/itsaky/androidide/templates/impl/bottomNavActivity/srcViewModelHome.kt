@@ -19,8 +19,7 @@ package com.itsaky.androidide.templates.impl.bottomNavActivity
 
 import com.itsaky.androidide.templates.base.AndroidModuleTemplateBuilder
 
-internal fun AndroidModuleTemplateBuilder.bottomNavModelHomeSrcKt() =
-    """
+internal fun AndroidModuleTemplateBuilder.bottomNavModelHomeSrcKt() = """
 package ${data.packageName}.ui.home
 
 import androidx.lifecycle.LiveData
@@ -34,11 +33,9 @@ class HomeViewModel : ViewModel() {
     }
     val text: LiveData<String> = _text
 }
-"""
-        .trim()
+""".trim()
 
-internal fun AndroidModuleTemplateBuilder.bottomNavModelHomeSrcJava() =
-    """
+internal fun AndroidModuleTemplateBuilder.bottomNavModelHomeSrcJava() = """
 package ${data.packageName}.ui.home;
 
 import androidx.lifecycle.LiveData;
@@ -58,5 +55,4 @@ public class HomeViewModel extends ViewModel {
         return mText;
     }
 }
-"""
-        .trim()
+""".trim()

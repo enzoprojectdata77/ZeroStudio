@@ -17,7 +17,10 @@
 
 package com.itsaky.androidide.preferences
 
+import android.content.Context
 import androidx.preference.Preference
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputLayout
 import com.itsaky.androidide.R
 import com.itsaky.androidide.preferences.internal.ProjectsPreferences
 import kotlinx.parcelize.IgnoredOnParcel
@@ -35,7 +38,88 @@ class TemplateSetting(
     override val children: List<IPreference> = mutableListOf()
 ) : IPreferenceScreen() {
     init {
+        addPreference(TemplateBasicSettingsScreen())
         addPreference(TemplateSpanCountPreference())
+    }
+}
+
+/**
+ * 二级页面：模板基础设置
+ */
+@Parcelize
+class TemplateBasicSettingsScreen(
+    override val key: String = "idepref_template_basic_settings",
+    override val title: Int = R.string.title_general, // 可以复用 "General" 或自定义 string
+    override val summary: Int? = R.string.msg_preferences, // 摘要信息
+    override val children: List<IPreference> = mutableListOf()
+) : IPreferenceScreen() {
+    init {
+        addPreference(DefaultProjectNamePreference())
+        addPreference(DefaultPackageNamePreference())
+    }
+}
+
+/**
+ * 偏好项：默认项目名称
+ */
+@Parcelize
+class DefaultProjectNamePreference(
+    override val key: String = ProjectsPreferences.TEMPLATE_DEFAULT_PROJECT_NAME,
+    override val title: Int = R.string.project_app_name, // "Application Name"
+    // override val icon: Int? = R.drawable.ic_edit
+) : EditTextPreference() {
+
+    override fun onCreatePreference(context: Context): Preference {
+        return super.onCreatePreference(context).apply {
+            summary = ProjectsPreferences.defaultProjectName
+        }
+    }
+
+    override fun onConfigureTextInput(input: TextInputLayout) {
+        input.setHint(R.string.project_app_name)
+        input.editText?.setText(ProjectsPreferences.defaultProjectName)
+    }
+
+    override fun onPreferenceChanged(preference: Preference, newValue: Any?): Boolean {
+        val inputStr = (newValue as? String)?.trim()
+        // 1. 没有修改或清空了，则使用默认值
+        // 2. 有修改则保存修改值
+        val finalValue = if (inputStr.isNullOrEmpty()) "My Application" else inputStr
+        ProjectsPreferences.defaultProjectName = finalValue
+        preference.summary = finalValue
+        return true
+    }
+}
+
+/**
+ * 偏好项：默认包名前缀
+ */
+@Parcelize
+class DefaultPackageNamePreference(
+    override val key: String = ProjectsPreferences.TEMPLATE_DEFAULT_PACKAGE_NAME,
+    override val title: Int = R.string.package_name, // "Package Name"
+    // override val icon: Int? = R.drawable.ic_package
+) : EditTextPreference() {
+
+    override fun onCreatePreference(context: Context): Preference {
+        return super.onCreatePreference(context).apply {
+            summary = ProjectsPreferences.defaultPackageName
+        }
+    }
+
+    override fun onConfigureTextInput(input: TextInputLayout) {
+        input.setHint(R.string.package_name)
+        input.editText?.setText(ProjectsPreferences.defaultPackageName)
+    }
+
+    override fun onPreferenceChanged(preference: Preference, newValue: Any?): Boolean {
+        val inputStr = (newValue as? String)?.trim()
+        // 1. 没有修改或清空了，则使用默认值
+        // 2. 有修改则保存修改值
+        val finalValue = if (inputStr.isNullOrEmpty()) "com.example.myapplication" else inputStr
+        ProjectsPreferences.defaultPackageName = finalValue
+        preference.summary = finalValue
+        return true
     }
 }
 

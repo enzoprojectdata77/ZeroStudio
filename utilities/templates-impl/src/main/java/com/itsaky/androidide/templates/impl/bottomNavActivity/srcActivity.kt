@@ -19,8 +19,7 @@ package com.itsaky.androidide.templates.impl.bottomNavActivity
 
 import com.itsaky.androidide.templates.base.AndroidModuleTemplateBuilder
 
-internal fun AndroidModuleTemplateBuilder.bottomNavActivitySrcKt() =
-    """
+internal fun AndroidModuleTemplateBuilder.bottomNavActivitySrcKt() = """
 package ${data.packageName}
 
 import android.os.Bundle
@@ -57,11 +56,9 @@ class MainActivity : AppCompatActivity() {
         binding.navView.setupWithNavController(navController)
     }
 }
-"""
-        .trim()
+""".trim()
 
-internal fun AndroidModuleTemplateBuilder.bottomNavActivitySrcJava() =
-    """
+internal fun AndroidModuleTemplateBuilder.bottomNavActivitySrcJava() = """
 package ${data.packageName};
 
 import android.os.Bundle;
@@ -98,5 +95,4 @@ public class MainActivity extends AppCompatActivity {
     }
 
 }
-"""
-        .trim()
+""".trim()

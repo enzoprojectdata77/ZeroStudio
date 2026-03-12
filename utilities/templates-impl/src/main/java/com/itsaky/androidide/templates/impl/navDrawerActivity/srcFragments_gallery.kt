@@ -19,8 +19,7 @@ package com.itsaky.androidide.templates.impl.navDrawerActivity
 
 import com.itsaky.androidide.templates.base.AndroidModuleTemplateBuilder
 
-internal fun AndroidModuleTemplateBuilder.galleryFragmentSrcJava() =
-    """
+internal fun AndroidModuleTemplateBuilder.galleryFragmentSrcJava() = """
 package ${data.packageName}.ui.gallery;
 
 import android.os.Bundle;
@@ -58,11 +57,9 @@ public class GalleryFragment extends Fragment {
         binding = null;
     }
 }
-"""
-        .trim()
+""".trim()
 
-internal fun AndroidModuleTemplateBuilder.galleryFragmentSrcKt() =
-    """
+internal fun AndroidModuleTemplateBuilder.galleryFragmentSrcKt() = """
 package ${data.packageName}.ui.gallery
 
 import android.os.Bundle
@@ -106,5 +103,4 @@ class GalleryFragment : Fragment() {
         _binding = null
     }
 }
-"""
-        .trim()
+""".trim()
