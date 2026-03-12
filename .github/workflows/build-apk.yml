@@ -6,12 +6,12 @@ on:
       build_type:
         description: 'Choose the compilation type (assembleDebug or assembleRelease)'
         required: true
-        default: 'assemble'
+        default: 'assemble --build-cache'
         type: choice
         options:
-          - assemble
-          - assembleDebug
-          - assembleRelease
+          - assemble --build-cache
+          - assembleDebug --build-cache
+          - assembleRelease --build-cache
 
 jobs:
   build:
@@ -54,7 +54,7 @@ jobs:
 
       - name: Compile APK
         run: |
-          gradle ${{ github.event.inputs.build_type }} --stacktrace
+          gradle ${{ github.event.inputs.build_type }} --build-cache
 
       - name: Find and rename APK
         run: |

@@ -238,6 +238,11 @@ This is a **Source-Available** license based on GNU GPLv3 but with **strict Mand
 
 ### 🚫 Prohibited Actions (绝对禁止行为) 
 ：：PS：Prohibited behavior: As the name suggests, it refers to behavior that is not advocated, unusable, harmful to the interests of others, and has a significant impact.Regardless of the protocol/open source protocol of this project, as long as this project is not deleted, it has the root retention, branching, or change. Any malicious, prohibited, or illegal behavior caused by individuals shall be borne by themselves.
+2.法律安全范围内危险/违规行为，除了违法/违规等红线行为：必须获得开发者认可或者授权，在github问题反馈或者讨论区创建你的申请需求书。
+3.在ZeroStudio增加收费：除了github和其它捐赠平台等捐助外，如果是需要在ZeroStudio内增加收费功能，需获得开发者认可或者授权，不得私自增加收费功能到ZeroStudio的apk内，需获得认可授权。
+en：
+2. Dangerous/illegal activities within the bounds of legality, excluding illegal/violation-of-law-regulation behaviors: Developer approval or authorization is required. Create your application request in the GitHub issue feedback or discussion forum.
+3. Adding paid features to ZeroStudio: Besides donations through GitHub and other donation platforms, adding paid features to ZeroStudio requires developer approval or authorization. Adding paid features to the ZeroStudio APK without authorization is prohibited.
 
 Under this license, the following actions are **STRICTLY PROHIBITED** and will result in immediate termination of rights and potential legal action:
 
@@ -249,8 +254,6 @@ Under this license, the following actions are **STRICTLY PROHIBITED** and will r
 
 *   **Free to Use:** You may use this software for personal, educational, or internal non-profit purposes freely.
 *   **Free to Modify:** You may modify the code, provided you keep it **100% Open Source**.
-*   **Free to Distribute:** You may share copies, provided NO fees are charged and this License remains intact.
-
 ---
 
 <details open>
