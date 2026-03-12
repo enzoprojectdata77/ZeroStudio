@@ -23,15 +23,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Create Swap Space to prevent OOM
-        run: |
-          sudo fallocate -l 8G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          echo "==== 当前系统内存状态 ===="
-          free -h
-
       - name: Install basic system dependency packages
         run: |
           sudo apt-get update
