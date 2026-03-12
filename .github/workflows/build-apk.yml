@@ -45,8 +45,8 @@ jobs:
           
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.1.12297006" "cmake;3.22.1"
           
-        run: |
-          pip3 install cmake==3.31.1 --break-system-packages
+        # run: |
+          # pip3 install cmake==3.22.1 --break-system-packages
           
           cmake --version
           protoc --version
