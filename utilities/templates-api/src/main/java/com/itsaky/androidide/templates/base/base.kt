@@ -18,7 +18,6 @@
 package com.itsaky.androidide.templates.base
 
 import android.content.Context
-import androidx.annotation.StringRes
 import android.view.View
 import androidx.annotation.StringRes
 import com.itsaky.androidide.templates.BooleanParameter
