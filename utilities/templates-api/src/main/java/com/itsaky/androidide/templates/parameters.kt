@@ -382,9 +382,9 @@ inline fun projectNameParameter(crossinline configure: StringParameterBuilder.()
       default = ProjectsPreferences.defaultProjectName
       startIcon = { R.drawable.ic_android }
       constraints = listOf(NONEMPTY)
-
       configure()
     }
+
 
 /**
  * 获取包名输入框参数
@@ -396,7 +396,6 @@ inline fun packageNameParameter(crossinline configure: StringParameterBuilder.()
       default = ProjectsPreferences.defaultPackageName
       startIcon = { R.drawable.ic_package }
       constraints = listOf(NONEMPTY, PACKAGE)
-
       configure()
     }
 

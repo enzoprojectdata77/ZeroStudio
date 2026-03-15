@@ -13,10 +13,10 @@ yes='^[Yy][Ee]?[Ss]?$'
 # Defualt values
 arch=$(uname -m)
 install_dir=$HOME
-sdkver_org=34.0.4
+sdkver_org=35.0.2
 with_cmdline=true
 assume_yes=false
-manifest="https://github.com/msmt2018/SDK-tool-for-Android-platform/releases/download/IDESdkDownJson/manifest.json"
+manifest="https://github.com/msmt2018/SDK-tool-for-Android-platform/releases/download/IDESdkDownJson2.0/manifest.json"
 pkgm="pkg"
 pkg_curl="libcurl"
 pkgs="jq tar"
@@ -94,8 +94,8 @@ print_help() {
   echo "This script helps you easily install build tools in AndroidIDE."
   echo ""
   echo "Usage:"
-  echo "${0} -s 34.0.4 -c -j 17"
-  echo "This will install Android SDK 34.0.4 with command line tools and JDK 17."
+  echo "${0} -s 35.0.2 -c -j 17"
+  echo "This will install Android SDK 35.0.2 with command line tools and JDK 17."
   echo ""
   echo "Options :"
   echo "-i   Set the installation directory. Defaults to \$HOME."

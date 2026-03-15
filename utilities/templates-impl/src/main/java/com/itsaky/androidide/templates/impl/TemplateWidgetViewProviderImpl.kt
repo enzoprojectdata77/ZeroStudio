@@ -47,6 +47,7 @@ import com.itsaky.androidide.utils.SingleTextWatcher
  * Default implementation of [ITemplateWidgetViewProvider].
  *
  * @author Akash Yadav
+ * @author android_zero
  */
 @AutoService(ITemplateWidgetViewProvider::class)
 class TemplateWidgetViewProviderImpl : ITemplateWidgetViewProvider {
@@ -149,7 +150,11 @@ class TemplateWidgetViewProviderImpl : ITemplateWidgetViewProvider {
       val observer = object : DefaultObserver<String>() {
         override fun onChanged(parameter: Parameter<String>) {
           disableAndRun {
-            input.setText(param.value)
+            val currentText = input.text?.toString() ?: ""
+            if (currentText != param.value) {
+               input.setText(param.value)
+               input.setSelection(param.value.length)
+            }
           }
         }
       }
@@ -160,9 +165,7 @@ class TemplateWidgetViewProviderImpl : ITemplateWidgetViewProvider {
           param.resetStartAndEndIcons(root.context, root)
         }
 
-        val err =
-          ConstraintVerifier.verify(value, constraints = param.constraints)
-
+        val err = ConstraintVerifier.verify(value, constraints = param.constraints)
         root.isErrorEnabled = err != null
         if (err != null) {
           root.error = err
@@ -194,8 +197,7 @@ class TemplateWidgetViewProviderImpl : ITemplateWidgetViewProvider {
         enumToName[it] = displayName
       }
 
-      check(
-        nameToEnum.isNotEmpty()) { "Cannot retrive values for enum parameter $param with default value ${param.default}" }
+      check(nameToEnum.isNotEmpty()) { "Cannot retrieve values for enum parameter $param with default value ${param.default}" }
 
       val array = nameToEnum.keys.toTypedArray()
 
@@ -262,6 +264,7 @@ class TemplateWidgetViewProviderImpl : ITemplateWidgetViewProvider {
     }
 
     endIcon?.let {
+      root.endIconMode = TextInputLayout.END_ICON_CUSTOM
       root.endIconDrawable = ContextCompat.getDrawable(context, it(this))
       onEndIconClick?.let(root::setEndIconOnClickListener)
     }

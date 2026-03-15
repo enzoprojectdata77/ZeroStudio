@@ -148,7 +148,8 @@ class TemplateSpanCountPreference(
             val label = if (span == 1) {
                 preference.context.getString(R.string.layout_list) // "List"
             } else {
-                preference.context.getString(R.string.layout_grid, span) // "Grid (x)"
+                // preference.context.getString(R.string.layout_grid, span) // "Grid (x)"
+                preference.context.getString(R.string.layout_grid, span.toString())
             }
             PreferenceChoices.Entry(label, currentSpan == span, span)
         }.toTypedArray()

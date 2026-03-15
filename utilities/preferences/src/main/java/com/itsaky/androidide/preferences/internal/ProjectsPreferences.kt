@@ -47,7 +47,7 @@ object ProjectsPreferences {
         }
          // 读取和设置默认包名前缀（未设置则返回 "com.example.myapplication"）
     var defaultPackageName: String
-        get() = prefManager.getString(TEMPLATE_DEFAULT_PACKAGE_NAME, "com.mydemo")
+        get() = prefManager.getString(TEMPLATE_DEFAULT_PACKAGE_NAME, "com.myapplication")
         set(value) {
             prefManager.putString(TEMPLATE_DEFAULT_PACKAGE_NAME, value)
         }

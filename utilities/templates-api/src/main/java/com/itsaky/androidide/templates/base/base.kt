@@ -20,9 +20,12 @@ package com.itsaky.androidide.templates.base
 import android.content.Context
 import androidx.annotation.StringRes
 import android.view.View
+import androidx.annotation.StringRes
 import com.itsaky.androidide.templates.BooleanParameter
+import com.itsaky.androidide.templates.BooleanParameterBuilder
 import com.itsaky.androidide.templates.CheckBoxWidget
 import com.itsaky.androidide.templates.EnumParameter
+import com.itsaky.androidide.templates.EnumParameterBuilder
 import com.itsaky.androidide.templates.FileTemplate
 import com.itsaky.androidide.templates.FileTemplateRecipeResult
 import com.itsaky.androidide.templates.Language
@@ -37,6 +40,7 @@ import com.itsaky.androidide.templates.ParameterConstraint.DIRECTORY
 import com.itsaky.androidide.templates.ParameterConstraint.EXISTS
 import com.itsaky.androidide.templates.ParameterConstraint.MODULE_NAME
 import com.itsaky.androidide.templates.ParameterConstraint.NONEMPTY
+import com.itsaky.androidide.templates.ParameterConstraint.PACKAGE
 import com.itsaky.androidide.templates.ProjectTemplate
 import com.itsaky.androidide.templates.ProjectTemplateData
 import com.itsaky.androidide.templates.ProjectVersionData
@@ -44,9 +48,11 @@ import com.itsaky.androidide.templates.R
 import com.itsaky.androidide.templates.Sdk
 import com.itsaky.androidide.templates.SpinnerWidget
 import com.itsaky.androidide.templates.StringParameter
+import com.itsaky.androidide.templates.StringParameterBuilder
 import com.itsaky.androidide.templates.TextFieldWidget
 import com.itsaky.androidide.templates.base.util.getNewProjectName
 import com.itsaky.androidide.templates.base.util.moduleNameToDir
+import com.itsaky.androidide.preferences.internal.ProjectsPreferences
 import com.itsaky.androidide.templates.enumParameter
 import com.itsaky.androidide.templates.minSdkParameter
 import com.itsaky.androidide.templates.packageNameParameter
@@ -61,6 +67,7 @@ import com.itsaky.androidide.templates.useTomlParameter
 import com.itsaky.androidide.utils.AndroidUtils
 import com.itsaky.androidide.utils.Environment
 import java.io.File
+import java.util.Locale
 
 typealias AndroidModuleTemplateConfigurator = AndroidModuleTemplateBuilder.() -> Unit
 
@@ -138,6 +145,7 @@ internal fun updateBrowseClickListener(parameter: StringParameter) {
     _currentBrowseParameter = parameter
 }
 
+
 /**
  * Setup base files for project templates.
  *
@@ -154,7 +162,7 @@ inline fun baseProject(
     minSdk: EnumParameter<Sdk> = minSdkParameter(),
     language: EnumParameter<Language> = projectLanguageParameter(),
     ndkVersion: EnumParameter<NdkVersion> = projectNdkVersionParameter(),
-    cmakeVersion: EnumParameter<CmakeVersion> = projectCmakeVersionParameter(), // 新增参数
+    cmakeVersion: EnumParameter<CmakeVersion> = projectCmakeVersionParameter(),
     projectVersionData: ProjectVersionData = ProjectVersionData(),
     context: Context? = null,
     @StringRes description: Int? = null,
@@ -167,24 +175,23 @@ inline fun baseProject(
 
         // When project name is changed, change the package name accordingly
         projectName.observe { name ->
-            val newPackage = AndroidUtils.appNameToPackageName(name.value, packageName.value)
-            packageName.setValue(newPackage)
+            val domain = AndroidUtils.getPackageDomain(packageName.value)
+            val newAppName = AndroidUtils.trimWhiteSpace(name.value).lowercase(Locale.getDefault())
+            packageName.setValue("$domain.$newAppName")
         }
 
         Environment.mkdirIfNotExits(Environment.PROJECTS_DIR)
 
-        // Create the click listener that will be used
-        val browseClickListener =
-            View.OnClickListener {
-                _currentBrowseParameter?.let { param ->
-                    _fileBrowserCallback?.openFileBrowser(param.value, param)
-                }
+        val browseClickListener = View.OnClickListener {
+            _currentBrowseParameter?.let { param ->
+                _fileBrowserCallback?.openFileBrowser(param.value, param)
             }
+        }
 
         val saveLocation = stringParameter {
             name = R.string.wizard_save_location
-            default = Environment.PROJECTS_DIR.absolutePath
-            // default = getLastSaveLocation(context)
+            // default = Environment.PROJECTS_DIR.absolutePath
+            default = getLastSaveLocation(context)
             constraints = listOf(NONEMPTY, DIRECTORY, EXISTS)
             endIcon = { R.drawable.ic_folder }
             onEndIconClick = browseClickListener
@@ -223,16 +230,22 @@ inline fun baseProject(
             cmakeVersion.isVisible = isNativeEnabled
         }
 
-          // Save the selected location for future use
-          saveLastSaveLocation(context, saveLocation.value)
+        saveLastSaveLocation(context, saveLocation.value)
  
         // Setup the required properties before executing the recipe
         preRecipe = {
             this@apply._executor = this
 
+            var finalProjectDir = File(saveLocation.value, projectName.value)
+            if (finalProjectDir.exists() && finalProjectDir.listFiles()?.isNotEmpty() == true) {
+                val safeName = getNewProjectName(saveLocation.value, projectName.value)
+                finalProjectDir = File(saveLocation.value, safeName)
+                projectName.setValue(safeName, false)
+            }
+
             this@apply._data = ProjectTemplateData(
                 name = projectName.value,
-                projectDir = File(saveLocation.value, projectName.value),
+                projectDir = finalProjectDir,
                 version = projectVersionData,
                 language = language.value,
                 useKts = useKts.value,
@@ -242,9 +255,9 @@ inline fun baseProject(
                 useToml = useToml.value
             )
 
-            if (data.projectDir.exists() && data.projectDir.listFiles()?.isNotEmpty() == true) {
-                throw IllegalArgumentException("Project directory already exists")
-            }
+            // if (data.projectDir.exists() && data.projectDir.listFiles()?.isNotEmpty() == true) {
+                // throw IllegalArgumentException("Project directory already exists")
+            // }
 
             setDefaultModuleData(
                 ModuleTemplateData(
@@ -305,13 +318,15 @@ inline fun baseAndroidModule(
     projectBuilder: ProjectTemplateBuilder? = null,
     crossinline block: AndroidModuleTemplateConfigurator
 ): ModuleTemplate {
-    return AndroidModuleTemplateBuilder()
-        .apply {
+    return AndroidModuleTemplateBuilder().apply {
+            this.projectBuilder = projectBuilder
+
+            projectBuilder?.moduleBuilders?.add(this)
 
             val appName = if (isLibrary) null else projectNameParameter()
             val language = projectLanguageParameter()
             val ndkVersion = projectNdkVersionParameter()
-            val cmakeVersion = projectCmakeVersionParameter() // 新增参数
+            val cmakeVersion = projectCmakeVersionParameter()
             val minSdk = minSdkParameter()
             val packageName = packageNameParameter()
             val useKts = useKtsParameter()
@@ -381,6 +396,5 @@ inline fun <R : FileTemplateRecipeResult> baseFile(
     dir: File,
     crossinline configurator: FileTemplateBuilder<R>.() -> Unit
 ): FileTemplate<R> {
-    return FileTemplateBuilder<R>(dir).apply(configurator)
-        .build() as FileTemplate<R>
+    return FileTemplateBuilder<R>(dir).apply(configurator).build() as FileTemplate<R>
 }
