@@ -23,13 +23,13 @@ import com.itsaky.androidide.templates.Language.Kotlin
 import com.itsaky.androidide.templates.ModuleType
 import com.itsaky.androidide.templates.base.AndroidModuleTemplateBuilder
 import com.itsaky.androidide.templates.base.ModuleTemplateBuilder
-import com.itsaky.androidide.templates.base.models.Dependency
+import com.itsaky.androidide.templates.base.modules.dependencies
 import com.itsaky.androidide.utils.Environment
 import java.io.File
 
 private const val compose_kotlinCompilerExtensionVersion = "1.5.11"
 private const val compose_kotlinExtraPlugin = "org.jetbrains.kotlin.plugin.compose"
-private const val NATIVE_LIB_NAME = "demolib"
+private const val NATIVE_LIB_NAME = "tomaslib"
 
 public var composeExtraPluginKt: String = ""
 public var composeExtraPluginGr: String = ""
@@ -272,23 +272,8 @@ private fun AndroidModuleTemplateBuilder.buildGradleSrcKts(isComposeModule: Bool
 
   // Calculate compileSdk value first
   val compileSdkValue = if (isComposeModule) 36 else data.versions.compileSdk.api
-  composeExtraPluginKt = if (isComposeModule) "\n    id(\"$compose_kotlinExtraPlugin\")" else ""
-
-  val ndkVersionBlock = if (hasNative && ndkInstalled) "\n    ndkVersion = \"28.2.13676358\"" else ""
-  val ndkConfigBlock = if (hasNative && ndkInstalled) """
-        externalNativeBuild {
-            ndkBuild {
-                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64", "x86"))
-            }
-        }
-""" else ""
-  val ndkPathBlock = if (hasNative && ndkInstalled) """
-    externalNativeBuild {
-        ndkBuild {
-            path = file("src/main/jni/Android.mk")
-        }
-    }
-""" else ""
+  composeExtraPluginKt = if (isComposeModule) "id(\"$compose_kotlinExtraPlugin\")" else ""
+  composeExtraPluginGr = if (isComposeModule) "id '$compose_kotlinExtraPlugin'" else ""
 
   return """
 plugins {
@@ -299,7 +284,7 @@ plugins {
 android {
     namespace = "${data.packageName}"
     compileSdk = $compileSdkValue
-    $ndkVersionBlock
+    ${if (hasNative && ndkInstalled) """ndkVersion = "28.2.13676358"""" else ""}
 
     defaultConfig {
         applicationId = "${data.packageName}"
@@ -311,8 +296,14 @@ android {
         vectorDrawables { 
             useSupportLibrary = true
         }
-    $ndkConfigBlock 
-   }
+        ${if (hasNative && ndkInstalled) """
+        externalNativeBuild {
+            ndkBuild {
+                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64", "x86"))
+            }
+        }
+        """ else ""}
+    }
     
     compileOptions {
         sourceCompatibility = ${data.versions.javaSource()}
@@ -325,14 +316,20 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-$ndkPathBlock
+    ${if (hasNative && ndkInstalled) """
+    externalNativeBuild {
+        ndkBuild {
+            path = file("src/main/jni/Android.mk")
+        }
+    }""" else ""}
     buildFeatures {
-        ${if (!isComposeModule) "viewBinding = true" else "compose = true"}
+        ${if (!isComposeModule) "viewBinding = true" else ""}
+        ${if (isComposeModule) "compose = true" else ""}
     }
     ${if(isComposeModule) composeConfigKts() else ""}
 }
 ${ktJvmTarget()}
-${dependenciesBlock(isKts = true)}
+${dependencies()}
 """
 }
 
@@ -343,23 +340,9 @@ private fun AndroidModuleTemplateBuilder.buildGradleSrcGroovy(isComposeModule: B
 
   // Calculate compileSdk value first
   val compileSdkValue = if (isComposeModule) 36 else data.versions.compileSdk.api
-  composeExtraPluginGr = if (isComposeModule) "\n    id '$compose_kotlinExtraPlugin'" else ""
-
-  val ndkVersionBlock = if (hasNative && ndkInstalled) "\n    ndkVersion '28.2.13676358'" else ""
-  val ndkConfigBlock = if (hasNative && ndkInstalled) """
-        externalNativeBuild {
-            ndkBuild {
-                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86'
-            }
-        }
-""" else ""
-  val ndkPathBlock = if (hasNative && ndkInstalled) """
-    externalNativeBuild {
-        ndkBuild {
-            path file('src/main/jni/Android.mk')
-        }
-    }
-""" else ""
+  // Ensure compose plugin application variables are set for Groovy, same as KTS path
+  composeExtraPluginKt = if (isComposeModule) "id(\"$compose_kotlinExtraPlugin\")" else ""
+  composeExtraPluginGr = if (isComposeModule) "id '$compose_kotlinExtraPlugin'" else ""
 
   return """
 plugins {
@@ -369,7 +352,8 @@ plugins {
 
 android {
     namespace '${data.packageName}'
-    compileSdk $compileSdkValue$ndkVersionBlock
+    compileSdk $compileSdkValue
+    ${if (hasNative && ndkInstalled) """ndkVersion '28.2.13676358'""" else ""}
     
     defaultConfig {
         applicationId "${data.packageName}"
@@ -381,8 +365,14 @@ android {
         vectorDrawables { 
             useSupportLibrary true
         }
-    $ndkConfigBlock
-   }
+        ${if (hasNative && ndkInstalled) """
+        externalNativeBuild {
+            ndkBuild {
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86'
+            }
+        }
+        """ else ""}
+    }
 
     compileOptions {
         sourceCompatibility ${data.versions.javaSource()}
@@ -395,14 +385,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    $ndkPathBlock
+
+    ${if (hasNative && ndkInstalled) """
+    externalNativeBuild {
+        ndkBuild {
+            path file('src/main/jni/Android.mk')
+        }
+    }""" else ""}
     buildFeatures {
-        ${if (!isComposeModule) "viewBinding true" else "compose true"}
+        ${if (!isComposeModule) "viewBinding true" else ""}
+        ${if (isComposeModule) "compose true" else ""}
     }
     ${if(isComposeModule) composeConfigGroovy() else ""}
 }
 ${ktJvmTarget()}
-${dependenciesBlock(isKts = false)}
+${dependencies()}
 """
 }
 
@@ -470,10 +467,14 @@ private fun AndroidModuleTemplateBuilder.ktPlugin(): String {
 
 private fun ktPluginKts(): String {
   return """
-    id("org.jetbrains.kotlin.android")$composeExtraPluginKt"""
+  id("kotlin-android")
+  $composeExtraPluginKt
+  """
 }
 
 private fun ktPluginGroovy(): String {
   return """
-    id 'org.jetbrains.kotlin.android'$composeExtraPluginGr"""
+  id 'kotlin-android'
+  $composeExtraPluginGr
+  """
 }

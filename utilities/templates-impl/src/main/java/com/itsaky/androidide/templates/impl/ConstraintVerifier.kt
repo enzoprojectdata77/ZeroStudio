@@ -47,7 +47,7 @@ object ConstraintVerifier {
    * @see verify
    */
   fun isValid(input: String, constraints: List<ParameterConstraint>): Boolean =
-    verify(input, constraints) == null
+      verify(input, constraints) == null
 
   /**
    * Verify the input against the given constraints.
@@ -59,19 +59,19 @@ object ConstraintVerifier {
   fun verify(input: String, constraints: List<ParameterConstraint>): String? {
     var err: String?
     for (constraint in constraints) {
-      err = when (constraint) {
-        NONEMPTY -> checkNotEmpty(input)
-        PACKAGE -> validatePackageName(input)
-        CLASS -> validateClassName(input)
-        CLASS_NAME -> validateSimpleName(input)
-        MODULE_NAME -> validateModuleName(input)
-        LAYOUT -> validateLayoutName(input)
-        EXISTS -> checKFileExists(input)
-        FILE -> checkIsFile(input)
-        DIRECTORY -> checkIsDirectory(input)
-        else -> throw IllegalArgumentException(
-          "Unsupported parameter constraint '$constraint'")
-      }
+      err =
+          when (constraint) {
+            NONEMPTY -> checkNotEmpty(input)
+            PACKAGE -> validatePackageName(input)
+            CLASS -> validateClassName(input)
+            CLASS_NAME -> validateSimpleName(input)
+            MODULE_NAME -> validateModuleName(input)
+            LAYOUT -> validateLayoutName(input)
+            EXISTS -> checKFileExists(input)
+            FILE -> checkIsFile(input)
+            DIRECTORY -> checkIsDirectory(input)
+            else -> throw IllegalArgumentException("Unsupported parameter constraint '$constraint'")
+          }
 
       if (err != null) {
         return err
@@ -81,20 +81,20 @@ object ConstraintVerifier {
   }
 
   private fun validatePackageName(input: String): String? {
-    AndroidUtils.validatePackageName(input)?.let { return it }
+    AndroidUtils.validatePackageName(input)?.let {
+      return it
+    }
 
     if (SourceVersion.isName(input)) {
       return null
     }
 
-    return BaseApplication.getBaseInstance()
-      .getString(R.string.msg_package_is_not_valid)
+    return BaseApplication.getBaseInstance().getString(R.string.msg_package_is_not_valid)
   }
 
   private fun validateLayoutName(input: String): String? {
     if (input.isBlank()) {
-      return BaseApplication.getBaseInstance()
-        .getString(R.string.msg_value_empty)
+      return BaseApplication.getBaseInstance().getString(R.string.msg_value_empty)
     }
 
     // Allow only lowecase letters with digits and underscores
@@ -102,12 +102,13 @@ object ConstraintVerifier {
       return null
     }
 
-    return BaseApplication.getBaseInstance()
-      .getString(string.msg_invalid_layout_name)
+    return BaseApplication.getBaseInstance().getString(string.msg_invalid_layout_name)
   }
 
   private fun checkIsDirectory(input: String): String? {
-    checKFileExists(input)?.let { return it }
+    checKFileExists(input)?.let {
+      return it
+    }
 
     val file = File(input)
     if (file.isDirectory) {
@@ -119,15 +120,16 @@ object ConstraintVerifier {
   }
 
   private fun checkIsFile(input: String): String? {
-    checKFileExists(input)?.let { return it }
+    checKFileExists(input)?.let {
+      return it
+    }
 
     val file = File(input)
     if (file.isFile) {
       return null
     }
 
-    return BaseApplication.getBaseInstance()
-      .getString(string.msg_path_must_be_file)
+    return BaseApplication.getBaseInstance().getString(string.msg_path_must_be_file)
   }
 
   private fun checKFileExists(input: String): String? {
@@ -136,8 +138,7 @@ object ConstraintVerifier {
       return null
     }
 
-    return BaseApplication.getBaseInstance()
-      .getString(string.msg_file_not_exist)
+    return BaseApplication.getBaseInstance().getString(string.msg_file_not_exist)
   }
 
   private fun checkNotEmpty(input: String): String? {
@@ -153,8 +154,7 @@ object ConstraintVerifier {
       return null
     }
 
-    return BaseApplication.getBaseInstance()
-      .getString(string.msg_invalid_module_name)
+    return BaseApplication.getBaseInstance().getString(string.msg_invalid_module_name)
   }
 
   private fun validateClassName(name: String): String? {
@@ -168,8 +168,7 @@ object ConstraintVerifier {
       err = validatePackageName(pck)
     } else {
       if (!SourceVersion.isIdentifier(pck) || SourceVersion.isKeyword(pck)) {
-        err = BaseApplication.getBaseInstance()
-          .getString(string.msg_package_is_not_valid)
+        err = BaseApplication.getBaseInstance().getString(string.msg_package_is_not_valid)
       }
     }
 
@@ -182,8 +181,7 @@ object ConstraintVerifier {
 
   private fun validateSimpleName(name: String): String? {
     if (SourceVersion.isKeyword(name) || !SourceVersion.isIdentifier(name)) {
-      return BaseApplication.getBaseInstance()
-        .getString(string.msg_classname_with_keywords)
+      return BaseApplication.getBaseInstance().getString(string.msg_classname_with_keywords)
     }
     return null
   }

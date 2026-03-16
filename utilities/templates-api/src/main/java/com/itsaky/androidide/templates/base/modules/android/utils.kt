@@ -28,7 +28,8 @@ import com.itsaky.androidide.templates.base.util.AndroidManifestBuilder.Configur
  * Configure the default template for the project.
  *
  * @param name The name of the module (gradle format, e.g. ':app').
- * @param copyDefAssets Whether to copy the default Android assets (except `values` directory) to this module.
+ * @param copyDefAssets Whether to copy the default Android assets (except `values` directory) to
+ *   this module.
  * @param block The module configurator.
  */
 inline fun ProjectTemplateBuilder.defaultAppModule(
@@ -39,37 +40,41 @@ inline fun ProjectTemplateBuilder.defaultAppModule(
 ) {
   check(defModuleTemplate == null) { "Default module has been already configured" }
 
-  val moduleBuilder = AndroidModuleTemplateBuilder().apply {
-      projectBuilder = this@defaultAppModule
-      _name = name
-      templateName = 0
-      thumb = 0
+  val module =
+      AndroidModuleTemplateBuilder()
+          .apply {
+            projectBuilder = this@defaultAppModule // Add this line
+            _name = name
+            templateName = 0
+            thumb = 0
 
-      this@defaultAppModule.moduleBuilders.add(this)
-
-      preRecipe = commonPreRecipe {
-        return@commonPreRecipe defModule
-      }
-
-      postRecipe = commonPostRecipe {
-        if (copyDefAssets) {
-          copyDefaultRes()
-          manifest {
-            configure(APPLICATION_ATTR) {
-              androidAttribute("dataExtractionRules", "@xml/data_extraction_rules")
-              androidAttribute("fullBackupContent", "@xml/backup_rules")
+            preRecipe = commonPreRecipe {
+              return@commonPreRecipe defModule
             }
+
+            postRecipe = commonPostRecipe {
+              if (copyDefAssets) {
+                copyDefaultRes()
+
+                // add manifest attributes for data extraction rules
+                // and backup rules
+                manifest {
+                  configure(APPLICATION_ATTR) {
+                    androidAttribute("dataExtractionRules", "@xml/data_extraction_rules")
+
+                    androidAttribute("fullBackupContent", "@xml/backup_rules")
+                  }
+                }
+              }
+            }
+
+            if (addAndroidX) {
+              baseAndroidXDependencies()
+            }
+
+            block()
           }
-        }
-      }
+          .build() as ModuleTemplate
 
-      if (addAndroidX) {
-        baseAndroidXDependencies()
-      }
-
-      block()
-  }
-
-  val module = moduleBuilder.build() as ModuleTemplate
   modules.add(module)
 }

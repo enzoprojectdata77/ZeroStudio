@@ -2,8 +2,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.org.jetbrains.kotlin.plugin.serialization)
-    alias(libs.plugins.org.jetbrains.kotlin.plugin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.chatai.common)
+    implementation(project(":common"))
 
     implementation(libs.okhttp)
 
@@ -59,13 +59,9 @@ dependencies {
     implementation(libs.androidx.media3.common)
 
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.material3)
 
-    testImplementation(libs.tests.junit)
-    androidTestImplementation(libs.tests.androidx.junit)
-    androidTestImplementation(libs.tests.androidx.espresso.core)
-}
-
-kotlin {
-    jvmToolchain(17)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

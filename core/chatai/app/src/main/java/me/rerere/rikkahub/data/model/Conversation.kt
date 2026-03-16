@@ -18,7 +18,6 @@ data class Conversation(
     val assistantId: Uuid,
     val title: String = "",
     val messageNodes: List<MessageNode>,
-    val truncateIndex: Int = -1,
     val chatSuggestions: List<String> = emptyList(),
     val isPinned: Boolean = false,
     @Serializable(with = InstantSerializer::class)
@@ -29,33 +28,10 @@ data class Conversation(
     val newConversation: Boolean = false
 ) {
     val files: List<Uri>
-        get() {
-            val images = messageNodes
-                .flatMap { node -> node.messages.flatMap { it.parts } }
-                .filterIsInstance<UIMessagePart.Image>()
-                .mapNotNull {
-                    it.url.takeIf { it.startsWith("file://") }?.toUri()
-                }
-            val documents = messageNodes
-                .flatMap { node -> node.messages.flatMap { it.parts } }
-                .filterIsInstance<UIMessagePart.Document>()
-                .mapNotNull {
-                    it.url.takeIf { it.startsWith("file://") }?.toUri()
-                }
-            val videos = messageNodes
-                .flatMap { node -> node.messages.flatMap { it.parts } }
-                .filterIsInstance<UIMessagePart.Video>()
-                .mapNotNull {
-                    it.url.takeIf { it.startsWith("file://") }?.toUri()
-                }
-            val audios = messageNodes
-                .flatMap { node -> node.messages.flatMap { it.parts } }
-                .filterIsInstance<UIMessagePart.Audio>()
-                .mapNotNull {
-                    it.url.takeIf { it.startsWith("file://") }?.toUri()
-                }
-            return images + documents + videos + audios
-        }
+        get() = messageNodes
+            .flatMap { node -> node.messages.flatMap { it.parts } }
+            .collectAllParts()
+            .mapNotNull { it.fileUri() }
 
     /**
      *  当前选中的 message
@@ -127,6 +103,8 @@ data class MessageNode(
     val id: Uuid = Uuid.random(),
     val messages: List<UIMessage>,
     val selectIndex: Int = 0,
+    @Transient
+    val isFavorite: Boolean = false,
 ) {
     val currentMessage get() = if (messages.isEmpty() || selectIndex !in messages.indices) {
         throw IllegalStateException("MessageNode has no valid current message: messages.size=${messages.size}, selectIndex=$selectIndex")
@@ -149,4 +127,21 @@ fun UIMessage.toMessageNode(): MessageNode {
         messages = listOf(this),
         selectIndex = 0
     )
+}
+
+/**
+ * 递归展开所有 parts，包括工具调用结果中的嵌套 parts。
+ */
+private fun List<UIMessagePart>.collectAllParts(): List<UIMessagePart> =
+    this + filterIsInstance<UIMessagePart.Tool>().flatMap { it.output.collectAllParts() }
+
+/**
+ * 提取 part 中引用的本地文件 URI，新增文件类型时只需在此处添加。
+ */
+private fun UIMessagePart.fileUri(): Uri? = when (this) {
+    is UIMessagePart.Image -> url.takeIf { it.startsWith("file://") }?.toUri()
+    is UIMessagePart.Document -> url.takeIf { it.startsWith("file://") }?.toUri()
+    is UIMessagePart.Video -> url.takeIf { it.startsWith("file://") }?.toUri()
+    is UIMessagePart.Audio -> url.takeIf { it.startsWith("file://") }?.toUri()
+    else -> null
 }

@@ -31,20 +31,19 @@ import kotlinx.parcelize.Parcelize
  *
  * @author android_zero
  */
-@Parcelize
-class TemplateSetting(
-    override val key: String = "idepref_general_project_templates",
-    override val title: Int = R.string.title_templates,
-    override val children: List<IPreference> = mutableListOf()
-) : IPreferenceScreen() {
-    init {
-        addPreference(TemplateBasicSettingsScreen())
-        addPreference(TemplateSpanCountPreference())
-    }
-}
+// @Parcelize
+// class TemplateSetting(
+    // override val key: String = "idepref_general_project_templates",
+    // override val title: Int = R.string.title_templates,
+    // override val children: List<IPreference> = mutableListOf()
+// ) : IPreferenceScreen() {
+    // init {
+        // addPreference(TemplateBasicSettingsScreen())
+    // }
+// }
 
 /**
- * 二级页面：模板基础设置
+ * 二级页面：基础设置
  */
 @Parcelize
 class TemplateBasicSettingsScreen(
@@ -56,6 +55,7 @@ class TemplateBasicSettingsScreen(
     init {
         addPreference(DefaultProjectNamePreference())
         addPreference(DefaultPackageNamePreference())
+        addPreference(TemplateSpanCountPreference())
     }
 }
 
@@ -148,8 +148,7 @@ class TemplateSpanCountPreference(
             val label = if (span == 1) {
                 preference.context.getString(R.string.layout_list) // "List"
             } else {
-                // preference.context.getString(R.string.layout_grid, span) // "Grid (x)"
-                preference.context.getString(R.string.layout_grid, span.toString())
+                preference.context.getString(R.string.layout_grid, span) // "Grid (x)"
             }
             PreferenceChoices.Entry(label, currentSpan == span, span)
         }.toTypedArray()

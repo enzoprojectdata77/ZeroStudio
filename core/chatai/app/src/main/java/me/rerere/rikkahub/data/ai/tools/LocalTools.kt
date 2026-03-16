@@ -5,6 +5,7 @@ import com.whl.quickjs.wrapper.QuickJSContext
 import com.whl.quickjs.wrapper.QuickJSObject
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
@@ -15,6 +16,8 @@ import kotlinx.serialization.json.put
 import me.rerere.ai.core.InputSchema
 import me.rerere.ai.core.Tool
 import me.rerere.ai.ui.UIMessagePart
+import me.rerere.rikkahub.data.event.AppEvent
+import me.rerere.rikkahub.data.event.AppEventBus
 import me.rerere.rikkahub.utils.readClipboardText
 import me.rerere.rikkahub.utils.writeClipboardText
 import java.time.ZonedDateTime
@@ -34,9 +37,17 @@ sealed class LocalToolOption {
     @Serializable
     @SerialName("clipboard")
     data object Clipboard : LocalToolOption()
+
+    @Serializable
+    @SerialName("tts")
+    data object Tts : LocalToolOption()
+
+    @Serializable
+    @SerialName("ask_user")
+    data object AskUser : LocalToolOption()
 }
 
-class LocalTools(private val context: Context) {
+class LocalTools(private val context: Context, private val eventBus: AppEventBus) {
     val javascriptTool by lazy {
         Tool(
             name = "eval_javascript",
@@ -56,6 +67,7 @@ class LocalTools(private val context: Context) {
                             put("description", "The JavaScript code to execute")
                         })
                     },
+                    required = listOf("code")
                 )
             },
             execute = {
@@ -85,7 +97,9 @@ class LocalTools(private val context: Context) {
                         put("logs", JsonPrimitive(logs.joinToString("\n")))
                     }
                     put(
-                        "result", when (result) {
+                        key = "result",
+                        element = when (result) {
+                            null -> JsonNull
                             is QuickJSObject -> JsonPrimitive(result.stringify())
                             else -> JsonPrimitive(result.toString())
                         }
@@ -138,6 +152,7 @@ class LocalTools(private val context: Context) {
             description = """
                 Read or write plain text from the device clipboard.
                 Use action: read or write. For write, provide text.
+                Do NOT write to the clipboard unless the user has explicitly requested it.
             """.trimIndent().replace("\n", " "),
             parameters = {
                 InputSchema.Obj(
@@ -188,6 +203,92 @@ class LocalTools(private val context: Context) {
         )
     }
 
+    val ttsTool by lazy {
+        Tool(
+            name = "text_to_speech",
+            description = """
+                Speak text aloud to the user using the device's text-to-speech engine.
+                Use this when the user asks you to read something aloud, or when audio output is appropriate.
+                The tool returns immediately; audio plays in the background on the device.
+                Provide natural, readable text without markdown formatting.
+            """.trimIndent().replace("\n", " "),
+            parameters = {
+                InputSchema.Obj(
+                    properties = buildJsonObject {
+                        put("text", buildJsonObject {
+                            put("type", "string")
+                            put("description", "The text to speak aloud")
+                        })
+                    },
+                    required = listOf("text")
+                )
+            },
+            execute = {
+                val text = it.jsonObject["text"]?.jsonPrimitive?.contentOrNull
+                    ?: error("text is required")
+                eventBus.emit(AppEvent.Speak(text))
+                val payload = buildJsonObject {
+                    put("success", true)
+                }
+                listOf(UIMessagePart.Text(payload.toString()))
+            }
+        )
+    }
+
+    val askUserTool by lazy {
+        Tool(
+            name = "ask_user",
+            description = """
+                Ask the user one or more questions when you need clarification, additional information, or confirmation.
+                Each question can optionally provide a list of suggested options for the user to choose from.
+                The user may select an option or provide their own free-text answer for each question.
+                The answers will be returned as a JSON object mapping question IDs to the user's responses.
+            """.trimIndent().replace("\n", " "),
+            parameters = {
+                InputSchema.Obj(
+                    properties = buildJsonObject {
+                        put("questions", buildJsonObject {
+                            put("type", "array")
+                            put("description", "List of questions to ask the user")
+                            put("items", buildJsonObject {
+                                put("type", "object")
+                                put("properties", buildJsonObject {
+                                    put("id", buildJsonObject {
+                                        put("type", "string")
+                                        put("description", "Unique identifier for this question")
+                                    })
+                                    put("question", buildJsonObject {
+                                        put("type", "string")
+                                        put("description", "The question text to display to the user")
+                                    })
+                                    put("options", buildJsonObject {
+                                        put("type", "array")
+                                        put(
+                                            "description",
+                                            "Optional list of suggested options for the user to choose from"
+                                        )
+                                        put("items", buildJsonObject {
+                                            put("type", "string")
+                                        })
+                                    })
+                                })
+                                put("required", kotlinx.serialization.json.buildJsonArray {
+                                    add("id")
+                                    add("question")
+                                })
+                            })
+                        })
+                    },
+                    required = listOf("questions")
+                )
+            },
+            needsApproval = true,
+            execute = {
+                error("ask_user tool should be handled by HITL flow")
+            }
+        )
+    }
+
     fun getTools(options: List<LocalToolOption>): List<Tool> {
         val tools = mutableListOf<Tool>()
         if (options.contains(LocalToolOption.JavascriptEngine)) {
@@ -198,6 +299,12 @@ class LocalTools(private val context: Context) {
         }
         if (options.contains(LocalToolOption.Clipboard)) {
             tools.add(clipboardTool)
+        }
+        if (options.contains(LocalToolOption.Tts)) {
+            tools.add(ttsTool)
+        }
+        if (options.contains(LocalToolOption.AskUser)) {
+            tools.add(askUserTool)
         }
         return tools
     }

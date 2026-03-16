@@ -41,7 +41,7 @@ import java.util.zip.ZipInputStream
  * @author android_zero
  */
 class ProjectTemplateBuilder :
-  ExecutorDataTemplateBuilder<ProjectTemplateRecipeResult, ProjectTemplateData>() {
+    ExecutorDataTemplateBuilder<ProjectTemplateRecipeResult, ProjectTemplateData>() {
 
   private var _defModule: ModuleTemplateData? = null
 
@@ -60,7 +60,8 @@ class ProjectTemplateBuilder :
     get() = checkNotNull(_defModule) { "Module template data not set" }
 
   /**
-   * Set the template data that will be used to create the default application module in the project.
+   * Set the template data that will be used to create the default application module in the
+   * project.
    *
    * @param data The module template data to use.
    */
@@ -82,26 +83,22 @@ class ProjectTemplateBuilder :
    * @param path The path to the asset.
    * @see com.itsaky.androidide.templates.base.baseAsset
    */
-  fun baseAsset(path: String) =
-    com.itsaky.androidide.templates.base.util.baseAsset("root", path)
+  fun baseAsset(path: String) = com.itsaky.androidide.templates.base.util.baseAsset("root", path)
 
-  /**
-   * Get the `build.gradle[.kts] file for the project.
-   */
+  /** Get the `build.gradle[.kts] file for the project. */
   fun buildGradleFile(): File {
     return data.buildGradleFile()
   }
 
-  /**
-   * Writes the `build.gradle[.kts]` file in the project root directory.
-   */
+  /** Writes the `build.gradle[.kts]` file in the project root directory. */
   fun buildGradle() {
     executor.save(buildGradleSrc(), buildGradleFile())
   }
 
-  /**
-   * Get the source for `build.gradle[.kts]` files.
-   */
+  /** Get the source for `build.gradle[.kts]` files. */
+  // In ProjectTemplateBuilder.kt
+
+  /** Get the source for `build.gradle[.kts]` files. */
   fun buildGradleSrc(): String {
     // Check multiple signals to robustly detect if any module uses Compose
     val composeMarkerFile = File(data.projectDir, ".compose_enabled")
@@ -136,32 +133,24 @@ class ProjectTemplateBuilder :
     executor.save(settingsGradleSrc(), settingsGradleFile())
   }
 
-  /**
-   * Get the `settings.gradle[.kts]` file for this project.
-   */
+  /** Get the `settings.gradle[.kts]` file for this project. */
   fun settingsGradleFile(): File {
     return File(data.projectDir, data.optonallyKts("settings.gradle"))
   }
 
-  /**
-   * Get the source for `settings.gradle[.kts]`.
-   */
+  /** Get the source for `settings.gradle[.kts]`. */
   fun settingsGradleSrc(): String {
     return settingsGradleSrcStr()
   }
 
-  /**
-   * Writes the `gradle.properties` file in the root project.
-   */
+  /** Writes the `gradle.properties` file in the root project. */
   fun gradleProps() {
     val name = "gradle.properties"
     val gradleProps = File(data.projectDir, name)
     executor.copyAsset(baseAsset(name), gradleProps)
   }
 
-  /**
-   * Writes/copies the Gradle Wrapper related files in the project directory.
-   */
+  /** Writes/copies the Gradle Wrapper related files in the project directory. */
   fun gradleWrapper() {
 
     ZipInputStream(executor.openAsset(ToolsManager.getCommonAsset("gradle-wrapper.zip")).buffered())
@@ -196,76 +185,13 @@ class ProjectTemplateBuilder :
     gradleWrapperProps()
   }
 
-  /**
-   * Writes the `.gitignore` file in the project directory.
-   */
+  /** Writes the `.gitignore` file in the project directory. */
   fun gitignore() {
     val gitignore = File(data.projectDir, ".gitignore")
     executor.copyAsset(baseAsset("gitignore"), gitignore)
   }
 
-  /**
-   * @author android_zero
-   *
-   * Updated to pass the 'description' to the ProjectTemplate constructor.
-   */
   override fun buildInternal(): ProjectTemplate {
-    return ProjectTemplate(modules, templateName!!, thumb!!, description, widgets!!, recipe!!)
+    return ProjectTemplate(modules, templateName!!, thumb!!, widgets!!, recipe!!)
   }
-}
-
-private fun toTomlAlias(group: String, artifact: String): String {
-    return (group.replace("com.google.android", "google")
-                 .replace("androidx", "")
-                 .replace(".", "-")
-         + "-" + artifact)
-        .replace(Regex("-+"), "-")
-        .removePrefix("-")
-}
-
-fun ProjectTemplateBuilder.generateTomlFile() {
-    if (!data.useToml) return
-
-    // Safely retrieve dependencies from tracked builders
-    val allDependencies = moduleBuilders.flatMap { it.dependencies }.distinct()
-    val allPlatforms = moduleBuilders.flatMap { it.platforms }.distinct()
-
-    val versions = mutableMapOf<String, String>()
-    val libraries = mutableMapOf<String, String>()
-    
-    // Add versions and libraries from all dependencies
-    (allDependencies + allPlatforms).forEach { dep ->
-        dep.version?.let {
-            val versionAlias = toTomlAlias(dep.group, dep.artifact).replace("-", "")
-            versions[versionAlias] = it
-            libraries[toTomlAlias(dep.group, dep.artifact)] = "{ group = \"${dep.group}\", name = \"${dep.artifact}\", version.ref = \"$versionAlias\" }"
-        }
-    }
-    
-    // Ensure essential versions are always present
-    versions.putIfAbsent("agp", data.version.gradlePlugin)
-    versions.putIfAbsent("kotlin", data.version.kotlin)
-
-    val tomlFile = File(data.projectDir, "gradle/libs.versions.toml")
-    tomlFile.parentFile.mkdirs()
-
-    val tomlContent = buildString {
-        appendLine("[versions]")
-        versions.toSortedMap().forEach { (alias, version) ->
-            appendLine("$alias = \"$version\"")
-        }
-        appendLine("\n[libraries]")
-        libraries.toSortedMap().forEach { (alias, definition) ->
-            appendLine("$alias = $definition")
-        }
-        appendLine("\n[plugins]")
-        appendLine("android-application = { id = \"com.android.application\", version.ref = \"agp\" }")
-        appendLine("android-library = { id = \"com.android.library\", version.ref = \"agp\" }")
-        appendLine("kotlin-android = { id = \"org.jetbrains.kotlin.android\", version.ref = \"kotlin\" }")
-        if (hasComposeModules) {
-            appendLine("kotlin-compose = { id = \"org.jetbrains.kotlin.plugin.compose\", version.ref = \"kotlin\" }")
-        }
-    }
-    
-    executor.save(tomlContent, tomlFile)
 }

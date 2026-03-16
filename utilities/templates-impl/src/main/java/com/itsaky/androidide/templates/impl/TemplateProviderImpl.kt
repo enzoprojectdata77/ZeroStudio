@@ -89,17 +89,16 @@ class TemplateProviderImpl : ITemplateProvider {
 
         // Register all default templates under the Mobile category.
         // This is where you can add more templates to this or other categories.
-        registerTemplate(TemplateCategory.Mobile, noActivityProjectTemplate())
-        registerTemplate(TemplateCategory.Mobile, emptyActivityProject())
-        registerTemplate(TemplateCategory.Mobile, basicActivityProject())
-        registerTemplate(TemplateCategory.Mobile, navDrawerActivityProject())
-        registerTemplate(TemplateCategory.Mobile, bottomNavActivityProject())
-        registerTemplate(TemplateCategory.Mobile, tabbedActivityProject())
-        registerTemplate(TemplateCategory.Mobile, noAndroidXActivityProject())
-        // registerTemplate(TemplateCategory.Mobile, composeActivityProject())
-      
-          registerTemplate(TemplateCategory.Generic, composeActivityProject())
-        
+         registerTemplate(TemplateCategory.BasicZeroStudio, emptyActivityProject())
+         registerTemplate(TemplateCategory.BasicZeroStudio, noActivityProjectTemplate())
+         registerTemplate(TemplateCategory.BasicZeroStudio, composeActivityProject())
+         registerTemplate(TemplateCategory.BasicZeroStudio, basicActivityProject())
+         registerTemplate(TemplateCategory.BasicZeroStudio, bottomNavActivityProject())
+         registerTemplate(TemplateCategory.BasicZeroStudio, navDrawerActivityProject())
+         registerTemplate(TemplateCategory.BasicZeroStudio, tabbedActivityProject())
+         registerTemplate(TemplateCategory.BasicZeroStudio, basicCppProject())
+         registerTemplate(TemplateCategory.BasicZeroStudio, noAndroidXActivityProject())
+
     }
 
     /**

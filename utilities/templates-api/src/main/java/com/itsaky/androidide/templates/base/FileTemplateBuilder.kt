@@ -28,14 +28,9 @@ import java.io.File
  * @property dir The directory in which the file must be created.
  * @author Akash Yadav
  */
-class FileTemplateBuilder<R: FileTemplateRecipeResult>(val dir: File) : TemplateBuilder<R>() {
+class FileTemplateBuilder<R : FileTemplateRecipeResult>(val dir: File) : TemplateBuilder<R>() {
 
-  /**
-   * @author android_zero
-   *
-   * Updated to pass the 'description' to the FileTemplate constructor.
-   */
   override fun buildInternal(): FileTemplate<R> {
-    return FileTemplate(templateName!!, thumb!!, description, widgets!!, recipe!!)
+    return FileTemplate(templateName!!, thumb!!, widgets!!, recipe!!)
   }
 }

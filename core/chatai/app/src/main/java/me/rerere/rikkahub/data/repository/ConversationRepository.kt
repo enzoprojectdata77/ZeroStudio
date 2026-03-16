@@ -1,34 +1,37 @@
 package me.rerere.rikkahub.data.repository
 
-import android.content.Context
 import android.database.sqlite.SQLiteBlobTooBigException
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.PagingSource
 import androidx.paging.map
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import me.rerere.ai.ui.UIMessage
-import me.rerere.ai.ui.migrateToolNodes
 import me.rerere.rikkahub.data.db.AppDatabase
+import me.rerere.rikkahub.data.db.fts.MessageFtsManager
 import me.rerere.rikkahub.data.db.dao.ConversationDAO
+import me.rerere.rikkahub.data.db.dao.FavoriteDAO
 import me.rerere.rikkahub.data.db.dao.MessageNodeDAO
 import me.rerere.rikkahub.data.db.entity.ConversationEntity
 import me.rerere.rikkahub.data.db.entity.MessageNodeEntity
+import me.rerere.rikkahub.data.files.FilesManager
 import me.rerere.rikkahub.data.model.Conversation
 import me.rerere.rikkahub.data.model.MessageNode
 import me.rerere.rikkahub.utils.JsonInstant
-import me.rerere.rikkahub.utils.deleteChatFiles
 import java.time.Instant
 import kotlin.uuid.Uuid
 
 class ConversationRepository(
-    private val context: Context,
     private val conversationDAO: ConversationDAO,
     private val messageNodeDAO: MessageNodeDAO,
+    private val favoriteDAO: FavoriteDAO,
     private val database: AppDatabase,
+    private val filesManager: FilesManager,
+    private val messageFtsManager: MessageFtsManager,
 ) {
     companion object {
         private const val PAGE_SIZE = 20
@@ -66,6 +69,72 @@ class ConversationRepository(
     ).flow.map { pagingData ->
         pagingData.map { entity ->
             conversationSummaryToConversation(entity)
+        }
+    }
+
+    suspend fun getConversationsOfAssistantPage(
+        assistantId: Uuid,
+        offset: Int,
+        limit: Int,
+    ): ConversationPageResult {
+        val pagingSource = conversationDAO.getConversationsOfAssistantPaging(assistantId.toString())
+        return try {
+            when (
+                val result = pagingSource.load(
+                    PagingSource.LoadParams.Refresh(
+                        key = if (offset == 0) null else offset,
+                        loadSize = limit,
+                        placeholdersEnabled = false
+                    )
+                )
+            ) {
+                is PagingSource.LoadResult.Page -> ConversationPageResult(
+                    items = result.data.map { entity ->
+                        conversationSummaryToConversation(entity)
+                    },
+                    nextOffset = result.nextKey
+                )
+
+                is PagingSource.LoadResult.Error -> throw result.throwable
+                is PagingSource.LoadResult.Invalid -> ConversationPageResult(emptyList(), null)
+            }
+        } finally {
+            pagingSource.invalidate()
+        }
+    }
+
+    suspend fun searchConversationsOfAssistantPage(
+        assistantId: Uuid,
+        titleKeyword: String,
+        offset: Int,
+        limit: Int,
+    ): ConversationPageResult {
+        val pagingSource = conversationDAO.searchConversationsOfAssistantPaging(
+            assistantId = assistantId.toString(),
+            searchText = titleKeyword
+        )
+        return try {
+            when (
+                val result = pagingSource.load(
+                    PagingSource.LoadParams.Refresh(
+                        key = if (offset == 0) null else offset,
+                        loadSize = limit,
+                        placeholdersEnabled = false
+                    )
+                )
+            ) {
+                is PagingSource.LoadResult.Page -> ConversationPageResult(
+                    items = result.data.map { entity ->
+                        conversationSummaryToConversation(entity)
+                    },
+                    nextOffset = result.nextKey
+                )
+
+                is PagingSource.LoadResult.Error -> throw result.throwable
+                is PagingSource.LoadResult.Invalid -> ConversationPageResult(emptyList(), null)
+            }
+        } finally {
+            pagingSource.invalidate()
         }
     }
 
@@ -129,6 +198,10 @@ class ConversationRepository(
         } else null
     }
 
+    suspend fun existsConversationById(uuid: Uuid): Boolean {
+        return conversationDAO.existsById(uuid.toString())
+    }
+
     suspend fun insertConversation(conversation: Conversation) {
         database.withTransaction {
             conversationDAO.insert(
@@ -136,6 +209,7 @@ class ConversationRepository(
             )
             saveMessageNodes(conversation.id.toString(), conversation.messageNodes)
         }
+        messageFtsManager.indexConversation(conversation)
     }
 
     suspend fun updateConversation(conversation: Conversation) {
@@ -147,6 +221,7 @@ class ConversationRepository(
             messageNodeDAO.deleteByConversation(conversation.id.toString())
             saveMessageNodes(conversation.id.toString(), conversation.messageNodes)
         }
+        messageFtsManager.indexConversation(conversation)
     }
 
     suspend fun deleteConversation(conversation: Conversation) {
@@ -156,13 +231,29 @@ class ConversationRepository(
         } else {
             conversation
         }
+        messageFtsManager.deleteConversation(conversation.id.toString())
         database.withTransaction {
             // message_node 会通过 CASCADE 自动删除
             conversationDAO.delete(
                 conversationToConversationEntity(conversation)
             )
         }
-        context.deleteChatFiles(fullConversation.files)
+        filesManager.deleteChatFiles(fullConversation.files)
+    }
+
+    suspend fun searchMessages(keyword: String) = messageFtsManager.search(keyword)
+
+    suspend fun rebuildAllIndexes(onProgress: (current: Int, total: Int) -> Unit = { _, _ -> }) {
+        messageFtsManager.deleteAll()
+        val allIds = conversationDAO.getAllIds()
+        val total = allIds.size
+        allIds.forEachIndexed { index, id ->
+            val entity = conversationDAO.getConversationById(id) ?: return@forEachIndexed
+            val nodes = loadMessageNodes(entity.id)
+            val conversation = conversationEntityToConversation(entity, nodes)
+            messageFtsManager.indexConversation(conversation)
+            onProgress(index + 1, total)
+        }
     }
 
     suspend fun deleteConversationOfAssistant(assistantId: Uuid) {
@@ -180,7 +271,6 @@ class ConversationRepository(
             createAt = conversation.createAt.toEpochMilli(),
             updateAt = conversation.updateAt.toEpochMilli(),
             assistantId = conversation.assistantId.toString(),
-            truncateIndex = conversation.truncateIndex,
             chatSuggestions = JsonInstant.encodeToString(conversation.chatSuggestions),
             isPinned = conversation.isPinned
         )
@@ -197,7 +287,6 @@ class ConversationRepository(
             createAt = Instant.ofEpochMilli(conversationEntity.createAt),
             updateAt = Instant.ofEpochMilli(conversationEntity.updateAt),
             assistantId = Uuid.parse(conversationEntity.assistantId),
-            truncateIndex = conversationEntity.truncateIndex,
             chatSuggestions = JsonInstant.decodeFromString(conversationEntity.chatSuggestions),
             isPinned = conversationEntity.isPinned,
         )
@@ -233,6 +322,11 @@ class ConversationRepository(
     }
 
     private suspend fun loadMessageNodes(conversationId: String): List<MessageNode> {
+        val favoriteNodeIds = favoriteDAO
+            .getFavoriteNodeIdsOfConversation(conversationId)
+            .mapNotNull { runCatching { Uuid.parse(it) }.getOrNull() }
+            .toSet()
+
         return database.withTransaction {
             val nodes = mutableListOf<MessageNode>()
             var offset = 0
@@ -248,21 +342,19 @@ class ConversationRepository(
                 if (page.isEmpty()) break
                 page.forEach { entity ->
                     val messages = JsonInstant.decodeFromString<List<UIMessage>>(entity.messages)
+                    val nodeId = Uuid.parse(entity.id)
                     nodes.add(
                         MessageNode(
-                            id = Uuid.parse(entity.id),
+                            id = nodeId,
                             messages = messages,
-                            selectIndex = entity.selectIndex
+                            selectIndex = entity.selectIndex,
+                            isFavorite = favoriteNodeIds.contains(nodeId)
                         )
                     )
                 }
                 offset += page.size
             }
-            // Migrate legacy TOOL nodes by merging them into previous ASSISTANT nodes
-            nodes.migrateToolNodes(
-                getMessages = { it.messages },
-                setMessages = { node, msgs -> node.copy(messages = msgs) }
-            )
+            nodes
         }
     }
 
@@ -290,4 +382,9 @@ data class LightConversationEntity(
     val isPinned: Boolean,
     val createAt: Long,
     val updateAt: Long,
+)
+
+data class ConversationPageResult(
+    val items: List<Conversation>,
+    val nextOffset: Int?,
 )

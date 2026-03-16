@@ -34,59 +34,54 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
-import com.composables.icons.lucide.List
-import com.composables.icons.lucide.ListTree
-import com.composables.icons.lucide.Lucide
-import com.composables.icons.lucide.MessageCirclePlus
-import com.composables.icons.lucide.Option
-import com.composables.icons.lucide.Sparkles
-import com.composables.icons.lucide.X
 import com.dokar.sonner.ToastType
+import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import me.rerere.ai.provider.Model
 import me.rerere.ai.ui.UIMessagePart
+import me.rerere.hugeicons.HugeIcons
+import me.rerere.hugeicons.stroke.Cancel01
+import me.rerere.hugeicons.stroke.LeftToRightListBullet
+import me.rerere.hugeicons.stroke.Menu03
+import me.rerere.hugeicons.stroke.MessageAdd01
 import me.rerere.rikkahub.R
-import me.rerere.rikkahub.Screen
 import me.rerere.rikkahub.data.datastore.Settings
 import me.rerere.rikkahub.data.datastore.findProvider
 import me.rerere.rikkahub.data.datastore.getCurrentAssistant
 import me.rerere.rikkahub.data.datastore.getCurrentChatModel
+import me.rerere.rikkahub.data.files.FilesManager
 import me.rerere.rikkahub.data.model.Conversation
 import me.rerere.rikkahub.service.ChatError
 import me.rerere.rikkahub.ui.components.ai.ChatInput
-import me.rerere.ai.core.MessageRole
 import me.rerere.rikkahub.ui.context.LocalNavController
-import me.rerere.rikkahub.ui.context.LocalTTSState
 import me.rerere.rikkahub.ui.context.LocalToaster
+import me.rerere.rikkahub.ui.context.Navigator
 import me.rerere.rikkahub.ui.hooks.ChatInputState
 import me.rerere.rikkahub.ui.hooks.EditStateContent
 import me.rerere.rikkahub.ui.hooks.useEditState
 import me.rerere.rikkahub.utils.base64Decode
-import me.rerere.rikkahub.utils.createChatFilesByContents
-import me.rerere.rikkahub.utils.getFileMimeType
 import me.rerere.rikkahub.utils.navigateToChatPage
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 import kotlin.uuid.Uuid
 
 @Composable
-fun ChatPage(id: Uuid, text: String?, files: List<Uri>) {
+fun ChatPage(id: Uuid, text: String?, files: List<Uri>, nodeId: Uuid? = null) {
     val vm: ChatVM = koinViewModel(
         parameters = {
             parametersOf(id.toString())
         }
     )
+    val filesManager: FilesManager = koinInject()
     val navController = LocalNavController.current
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     val setting by vm.settings.collectAsStateWithLifecycle()
@@ -122,9 +117,9 @@ fun ChatPage(id: Uuid, text: String?, files: List<Uri>) {
     // 初始化输入状态（处理传入的 files 和 text 参数）
     LaunchedEffect(files, text) {
         if (files.isNotEmpty()) {
-            val localFiles = context.createChatFilesByContents(files)
+            val localFiles = filesManager.createChatFilesByContents(files)
             val contentTypes = files.mapNotNull { file ->
-                context.getFileMimeType(file)
+                filesManager.getFileMimeType(file)
             }
             val parts = buildList {
                 localFiles.forEachIndexed { index, file ->
@@ -149,8 +144,18 @@ fun ChatPage(id: Uuid, text: String?, files: List<Uri>) {
 
     val chatListState = rememberLazyListState()
     LaunchedEffect(vm) {
-        if (!vm.chatListInitialized && chatListState.layoutInfo.totalItemsCount > 0) {
+        if (nodeId == null && !vm.chatListInitialized && chatListState.layoutInfo.totalItemsCount > 0) {
             chatListState.scrollToItem(chatListState.layoutInfo.totalItemsCount)
+            vm.chatListInitialized = true
+        }
+    }
+
+    LaunchedEffect(nodeId, conversation.messageNodes.size) {
+        if (nodeId != null && conversation.messageNodes.isNotEmpty() && !vm.chatListInitialized) {
+            val index = conversation.messageNodes.indexOfFirst { it.id == nodeId }
+            if (index >= 0) {
+                chatListState.scrollToItem(index)
+            }
             vm.chatListInitialized = true
         }
     }
@@ -230,7 +235,7 @@ private fun ChatPageContent(
     bigScreen: Boolean,
     conversation: Conversation,
     drawerState: DrawerState,
-    navController: NavHostController,
+    navController: Navigator,
     vm: ChatVM,
     chatListState: LazyListState,
     enableWebSearch: Boolean,
@@ -242,10 +247,7 @@ private fun ChatPageContent(
     val scope = rememberCoroutineScope()
     val toaster = LocalToaster.current
     var previewMode by rememberSaveable { mutableStateOf(false) }
-
-    LaunchedEffect(loadingJob) {
-        inputState.loading = loadingJob != null
-    }
+    val hazeState = rememberHazeState()
 
     TTSAutoPlay(vm = vm, setting = setting, conversation = conversation)
 
@@ -276,9 +278,11 @@ private fun ChatPageContent(
             bottomBar = {
                 ChatInput(
                     state = inputState,
+                    loading = loadingJob != null,
                     settings = setting,
                     conversation = conversation,
                     mcpManager = vm.mcpManager,
+                    hazeState = hazeState,
                     onCancelClick = {
                         loadingJob?.cancel()
                     },
@@ -341,9 +345,6 @@ private fun ChatPageContent(
                             )
                         )
                     },
-                    onClearContext = {
-                        vm.handleMessageTruncate()
-                    },
                     onCompressContext = { additionalPrompt, targetTokens, keepRecentMessages ->
                         vm.handleCompressContext(additionalPrompt, targetTokens, keepRecentMessages)
                     },
@@ -358,6 +359,7 @@ private fun ChatPageContent(
                 loading = loadingJob != null,
                 previewMode = previewMode,
                 settings = setting,
+                hazeState = hazeState,
                 errors = errors,
                 onDismissError = onDismissError,
                 onClearAllErrors = onClearAllErrors,
@@ -375,7 +377,11 @@ private fun ChatPageContent(
                     }
                 },
                 onDelete = {
-                    vm.deleteMessage(it)
+                    if (loadingJob != null) {
+                        vm.showDeleteBlockedWhileGeneratingError()
+                    } else {
+                        vm.deleteMessage(it)
+                    }
                 },
                 onUpdateMessage = { newNode ->
                     vm.updateConversation(
@@ -409,6 +415,12 @@ private fun ChatPageContent(
                 onToolApproval = { toolCallId, approved, reason ->
                     vm.handleToolApproval(toolCallId, approved, reason)
                 },
+                onToolAnswer = { toolCallId, answer ->
+                    vm.handleToolAnswer(toolCallId, answer)
+                },
+                onToggleFavorite = { node ->
+                    vm.toggleMessageFavorite(node)
+                },
             )
         }
     }
@@ -440,7 +452,7 @@ private fun TopBar(
                         scope.launch { drawerState.open() }
                     }
                 ) {
-                    Icon(Lucide.ListTree, "Messages")
+                    Icon(HugeIcons.Menu03, "Messages")
                 }
             }
         },
@@ -486,7 +498,7 @@ private fun TopBar(
                     onClickMenu()
                 }
             ) {
-                Icon(if (previewMode) Lucide.X else Lucide.List, "Chat Options")
+                Icon(if (previewMode) HugeIcons.Cancel01 else HugeIcons.LeftToRightListBullet, "Chat Options")
             }
 
             IconButton(
@@ -494,7 +506,7 @@ private fun TopBar(
                     onNewChat()
                 }
             ) {
-                Icon(Lucide.MessageCirclePlus, "New Message")
+                Icon(HugeIcons.MessageAdd01, "New Message")
             }
         },
     )

@@ -35,9 +35,9 @@ import com.itsaky.androidide.templates.base.util.AndroidManifestBuilder.Configur
 import com.itsaky.androidide.templates.base.util.AndroidManifestBuilder.ConfigurationType.MANIFEST_ATTR
 import com.itsaky.androidide.templates.base.util.AndroidManifestBuilder.ConfigurationType.MANIFEST_CONTENT
 import com.itsaky.androidide.xml.permissions.Permission
+import java.io.File
 import org.eclipse.lemminx.dom.builder.IndentedXmlBuilder
 import org.eclipse.lemminx.dom.builder.IndentedXmlConfigurator
-import java.io.File
 
 /**
  * Builder for building `AndroidManifest.xml` file for an Android module.
@@ -48,25 +48,17 @@ class AndroidManifestBuilder {
 
   enum class ConfigurationType {
 
-    /**
-     * For configuring attributes for the `<manifest>` tag.
-     */
+    /** For configuring attributes for the `<manifest>` tag. */
     MANIFEST_ATTR,
 
-    /**
-     * For configuring elements inside the `<manifest>` tag.
-     */
+    /** For configuring elements inside the `<manifest>` tag. */
     MANIFEST_CONTENT,
 
-    /**
-     * For configuring attributes for the `<application>` tag.
-     */
+    /** For configuring attributes for the `<application>` tag. */
     APPLICATION_ATTR,
 
-    /**
-     * For configuring elements inside the `<application>` tag.
-     */
-    APPLICATION_CONTENT
+    /** For configuring elements inside the `<application>` tag. */
+    APPLICATION_CONTENT,
   }
 
   private val configurators = hashMapOf<ConfigurationType, HashSet<IndentedXmlConfigurator>>()
@@ -85,39 +77,30 @@ class AndroidManifestBuilder {
   var appLabelRes: String = "app_name"
 
   /**
-   * The package name for the manifest. If the value is `null`, then the package attribute is not defined in the manifest.
+   * The package name for the manifest. If the value is `null`, then the package attribute is not
+   * defined in the manifest.
    */
   var packageName: String? = null
 
-  /**
-   * The icon for the application. Not defined in manifest if value is `null`.
-   */
+  /** The icon for the application. Not defined in manifest if value is `null`. */
   var icon: ManifestIcon = ManifestIcon("ic_launcher", "mipmap")
 
-  /**
-   * The round icon for the application. Not defined in manifest if value is `null`.
-   */
+  /** The round icon for the application. Not defined in manifest if value is `null`. */
   var roundIcon: ManifestIcon? = icon
 
-  /**
-   * The name of the theme resource that will be used in the `<application>` tag.
-   */
+  /** The name of the theme resource that will be used in the `<application>` tag. */
   var themeRes: String = "AppTheme"
 
-  /**
-   * Whether the RTL flag should be set or not.
-   */
+  /** Whether the RTL flag should be set or not. */
   var rtl = true
 
   /**
-   * Whether the manifest is for a library. When set to `true`, some flags
-   * like [icon], [roundIcon], [rtl] are ignored.
+   * Whether the manifest is for a library. When set to `true`, some flags like [icon], [roundIcon],
+   * [rtl] are ignored.
    */
   var isLibrary = false
 
-  /**
-   * Adds the given permission to the manifest.
-   */
+  /** Adds the given permission to the manifest. */
   fun addPermission(permission: Permission) {
     permissions.add(permission)
   }
@@ -132,22 +115,17 @@ class AndroidManifestBuilder {
     activities.add(activity)
   }
 
-  fun configure(type: ConfigurationType, configurator: IndentedXmlConfigurator
-  ) {
+  fun configure(type: ConfigurationType, configurator: IndentedXmlConfigurator) {
     configurators.computeIfAbsent(type) { hashSetOf() }.add(configurator)
   }
 
-  /**
-   * Generates the manifest and saves the content to the given file.
-   */
+  /** Generates the manifest and saves the content to the given file. */
   fun RecipeExecutor.generate(manifest: File) {
     save(manifestSrc(), manifest)
   }
 
   private fun manifestSrc(): String {
-    return IndentedXmlBuilder(autoIndent = true).apply {
-      buildManifest()
-    }.withXmlDecl()
+    return IndentedXmlBuilder(autoIndent = true).apply { buildManifest() }.withXmlDecl()
   }
 
   private fun IndentedXmlBuilder.buildManifest() {

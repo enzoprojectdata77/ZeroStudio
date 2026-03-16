@@ -23,42 +23,28 @@ import com.itsaky.androidide.templates.base.util.optonallyKts
 import java.io.File
 import java.util.UUID
 
-/**
- * Empty template recipe (no-op).
- */
+/** Empty template recipe (no-op). */
 val EMPTY_RECIPE = TemplateRecipe { null }
 
-/**
- * Data that is used to create templates.
- */
+/** Data that is used to create templates. */
 sealed class TemplateData
 
-/**
- * Result obtained after the execution of [TemplateRecipe].
- */
+/** Result obtained after the execution of [TemplateRecipe]. */
 interface TemplateRecipeResult
 
 interface TemplateRecipeResultWithData<D : TemplateData> : TemplateRecipeResult {
 
-  /**
-   * The data used to create the template.
-   */
+  /** The data used to create the template. */
   val data: D
 }
 
-/**
- * Result of recipe execution for a [ProjectTemplate].
- */
+/** Result of recipe execution for a [ProjectTemplate]. */
 interface ProjectTemplateRecipeResult : TemplateRecipeResultWithData<ProjectTemplateData>
 
-/**
- * Result of recipe execution for a [ModuleTemplate].
- */
+/** Result of recipe execution for a [ModuleTemplate]. */
 interface ModuleTemplateRecipeResult : TemplateRecipeResultWithData<ModuleTemplateData>
 
-/**
- * Result of recipe execution for a [FileTemplate].
- */
+/** Result of recipe execution for a [FileTemplate]. */
 interface FileTemplateRecipeResult : TemplateRecipeResult
 
 /**
@@ -68,9 +54,7 @@ interface FileTemplateRecipeResult : TemplateRecipeResult
  */
 typealias TemplateRecipeConfigurator = RecipeExecutor.() -> Unit
 
-/**
- * Recipe for creating the project/module.
- */
+/** Recipe for creating the project/module. */
 fun interface TemplateRecipe<T : TemplateRecipeResult> {
 
   /**
@@ -105,24 +89,19 @@ abstract class BaseTemplateData(
     val useNdk: Boolean,
     val ndkVersion: String,
     val cmakeVersion: String,
-    val useToml: Boolean
 ) : TemplateData() {
 
-  /**
-   * Get the `build.gradle[.kts]` file for the project.
-   */
+  /** Get the `build.gradle[.kts]` file for the project. */
   fun buildGradleFile(): File {
     return File(projectDir, optonallyKts("build.gradle"))
   }
 }
 
-/**
- * Language for source files.
- */
+/** Language for source files. */
 enum class Language(val lang: String, val ext: String) {
 
   Java("Java", "java"),
-   Kotlin("Kotlin", "kt");
+  Kotlin("Kotlin", "kt"),
 }
 
 /**
@@ -134,7 +113,7 @@ enum class ModuleType(val typeName: String) {
 
   AndroidApp("Android Application"),
   AndroidLibrary("Android Library"),
-  JavaLibrary("Java library")
+  JavaLibrary("Java library"),
 }
 
 /**
@@ -144,18 +123,14 @@ enum class ModuleType(val typeName: String) {
  */
 enum class SrcSet(val folder: String) {
 
-  /**
-   * `src/main`.
-   */
+  /** `src/main`. */
   Main("main"),
 
-  /**
-   * `src/test`.
-   */
+  /** `src/test`. */
   Test("test"),
 
   /** `src/androidTest`. */
-  AndroidTest("androidTest")
+  AndroidTest("androidTest"),
 }
 
 /**
@@ -168,7 +143,7 @@ enum class SrcSet(val folder: String) {
 data class ProjectVersionData(
     val gradlePlugin: String = ANDROID_GRADLE_PLUGIN_VERSION,
     val gradle: String = GRADLE_DISTRIBUTION_VERSION,
-    val kotlin: String = KOTLIN_VERSION
+    val kotlin: String = KOTLIN_VERSION,
 )
 
 /**
@@ -182,16 +157,18 @@ data class ModuleVersionData(
     val targetSdk: Sdk = TARGET_SDK_VERSION,
     val compileSdk: Sdk = COMPILE_SDK_VERSION,
     val javaSource: String = JAVA_SOURCE_VERSION,
-    val javaTarget: String = JAVA_TARGET_VERSION
+    val javaTarget: String = JAVA_TARGET_VERSION,
 ) {
 
   /**
-   * Get the Java source version string representation in the `JavaVersion.VERSION_${version}` format.
+   * Get the Java source version string representation in the `JavaVersion.VERSION_${version}`
+   * format.
    */
   fun javaSource() = javaVersionPrefix(javaSource)
 
   /**
-   * Get the Java target version string representation in the `JavaVersion.VERSION_${version}` format.
+   * Get the Java target version string representation in the `JavaVersion.VERSION_${version}`
+   * format.
    */
   fun javaTarget() = javaVersionPrefix(javaTarget)
 
@@ -212,8 +189,7 @@ class ProjectTemplateData(
     useNdk: Boolean,
     ndkVersion: String,
     cmakeVersion: String,
-    useToml: Boolean,
-) : BaseTemplateData(name, projectDir, language, useKts, useNdk, ndkVersion, cmakeVersion, useToml)
+) : BaseTemplateData(name, projectDir, language, useKts, useNdk, ndkVersion, cmakeVersion)
 
 /**
  * Data for creating module projects.
@@ -233,10 +209,9 @@ open class ModuleTemplateData(
     useNdk: Boolean = false,
     ndkVersion: String,
     cmakeVersion: String,
-    useToml: Boolean = true,
     minSdk: Sdk,
     val versions: ModuleVersionData = ModuleVersionData(minSdk),
-) : BaseTemplateData(name, projectDir, language, useKts, useNdk, ndkVersion, cmakeVersion, useToml) {
+) : BaseTemplateData(name, projectDir, language, useKts, useNdk, ndkVersion, cmakeVersion) {
 
   private val srcDirs = mutableMapOf<SrcSet, File>()
 
@@ -260,15 +235,11 @@ open class Template<R : TemplateRecipeResult>(
     @DrawableRes open val thumb: Int,
     @StringRes open val description: Int? = null,
     open val widgets: List<Widget<*>>,
-    open val recipe: TemplateRecipe<R>
+    open val recipe: TemplateRecipe<R>,
 ) {
 
-  /**
-   * The ID for this template.
-   */
-  val templateId: String by lazy {
-    UUID.randomUUID().toString()
-  }
+  /** The ID for this template. */
+  val templateId: String by lazy { UUID.randomUUID().toString() }
 
   open val parameters: Collection<Parameter<*>>
     get() = widgets.filterIsInstance<ParameterWidget<*>>().map { it.parameter }
@@ -291,7 +262,7 @@ open class ProjectTemplate(
     @DrawableRes thumb: Int,
     @StringRes description: Int? = null,
     widgets: List<Widget<*>>,
-    recipe: TemplateRecipe<ProjectTemplateRecipeResult>
+    recipe: TemplateRecipe<ProjectTemplateRecipeResult>,
 ) : Template<ProjectTemplateRecipeResult>(templateName, thumb, description, widgets, recipe) {
 
   override val parameters: Collection<Parameter<*>>
@@ -336,7 +307,7 @@ open class ModuleTemplate(
     @DrawableRes thumb: Int,
     @StringRes description: Int? = null,
     widgets: List<Widget<*>>,
-    recipe: TemplateRecipe<ModuleTemplateRecipeResult>
+    recipe: TemplateRecipe<ModuleTemplateRecipeResult>,
 ) : Template<ModuleTemplateRecipeResult>(templateName, thumb, description, widgets, recipe)
 
 /**
@@ -347,9 +318,8 @@ open class FileTemplate<R : FileTemplateRecipeResult>(
     @DrawableRes thumb: Int,
     @StringRes description: Int? = null,
     widgets: List<Widget<*>>,
-    recipe: TemplateRecipe<R>
+    recipe: TemplateRecipe<R>,
 ) : Template<R>(name, thumb, description, widgets, recipe)
-
 
 /**
  * Base class for template builders.
@@ -366,7 +336,7 @@ abstract class TemplateBuilder<R : TemplateRecipeResult>(
     @DrawableRes open var thumb: Int? = null,
     @StringRes open var description: Int? = null,
     open var widgets: List<Widget<*>>? = null,
-    open var recipe: TemplateRecipe<R>? = null
+    open var recipe: TemplateRecipe<R>? = null,
 ) {
 
   /**

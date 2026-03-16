@@ -1,17 +1,16 @@
-import org.apache.tools.ant.taskdefs.condition.Os
+import com.android.build.api.dsl.Packaging
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.FileInputStream
 import java.util.Properties
-import kotlin.math.sign
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.org.jetbrains.kotlin.plugin.compose)
-    alias(libs.plugins.org.jetbrains.kotlin.plugin.serialization)
-    alias(libs.plugins.com.google.devtools.ksp)
-    // alias(libs.plugins.google.services)
-    // alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -19,16 +18,16 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        // applicationId = "me.rerere.rikkahub"
+        applicationId = "me.rerere.rikkahub"
         minSdk = 26
         // targetSdk = 36
-        // versionCode = 135
-        // versionName = "1.9.0-beta.1"
+        // versionCode = 146
+        // versionName = "2.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters += listOf("arm64-v8a","armeabi-v7a", "x86_64")
+            abiFilters += listOf("arm64-v8a", "x86_64")
         }
     }
 
@@ -39,7 +38,7 @@ android {
             val isBuildingBundle = gradle.startParameter.taskNames.any { it.lowercase().contains("bundle") }
             isEnable = !isBuildingBundle
             reset()
-            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            include("arm64-v8a", "x86_64")
             isUniversalApk = true
         }
     }
@@ -69,34 +68,34 @@ android {
         // }
     // }
 
-    // buildTypes {
-        // release {
-            // signingConfig = signingConfigs.getByName("release")
-            // isMinifyEnabled = true
-            // isShrinkResources = true
-            // proguardFiles(
-                // getDefaultProguardFile("proguard-android-optimize.txt"),
-                // "proguard-rules.pro"
-            // )
-            // buildConfigField("String", "VERSION_NAME", "\"${android.defaultConfig.versionName}\"")
-            // buildConfigField("String", "VERSION_CODE", "\"${android.defaultConfig.versionCode}\"")
-        // }
-        // debug {
-            // applicationIdSuffix = ".debug"
-            // buildConfigField("String", "VERSION_NAME", "\"${android.defaultConfig.versionName}\"")
-            // buildConfigField("String", "VERSION_CODE", "\"${android.defaultConfig.versionCode}\"")
-        // }
-        // create("baseline") {
-            // initWith(getByName("release"))
-            // matchingFallbacks.add("release")
-            // signingConfig = signingConfigs.getByName("debug")
-            // applicationIdSuffix = ".debug"
-            // isDebuggable = false
-            // isMinifyEnabled = false
-            // isShrinkResources = false
-            // isProfileable = true
-        // }
-    // }
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            buildConfigField("String", "VERSION_NAME", "\"${android.defaultConfig.versionName}\"")
+            buildConfigField("String", "VERSION_CODE", "\"${android.defaultConfig.versionCode}\"")
+        }
+        debug {
+            applicationIdSuffix = ".debug"
+            buildConfigField("String", "VERSION_NAME", "\"${android.defaultConfig.versionName}\"")
+            buildConfigField("String", "VERSION_CODE", "\"${android.defaultConfig.versionCode}\"")
+        }
+        create("baseline") {
+            initWith(getByName("release"))
+            matchingFallbacks.add("release")
+            signingConfig = signingConfigs.getByName("debug")
+            applicationIdSuffix = ".debug"
+            isDebuggable = false
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isProfileable = true
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -108,9 +107,14 @@ android {
     sourceSets {
         getByName("androidTest").assets.srcDirs("$projectDir/schemas")
     }
-    // androidResources {
-        // generateLocaleConfig = true
-    // }
+    androidResources {
+        generateLocaleConfig = true
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions.optIn.add("androidx.compose.material3.ExperimentalMaterial3Api")
         compilerOptions.optIn.add("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
@@ -122,7 +126,14 @@ android {
         compilerOptions.optIn.add("kotlin.uuid.ExperimentalUuidApi")
         compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
         compilerOptions.optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")
+        compilerOptions.optIn.add("androidx.navigation3.runtime.ExperimentalNavigation3Api")
     }
+}
+
+composeCompiler {
+    stabilityConfigurationFiles.add(
+        project.layout.projectDirectory.file("compose_compiler_config.conf")
+    )
 }
 
 tasks.register("buildAll") {
@@ -144,28 +155,25 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.process)
-    implementation(libs.androidx.work.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.profileinstaller)
 
     // Compose
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.adaptive)
     implementation(libs.androidx.material3.adaptive.layout)
 
-    // Navigation 2
-    implementation(libs.androidx.navigation.compose)
-
     // Navigation 3
-//    implementation(libs.androidx.navigation3.runtime)
-//    implementation(libs.androidx.navigation3.ui)
-//    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-//    implementation(libs.androidx.material3.adaptive.navigation3)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.material3.adaptive.navigation3)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -180,6 +188,10 @@ dependencies {
     // https://github.com/drewnoakes/metadata-extractor
     implementation(libs.metadata.extractor)
 
+    // Haze (background blur)
+    implementation(libs.haze)
+    implementation(libs.haze.materials)
+
     // koin
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
@@ -192,14 +204,14 @@ dependencies {
     // okhttp
     implementation(libs.okhttp)
     implementation(libs.okhttp.sse)
-    implementation(libs.common.retrofit)
+    implementation(libs.retrofit)
     implementation(libs.retrofit.serialization.json)
 
     // ktor client
-    implementation(libs.io.ktor.client.core)
-    implementation(libs.io.ktor.client.okhttp)
-    implementation(libs.io.ktor.client.content.negotiation)
-    implementation(libs.io.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
 
     // ucrop
     implementation(libs.ucrop)
@@ -208,9 +220,9 @@ dependencies {
     implementation(libs.pebble)
 
     // coil
-    implementation(libs.io.coil.compose)
-    implementation(libs.io.coil.okhttp)
-    implementation(libs.io.coil.svg)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.okhttp)
+    implementation(libs.coil.svg)
 
     // serialization
     implementation(libs.kotlinx.serialization.json)
@@ -244,6 +256,7 @@ dependencies {
 
     // lucide icons
     implementation(libs.lucide.icons)
+    implementation(libs.huge.icons)
 
     // image viewer
     implementation(libs.image.viewer)
@@ -257,25 +270,37 @@ dependencies {
     // mcp
     implementation(libs.modelcontextprotocol.kotlin.sdk)
 
+    // jmDNS (mDNS/Bonjour for .local hostname)
+    implementation(libs.jmdns)
+
+    // SLF4J Android binding — routes Ktor/SLF4J logs to logcat
+    implementation(libs.slf4j.api)
+    implementation(libs.slf4j.android)
+
+    // sqlite-android (requery SQLite for Android)
+    implementation(libs.sqlite.android)
+
     // modules
-    implementation(projects.core.chatai.ai)
-    implementation(projects.core.chatai.document)
-    implementation(projects.core.chatai.highlight)
-    implementation(projects.core.chatai.search)
-    implementation(projects.core.chatai.tts)
-    implementation(projects.core.chatai.common)
+    implementation(project(":ai"))
+    implementation(project(":web"))
+    implementation(project(":document"))
+    implementation(project(":highlight"))
+    implementation(project(":search"))
+    implementation(project(":tts"))
+    implementation(project(":common"))
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
     implementation(kotlin("reflect"))
 
     // Leak Canary
-    // debugImplementation(libs.common.leakcanary)
+    // debugImplementation(libs.leakcanary.android)
 
     // tests
-    testImplementation(libs.tests.junit)
-    androidTestImplementation(libs.tests.androidx.junit)
-    androidTestImplementation(libs.tests.androidx.espresso.core)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.androidx.room.testing)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

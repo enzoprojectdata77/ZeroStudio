@@ -3,12 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 
-// 包含 Oniguruma 头文件
 #include "oniguruma.h"
 #include "regparse.h"
 #include "regint.h" 
 
-// --- 修复宏定义缺失 ---
 #ifndef ONIGENC_CTYPE_ANYCHAR
 #define ONIGENC_CTYPE_ANYCHAR -1
 #endif
@@ -104,7 +102,6 @@ static void serialize_cclass(StringBuilder* json, CClassNode* cc, OnigEncoding e
     int first = 1;
     
     // 1. 遍历 ASCII BitSet (0-255)
-    // 优化：合并连续的范围，例如 97,98,99 -> "a-c"
     int range_start = -1;
     for (int i = 0; i < 256; i++) {
         if (BITSET_AT(cc->bs, i)) {
@@ -230,7 +227,6 @@ static void traverse_node(Node* node, StringBuilder* json, OnigEncoding enc) {
 
         // --- 5. 转义序列 Escape / 6. 任意字符 Any Char ---
         case ND_CTYPE:
-            // 修复：使用上面定义的宏
             if (CTYPE_(node)->ctype == ONIGENC_CTYPE_ANYCHAR) { 
                  sb_append(json, "\"railType\": \"ANY_CHAR\"");
             } else {

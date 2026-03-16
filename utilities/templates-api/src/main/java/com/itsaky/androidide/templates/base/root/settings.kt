@@ -20,15 +20,6 @@ package com.itsaky.androidide.templates.base.root
 import com.itsaky.androidide.templates.base.ProjectTemplateBuilder
 
 internal fun ProjectTemplateBuilder.settingsGradleSrcStr(): String {
-  val tomlBlock = if (data.useToml) {
-    """
-  versionCatalogs {
-    create("libs") {
-      from(files("gradle/libs.versions.toml"))
-    }
-  }"""
-  } else ""
-
   return """
 pluginManagement {
   repositories {
@@ -44,12 +35,11 @@ dependencyResolutionManagement {
     google()
     mavenCentral()
   }
-$tomlBlock
 }
 
 rootProject.name = "${data.name}"
 
-${modules.joinToString(separator = "\n") { "include(\"${it.name}\")" }}
+${modules.joinToString(separator = ", ") { "include(\"${it.name}\")" }}    
   """
       .trim()
 }

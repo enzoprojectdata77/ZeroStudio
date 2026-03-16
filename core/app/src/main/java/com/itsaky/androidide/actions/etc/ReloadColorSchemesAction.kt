@@ -44,7 +44,7 @@ class ReloadColorSchemesAction(context: Context, override val order: Int) : Edit
 
   init {
     label = context.getString(R.string.title_reload_color_schemes)
-    icon = ContextCompat.getDrawable(context, R.drawable.ic_reload)
+    icon = ContextCompat.getDrawable(context, R.drawable.ic_code_reload_styles_color)
   }
 
   override suspend fun execAction(data: ActionData): Boolean {

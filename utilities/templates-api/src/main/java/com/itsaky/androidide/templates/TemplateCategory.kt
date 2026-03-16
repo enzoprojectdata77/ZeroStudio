@@ -62,6 +62,10 @@ data class TemplateCategory(
         /** "Generic" category for non-specific or multi-platform templates. */
         val Generic = TemplateCategory("generic", "Generic", R.drawable.ic_template_generic)
 
+        /** Demo for managing native build projects such as NDK and CMake. **/
+        val Native = TemplateCategory("native", "Native Build", R.drawable.cpp_configure)
+        
+        val BasicZeroStudio = TemplateCategory("zerostudio", "IDE Basic", R.drawable.ic_template_generic)
 
         /**
          * Returns a list of all default categories.

@@ -28,7 +28,6 @@ import me.rerere.ai.ui.UIMessagePart
 import me.rerere.ai.ui.ToolApprovalState
 import me.rerere.ai.ui.handleMessageChunk
 import me.rerere.ai.ui.limitContext
-import me.rerere.ai.ui.truncate
 import me.rerere.rikkahub.data.ai.transformers.InputMessageTransformer
 import me.rerere.rikkahub.data.ai.transformers.MessageTransformer
 import me.rerere.rikkahub.data.ai.transformers.OutputMessageTransformer
@@ -73,7 +72,6 @@ class GenerationHandler(
         assistant: Assistant,
         memories: List<AssistantMemory>? = null,
         tools: List<Tool> = emptyList(),
-        truncateIndex: Int = -1,
         maxSteps: Int = 256,
     ): Flow<GenerationChunk> = flow {
         val provider = model.findProvider(settings.providers) ?: error("Provider not found")
@@ -110,7 +108,7 @@ class GenerationHandler(
 
             // Check if we have approved tool calls to execute (resuming after approval)
             val pendingTools = messages.lastOrNull()?.getTools()?.filter {
-                !it.isExecuted && (it.approvalState is ToolApprovalState.Approved || it.approvalState is ToolApprovalState.Denied)
+                !it.isExecuted && (it.approvalState is ToolApprovalState.Approved || it.approvalState is ToolApprovalState.Denied || it.approvalState is ToolApprovalState.Answered)
             } ?: emptyList()
 
             val toolsToProcess: List<UIMessagePart.Tool>
@@ -147,7 +145,6 @@ class GenerationHandler(
                     provider = provider,
                     tools = toolsInternal,
                     memories = memories ?: emptyList(),
-                    truncateIndex = truncateIndex,
                     stream = assistant.streamOutput
                 )
                 messages = messages.visualTransforms(
@@ -220,7 +217,9 @@ class GenerationHandler(
             } else {
                 // Resuming after approval - use the pending tools directly
                 Log.i(TAG, "generateText: resuming with ${pendingTools.size} approved/denied tools")
-                toolsToProcess = messages.last().getTools().filter { !it.isExecuted }
+                toolsToProcess = messages.last().getTools().filter {
+                    !it.isExecuted && (it.approvalState is ToolApprovalState.Approved || it.approvalState is ToolApprovalState.Denied || it.approvalState is ToolApprovalState.Answered)
+                }
             }
 
             // Handle tools (execute approved tools, handle denied tools)
@@ -242,6 +241,16 @@ class GenerationHandler(
                                         }
                                     )
                                 )
+                            )
+                        )
+                    }
+
+                    is ToolApprovalState.Answered -> {
+                        // Tool was answered by user (e.g., ask_user tool)
+                        val answer = (tool.approvalState as ToolApprovalState.Answered).answer
+                        executedTools += tool.copy(
+                            output = listOf(
+                                UIMessagePart.Text(answer)
                             )
                         )
                     }
@@ -322,7 +331,6 @@ class GenerationHandler(
         provider: ProviderSetting,
         tools: List<Tool>,
         memories: List<AssistantMemory>,
-        truncateIndex: Int,
         stream: Boolean
     ) {
         val internalMessages = buildList {
@@ -349,7 +357,7 @@ class GenerationHandler(
                 }
             }
             if (system.isNotBlank()) add(UIMessage.system(prompt = system))
-            addAll(messages.truncate(truncateIndex).limitContext(assistant.contextMessageSize))
+            addAll(messages.limitContext(assistant.contextMessageSize))
         }.transforms(
             transformers = transformers,
             context = context,

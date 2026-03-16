@@ -92,11 +92,7 @@ dependencyResolutionManagement {
     maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
     maven { url = uri("https://maven.aliyun.com/repository/public") }
     maven { url = uri("https://maven.aliyun.com/repository/google") }
-    // maven {url = uri("https://maven.pkg.github.com/android-zeros/ZeroStudio-gradle-tooling-api/") 
-                  // credentials { 
-                               // username = "android-zeros"  
-                               // password = "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" } }
-    
+    maven("https://repo.itextsupport.com/android")
     
   }
   // versionCatalogs { create("ktlib") { from(files("gradle/kotlin.versions.toml")) } }

@@ -79,5 +79,4 @@ private fun ProjectTemplateBuilder.ktPluginGroovy(hasCompose: Boolean = false): 
       } else ""
 
   return kotlinPlugin + composePlugin
-
 }

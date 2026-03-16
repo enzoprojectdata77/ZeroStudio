@@ -1,24 +1,28 @@
 package me.rerere.rikkahub.ui.pages.assistant.detail
 
-import android.app.Application
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import me.rerere.rikkahub.data.datastore.Settings
 import me.rerere.rikkahub.data.datastore.SettingsStore
+import me.rerere.rikkahub.data.files.FilesManager
+import me.rerere.rikkahub.data.files.SkillManager
+import me.rerere.rikkahub.data.files.SkillMetadata
 import me.rerere.rikkahub.data.model.Assistant
 import me.rerere.rikkahub.data.model.AssistantMemory
 import me.rerere.rikkahub.data.model.Avatar
 import me.rerere.rikkahub.data.model.Tag
 import me.rerere.rikkahub.data.repository.MemoryRepository
-import me.rerere.rikkahub.utils.deleteChatFiles
 import kotlin.uuid.Uuid
 
 private const val TAG = "AssistantDetailVM"
@@ -27,9 +31,19 @@ class AssistantDetailVM(
     private val id: String,
     private val settingsStore: SettingsStore,
     private val memoryRepository: MemoryRepository,
-    private val context: Application,
+    private val filesManager: FilesManager,
+    private val skillManager: SkillManager,
 ) : ViewModel() {
     private val assistantId = Uuid.parse(id)
+
+    private val _skills = MutableStateFlow<List<SkillMetadata>>(emptyList())
+    val skills = _skills.asStateFlow()
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            _skills.value = skillManager.listSkills()
+        }
+    }
 
     val settings: StateFlow<Settings> =
         settingsStore.settingsFlow.stateIn(viewModelScope, SharingStarted.Eagerly, Settings.dummy())
@@ -181,7 +195,7 @@ class AssistantDetailVM(
 
     fun checkAvatarDelete(old: Assistant, new: Assistant) {
         if (old.avatar is Avatar.Image && old.avatar != new.avatar) {
-            context.deleteChatFiles(listOf(old.avatar.url.toUri()))
+            filesManager.deleteChatFiles(listOf(old.avatar.url.toUri()))
         }
     }
 
@@ -193,7 +207,7 @@ class AssistantDetailVM(
             try {
                 val oldUri = oldBackground.toUri()
                 if (oldUri.scheme == "content" || oldUri.scheme == "file") {
-                    context.deleteChatFiles(listOf(oldUri))
+                    filesManager.deleteChatFiles(listOf(oldUri))
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to delete background file: $oldBackground", e)

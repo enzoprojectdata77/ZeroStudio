@@ -58,7 +58,7 @@ class ProjectSettingPreferencesScreen(
 ) : IPreferenceGroup() {
 
   init {
-    addPreference(TemplateSetting())
+    addPreference(TemplateBasicSettingsScreen())
 
   }
 }
