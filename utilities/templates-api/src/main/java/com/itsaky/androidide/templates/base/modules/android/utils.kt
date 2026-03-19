@@ -43,7 +43,10 @@ inline fun ProjectTemplateBuilder.defaultAppModule(
   val module =
       AndroidModuleTemplateBuilder()
           .apply {
-            projectBuilder = this@defaultAppModule // Add this line
+            projectBuilder = this@defaultAppModule
+            
+            this@defaultAppModule.moduleBuilders.add(this) 
+            
             _name = name
             templateName = 0
             thumb = 0

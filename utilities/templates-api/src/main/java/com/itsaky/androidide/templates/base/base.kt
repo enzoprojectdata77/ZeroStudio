@@ -320,7 +320,7 @@ inline fun baseAndroidModule(
         this.context = context
         this.projectBuilder = projectBuilder
 
-            // projectBuilder?.moduleBuilders?.add(this)
+        projectBuilder?.moduleBuilders?.add(this)
 
         val appName = if (isLibrary) null else projectNameParameter()
         val language = projectLanguageParameter()

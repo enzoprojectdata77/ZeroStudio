@@ -224,7 +224,7 @@
     <string name="template_wizard_ndk_version">Bersyon ng NDK</string>
     <string name="template_wizard_cmake_version">Bersyon ng CMake</string>
     <string name="template_msg_use_cmake">Suporta sa CMake</string>
-    <string name="template_msg_use_ndk">C/C Na Suporta ng Katutubo</string>
+    <string name="template_msg_use_ndk">C/C++ Na Suporta ng Katutubo</string>
     <string name="template_support_toml">Suporta sa TOML</string>
     <string name="title_template_native_build_imgui_description">Katutubong Grapikal na Interface ng Gumagamit ng Android</string>
     <string name="title_template_no_activity_desc">Wala itong aktibidad</string>

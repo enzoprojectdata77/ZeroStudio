@@ -213,7 +213,7 @@
     <string name="template_wizard_ndk_version">เวอร์ชัน NDK</string>
     <string name="template_wizard_cmake_version">เวอร์ชัน CMake</string>
     <string name="template_msg_use_cmake">สนับสนุน Cmake</string>
-    <string name="template_msg_use_ndk">C/C การสนับสนุนโดยเนทีฟ</string>
+    <string name="template_msg_use_ndk">C/C++ การสนับสนุนโดยเนทีฟ</string>
     <string name="template_support_toml">การสนับสนุน TOML</string>
     <string name="title_template_native_build_imgui_description">อินเทอร์เฟซผู้ใช้กราฟิกเนทีฟของแอนดรอยด์</string>
     <string name="title_template_no_activity_desc">มันไม่มีการเคลื่อนไหว</string>

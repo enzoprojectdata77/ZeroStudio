@@ -224,7 +224,7 @@
     <string name="template_wizard_ndk_version">NDK 버전</string>
     <string name="template_wizard_cmake_version">CMake 버전</string>
     <string name="template_msg_use_cmake">Cmake 지원</string>
-    <string name="template_msg_use_ndk">C/C 네이티브 지원</string>
+    <string name="template_msg_use_ndk">C/C++ 네이티브 지원</string>
     <string name="template_support_toml">TOML 지원</string>
     <string name="title_template_native_build_imgui_description">안드로이드 네이티브 그래픽 사용자 인터페이스</string>
     <string name="title_template_no_activity_desc">활동이 없습니다</string>

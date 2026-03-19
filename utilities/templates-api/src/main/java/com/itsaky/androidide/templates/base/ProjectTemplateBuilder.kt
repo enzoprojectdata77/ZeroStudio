@@ -169,8 +169,8 @@ class ProjectTemplateBuilder :
           val gradlew = File(data.projectDir, "gradlew")
           val gradlewBat = File(data.projectDir, "${gradlew.name}.bat")
 
-          check(gradlew.exists()) { "'$gradlew' does not exist!" }
-          check(gradlewBat.exists()) { "'$gradlew' does not exist!" }
+          check(gradlew.exists()) { "'${gradlew}' does not exist!" }
+          check(gradlewBat.exists()) { "'${gradlewBat}' does not exist!" }
 
           gradlew.setExecutable(true)
           gradlewBat.setExecutable(true)
@@ -187,8 +187,7 @@ class ProjectTemplateBuilder :
 
   /**
    * 动态生成 TOML 配置文件。
-   * 从已注册的所有模块（moduleBuilders）中提取它们使用到的 sdk 依赖项，动态构建 TOML 内容。
-   * 
+
    * @author android_zero
    * 功能：负责统一导出标准现代化的依赖版本集，解耦 build.gradle。
    */
@@ -212,28 +211,56 @@ class ProjectTemplateBuilder :
         plugins["kotlin-compose"] = "{ id = \"org.jetbrains.kotlin.plugin.compose\", version.ref = \"kotlin\" }"
     }
 
-        // 收集子模块注册的所有依赖项并去重 (包括 defModule 中注册的，如果存在)
-        val allDeps = mutableSetOf<Dependency>()
-        moduleBuilders.forEach { builder ->
-            allDeps.addAll(builder.dependencies)
-            allDeps.addAll(builder.platforms)
-        }
+    // 收集子模块注册的所有依赖项并去重
+    val allDeps = mutableSetOf<Dependency>()
+    moduleBuilders.forEach { builder ->
+        allDeps.addAll(builder.dependencies)
+        allDeps.addAll(builder.platforms)
+    }
+
+    // 常见的通用顶级域名 (TLD)，在生成变量名时可以忽略它们，让命名更精简
+    val commonTlds = setOf("com", "org", "net", "io", "dev")
 
     // 将这些依赖项动态转化为 TOML 语法
     allDeps.forEach { dep ->
-        val alias = dep.tomlAlias
-        if (alias != null) {
-            if (dep.version != null) {
-                // 提取 alias 中的连字符转为首字母大写作为 versionRef (例如 androidx-core -> androidxCore)
-                val versionRef = alias.split("-").mapIndexed { index, s ->
-                    if (index == 0) s else s.replaceFirstChar { it.uppercase() }
+        // 解析依赖的 Group 以获取有意义的名称部分
+        val groupParts = dep.group.split(".")
+        // 剔除无效的顶级域名如 "com", "org", "io" 等
+        val sigGroupParts = if (groupParts.size > 1 && groupParts[0] in commonTlds) {
+            groupParts.drop(1)
+        } else {
+            groupParts
+        }
+
+        // 生成库别名 alias
+        // 如果预设了 tomlAlias 则使用预设；如果没有则智能拼接 (如 google-android-material)
+        val alias = dep.tomlAlias ?: buildString {
+            append(sigGroupParts.joinToString("-"))
+            append("-")
+            append(dep.artifact.replace(".", "-"))
+        }
+        
+        if (dep.version != null) {
+            // 生成 VersionRef 引用名称
+            // 转为小驼峰命名，如：androidxCore, googleAndroidMaterial, jetbrainsKotlinxCoroutines
+            var versionRef = sigGroupParts.mapIndexed { index, s ->
+                if (index == 0) s else s.replaceFirstChar { it.uppercase() }
+            }.joinToString("")
+            
+            // 冲突处理 (Collision Resolution)：
+            // 如果生成的 versionRef 已经存在，并且记录的版本号与当前依赖版本不同，则附加 artifact 的名称以作区分
+            if (versions.containsKey(versionRef) && versions[versionRef] != dep.version) {
+                val artifactCamel = dep.artifact.split("-", ".").map { 
+                    it.replaceFirstChar { c -> c.uppercase() } 
                 }.joinToString("")
-                
-                versions[versionRef] = dep.version
-                libraries[alias] = "{ group = \"${dep.group}\", name = \"${dep.artifact}\", version.ref = \"$versionRef\" }"
-            } else {
-                libraries[alias] = "{ group = \"${dep.group}\", name = \"${dep.artifact}\" }"
+                versionRef += artifactCamel
             }
+            
+            versions[versionRef] = dep.version
+            libraries[alias] = "{ group = \"${dep.group}\", name = \"${dep.artifact}\", version.ref = \"$versionRef\" }"
+        } else {
+            // 没有版本号（通常属于 BOM 平台依赖）
+            libraries[alias] = "{ group = \"${dep.group}\", name = \"${dep.artifact}\" }"
         }
     }
 
@@ -241,11 +268,11 @@ class ProjectTemplateBuilder :
     tomlBuilder.append("[versions]\n")
     versions.forEach { (k, v) -> tomlBuilder.append("$k = \"$v\"\n") }
 
-    tomlBuilder.append("\n[plugins]\n")
-    plugins.forEach { (k, v) -> tomlBuilder.append("$k = $v\n") }
-
     tomlBuilder.append("\n[libraries]\n")
     libraries.forEach { (k, v) -> tomlBuilder.append("$k = $v\n") }
+
+    tomlBuilder.append("\n[plugins]\n")
+    plugins.forEach { (k, v) -> tomlBuilder.append("$k = $v\n") }
 
     val tomlFile = File(data.projectDir, "gradle/libs.versions.toml")
     tomlFile.parentFile?.mkdirs()

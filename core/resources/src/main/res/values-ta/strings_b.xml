@@ -224,7 +224,7 @@
     <string name="template_wizard_ndk_version">NDK பதிப்பு</string>
     <string name="template_wizard_cmake_version">சி மேக் பதிப்பு</string>
     <string name="template_msg_use_cmake">சிய்மேக் ஆதரவு</string>
-    <string name="template_msg_use_ndk">C/C   இயல்புநிலை ஆதரவு</string>
+    <string name="template_msg_use_ndk">C/C++   இயல்புநிலை ஆதரவு</string>
     <string name="template_support_toml">TOML ஆதரவு</string>
     <string name="title_template_native_build_imgui_description">ஆண்ட்ராய்டு தேசிய காட்சியியல் பயனர் இடைமுகம்</string>
     <string name="title_template_no_activity_desc">அதற்கு எந்த செயல்பாடும் இல்லை</string>

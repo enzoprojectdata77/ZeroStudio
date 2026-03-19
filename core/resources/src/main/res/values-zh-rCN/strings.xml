@@ -233,7 +233,7 @@
      <string name="template_wizard_ndk_version">NDK 版本</string>
      <string name="template_wizard_cmake_version">CMake 版本</string>
      <string name="template_msg_use_cmake">Cmake 支持</string>
-     <string name="template_msg_use_ndk">C/C 本地支持</string>
+     <string name="template_msg_use_ndk">C/C++ 本地支持</string>
      <string name="template_support_toml">TOML 支持</string>
      <string name="title_template_native_build_imgui_description">安卓Native图形用户界面</string>
      <string name="title_template_no_activity_desc">它没有Activity</string>

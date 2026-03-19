@@ -9,3 +9,5 @@ pkill -f 'java.*gradle' 2>/dev/null
 pkill -f 'gradle' 2>/dev/null
 
 echo "✅ Gradle is all cleaned up! Memory is freed."
+
+

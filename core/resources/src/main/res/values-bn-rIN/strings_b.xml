@@ -224,7 +224,7 @@
     <string name="template_wizard_ndk_version">এনডিকে সংস্করণ</string>
     <string name="template_wizard_cmake_version">সি-মেক সংস্করণ</string>
     <string name="template_msg_use_cmake">সিএমেক সমর্থন</string>
-    <string name="template_msg_use_ndk">সি/সি   স্থানীয় সমর্থন</string>
+    <string name="template_msg_use_ndk">C/C++   স্থানীয় সমর্থন</string>
     <string name="template_support_toml">টমল সমর্থন</string>
     <string name="title_template_native_build_imgui_description">অ্যান্ড্রয়েড নেটিভ গ্রাফিক্যাল ইউজার ইন্টারফেস</string>
     <string name="title_template_no_activity_desc">এটির কোনো কার্যক্রম নেই</string>

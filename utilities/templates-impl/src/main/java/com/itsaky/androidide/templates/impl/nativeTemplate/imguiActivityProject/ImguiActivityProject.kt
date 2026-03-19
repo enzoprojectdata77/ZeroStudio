@@ -46,7 +46,8 @@ fun imguiActivityProject(): ProjectTemplate = baseProjectImpl(
     defaultAppModuleWithNdk(addAndroidX = false) {
         
         postRecipe = commonPostRecipe {
-            // 覆盖生成 ImGui 专用的 AndroidManifest.xml
+            copyDefaultRes()
+            // 使用ImGui 专用的 AndroidManifest.xml
             save(imguiManifestXml(data.packageName, "MainActivity"), manifestFile())
         }
 
@@ -58,7 +59,7 @@ fun imguiActivityProject(): ProjectTemplate = baseProjectImpl(
             extractAssetWithDialog(
                 path = "template/imgui/jni/imgui-NdkSource-Jni.tar.xz",
                 destDir = mainDir,
-                stripPaths = 1,
+                stripPaths = 0,
                 dialogTitle = "Extracting NDK Sources",
                 dialogMessage = "Please wait while the ImGui NDK sources are being extracted..."
             )
