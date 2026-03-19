@@ -43,7 +43,7 @@
     - [x] toml
     - [ ] python
     - [ ] shell
-    - [o] more.....
+    - [ ] more.....
 - [ ] UI Designer
     - [x] Layout inflater
     - [x] Resolve resource references
@@ -51,10 +51,19 @@
     - [x] Drag & Drop
     - [x] Visual attribute editor
     - [x] Android Widgets
+    - [ ] Implement a gripper constraint layout similar to Android studio
 - [ ] String Translator
 - [ ] Asset Studio (Drawable & Icon Maker)
-- [x] Git and CD/CI
-- [ ] advanced images Preview
+- [x] (Git)[https://github.com/catpuppyapp/PuppyGit] and CD/CI
+- [x] (Chat ai)[https://github.com/rikkahub/rikkahub] Support assistant skills, mcp， Numerous common provider models etc...
+- [ ] Preview function
+    - [ ] advanced images Preview
+    - [ ] Markdown preview
+    - [ ] web(html，vue，nodejs，js，etc ...) preview
+    - [ ] C/C++ drawing preview
+    - [ ] C/C++ drawing preview
+    - [ ] flutter preview
+- [x] Built in Kotlin+JSON written MCP server, tools can be freely defined
 - [x] compose Preview
 - [x] Regular expression preview
 
@@ -65,6 +74,19 @@ Here is the decorated version:
 ---
 
 <details close>
+<summary>⚖️ <strong>🍀 Core projects referenced in project integration</strong></summary>
+
+## Thank you to the developers for their outstanding contributions to open source.
+-> The order of arrangement is not important.
+
+ - [x] (sora editor)[https://github.com/Rosemoe/sora-editor]
+ - [x] (Git)[https://github.com/catpuppyapp/PuppyGit]
+ - [x] (Chat ai)[https://github.com/rikkahub/rikkahub] 
+ - [x] (termux)[https://github.com/termux/termux-app]
+
+</details>
+<details close>
+
 <summary>⚖️ <strong>🌿 About Android Tree-Sitter</strong></summary>
 
 A streamlined port of the Tree-Sitter parser generator, specifically optimized for the Android NDK environment.
