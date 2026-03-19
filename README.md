@@ -58,6 +58,7 @@
 - [ ] git CD/CI/PR/workflow container
 - [x] (Chat ai)[https://github.com/rikkahub/rikkahub] Support assistant skills, mcp， Numerous common provider models etc...
 - [ ] Preview function
+    - [x]  AndroidX Jetpack Compose Preview //Currently, errors need to be fixed before use
     - [ ] advanced images Preview
     - [ ] Markdown preview
     - [ ] web(html，vue，nodejs，js，etc ...) preview
@@ -65,7 +66,6 @@
     - [ ] C/C++ drawing preview
     - [ ] flutter preview
 - [x] Built in Kotlin+JSON written MCP server, tools can be freely defined
-- [x] compose Preview
 - [x] Regular expression preview
 
 To make your Markdown document look more professional and user-friendly (perfect for a GitHub README), I have added formatting elements like tables, blockquotes, and code blocks.
