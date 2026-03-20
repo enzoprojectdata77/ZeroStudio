@@ -24,6 +24,7 @@ import com.itsaky.androidide.templates.ModuleTemplateData
 import com.itsaky.androidide.templates.ProjectTemplate
 import com.itsaky.androidide.templates.ProjectTemplateData
 import com.itsaky.androidide.templates.ProjectTemplateRecipeResult
+import com.itsaky.androidide.templates.TemplateRecipe
 import com.itsaky.androidide.templates.base.models.Dependency
 import com.itsaky.androidide.templates.base.root.buildGradleSrcGroovy
 import com.itsaky.androidide.templates.base.root.buildGradleSrcKts
@@ -187,7 +188,7 @@ class ProjectTemplateBuilder :
 
   /**
    * 动态生成 TOML 配置文件。
-
+   *
    * @author android_zero
    * 功能：负责统一导出标准现代化的依赖版本集，解耦 build.gradle。
    */
@@ -279,7 +280,24 @@ class ProjectTemplateBuilder :
     executor.save(tomlBuilder.toString(), tomlFile)
   }
 
+  /**
+   * 内部构建工程模板的核心方法。
+   * 此处运用匿名内部类拦截原生 recipe 执行机制，将根项目的依赖数据收集生成任务（TOML与根build.gradle）推迟到所有模块任务执行完毕之后执行。
+   */
   override fun buildInternal(): ProjectTemplate {
-    return ProjectTemplate(modules, templateName!!, thumb!!, description, widgets!!, recipe!!)
+    return object : ProjectTemplate(modules, templateName!!, thumb!!, description, widgets!!, recipe!!) {
+      override val recipe: TemplateRecipe<ProjectTemplateRecipeResult>
+        get() = TemplateRecipe { executor ->
+          // 首先按框架既定流程完整执行父类的 recipe（这会先后执行项目自身的配置逻辑和所有注册的子模块的 recipe 构建过程）
+          val result = super.recipe.execute(executor)
+          
+          // 执行到此阶段时，所有的子模块已经跑完 recipe 并在构建期动态向 builder 完成了全面和完整的依赖配置注入（包含自动分辨是否带有 Compose 支持）
+          // 此时方可准确无遗漏地执行全局统一数据的生成以确保 TOML 和 根目录 BuildGradle 集合不出现空白。
+          generateToml()
+          buildGradle()
+          
+          result
+        }
+    }
   }
 }

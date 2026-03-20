@@ -292,11 +292,12 @@ inline fun baseProject(
           // .gitignore
           gitignore()
           
+          
+          // generateToml和buildGradle因为执行顺序导致bug，所以已经迁移到ProjectTemplateBuilder.kt -> buildInternal(): ProjectTemplate
           // Automatically generate TOML
-          generateToml() 
-
+          // generateToml() 
           // build.gradle[.kts] - Call this LAST after modules have been processed
-          buildGradle()
+          // buildGradle()
         }
 
         block()

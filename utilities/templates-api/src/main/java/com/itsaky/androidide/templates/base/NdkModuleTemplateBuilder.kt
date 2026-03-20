@@ -94,6 +94,8 @@ inline fun ProjectTemplateBuilder.defaultAppModuleWithNdk(
 ) {
     val module = NdkModuleTemplateBuilder().apply {
         projectBuilder = this@defaultAppModuleWithNdk
+        // This ensures its dependencies are collected for TOML generation.
+        this@defaultAppModuleWithNdk.moduleBuilders.add(this)
         _name = name
 
         templateName = 0
