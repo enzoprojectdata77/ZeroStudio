@@ -93,40 +93,28 @@ install_packages() {
 
 install_p7zip() {
   print_info "Installing p7zip manually for 7z extraction support..."
-  local p7zip_url=""
+  p7zip_url=""
   case "$arch" in
-    "aarch64")
-      p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-aarch64-e9f3af7af65c6f737f41404dbd6babf727147861.deb"
-      ;;
-    "arm")
-      p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-arm-e9f3af7af65c6f737f41404dbd6babf727147861.deb"
-      ;;
-    "x86_64")
-      p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-x86_64-e9f3af7af65c6f737f41404dbd6babf727147861.deb"
-      ;;
-    *)
-      print_warn "No pre-compiled p7zip found for $arch, you may fail to extract .7z files."
-      return
-      ;;
+    "aarch64") p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-aarch64-e9f3af7af65c6f737f41404dbd6babf727147861.deb" ;;
+    "arm") p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-arm-e9f3af7af65c6f737f41404dbd6babf727147861.deb" ;;
+    "x86_64") p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-x86_64-e9f3af7af65c6f737f41404dbd6babf727147861.deb" ;;
   esac
 
-  local tmp_p7zip_dir="$install_dir/tmp_p7zip_$$"
-  mkdir -p "$tmp_p7zip_dir"
-  cd "$tmp_p7zip_dir"
-
-  print_info "Downloading p7zip for $arch..."
-  curl -L -o "p7zip.zip" "$p7zip_url" --http1.1
-
-  print_info "Extracting p7zip package..."
-  unzip -q p7zip.zip
-
-  print_info "Installing p7zip using dpkg..."
-  # 静默安装提取出的所有 .deb 文件
-  dpkg -i ./debs/*.deb || true
-
-  cd - > /dev/null
-  rm -rf "$tmp_p7zip_dir"
-  print_success "p7zip installed successfully."
+  if[ -n "$p7zip_url" ]; then
+    tmp_p7zip_dir="$install_dir/tmp_p7zip_$$"
+    mkdir -p "$tmp_p7zip_dir"
+    cd "$tmp_p7zip_dir"
+    curl -L -o "p7zip.zip" "$p7zip_url" --http1.1
+    unzip -q p7zip.zip
+    
+    apt install ./debs/*.deb -y || dpkg -i ./debs/*.deb
+    
+    cd - > /dev/null
+    rm -rf "$tmp_p7zip_dir"
+    print_success "p7zip installed successfully."
+  else
+    print_warn "No p7zip available for $arch"
+  fi
   echo ""
 }
 
@@ -173,14 +161,12 @@ download_and_extract() {
     mkdir -p "$dir"
   fi
 
-  filename=$(basename "$url")
-  # 移除 URL 中可能存在的 Query 参数
-  filename="${filename%%\?*}"
-  dest="$dir/$filename"
+  cd "$dir"
 
   do_download=true
   if [ -f "$dest" ]; then
-    print_info "File ${filename} already exists."
+    name_file=$(basename "$dest")
+    print_info "File ${name_file} already exists."
     if is_yes "Do you want to skip the download process?"; then
       do_download=false
     fi
@@ -195,46 +181,48 @@ download_and_extract() {
   fi
 
   if [ ! -f "$dest" ]; then
-    print_err "The downloaded file $filename does not exist. Cannot proceed..."
+    print_err "The downloaded file $name does not exist. Cannot proceed..."
     exit 1
   fi
 
-  print_info "Extracting downloaded archive $filename..."
+  print_info "Extracting downloaded archive..."
   
-  # 创建独立临时文件夹解压，防止污染最终目标文件夹
-  local tmp_extract_dir="$dir/tmp_extract_$$"
-  mkdir -p "$tmp_extract_dir"
+  # 创建临时目录用于解压
+  tmp_dir="${dir}/tmp_extract_$$"
+  mkdir -p "$tmp_dir"
 
-  if [[ "$filename" == *.zip ]]; then
-    unzip -q "$dest" -d "$tmp_extract_dir"
-  elif [[ "$filename" == *.7z ]]; then
-    7za x "$dest" -o"$tmp_extract_dir"
-  elif [[ "$filename" == *.tar.xz ]]; then
-    tar xvJf "$dest" -C "$tmp_extract_dir"
-  elif [[ "$filename" == *.tar.gz ]]; then
-    tar xvzf "$dest" -C "$tmp_extract_dir"
+  # 根据扩展名动态解压
+  if [[ "$dest" == *.zip ]]; then
+    unzip -q "$dest" -d "$tmp_dir"
+  elif [[ "$dest" == *.7z ]]; then
+    7z x "$dest" -o"$tmp_dir"
+  elif [[ "$dest" == *.tar.gz ]] || [[ "$dest" == *.tgz ]]; then
+    tar xvzf "$dest" -C "$tmp_dir"
+  elif [[ "$dest" == *.tar.xz ]]; then
+    tar xvJf "$dest" -C "$tmp_dir"
   else
-    tar xvf "$dest" -C "$tmp_extract_dir"
+    tar xvf "$dest" -C "$tmp_dir"
   fi
 
+  # 剥离多余的顶层文件夹（例如将 android-ndk-r29c 下的内容直接上提）
+  inner_count=$(ls -1 "$tmp_dir" | wc -l)
+  if [ "$inner_count" -eq 1 ]; then
+    inner_dir="$tmp_dir/$(ls -1 "$tmp_dir")"
+    if [ -d "$inner_dir" ]; then
+      cp -r "$inner_dir"/* "$dir"/ 2>/dev/null || true
+    else
+      cp -r "$tmp_dir"/* "$dir"/ 2>/dev/null || true
+    fi
+  else
+    cp -r "$tmp_dir"/* "$dir"/ 2>/dev/null || true
+  fi
+  
+  rm -rf "$tmp_dir"
   print_info "Extracted successfully"
+  echo ""
+
   rm -vf "$dest"
-
-  # 智能剥离顶层多余文件夹 (例如将 android-ndk-r29c/* 提出来)
-  cd "$tmp_extract_dir"
-  extracted_count=$(find . -maxdepth 1 -mindepth 1 | wc -l)
-  if [ "$extracted_count" -eq 1 ]; then
-      extracted_inner=$(find . -maxdepth 1 -mindepth 1 -type d | head -n 1)
-      if [ -n "$extracted_inner" ]; then
-          mv "$extracted_inner"/* . 2>/dev/null || true
-          rm -rf "$extracted_inner"
-      fi
-  fi
   cd - > /dev/null
-
-  # 将纯净的文件移动到最终目标目录
-  cp -r "$tmp_extract_dir"/* "$dir"/ 2>/dev/null || true
-  rm -rf "$tmp_extract_dir"
 }
 
 download_comp() {
@@ -257,8 +245,12 @@ download_comp() {
   print_success "Found URL: $url"
   echo ""
 
-  # 传入精准解压目录 (mdir)
-  download_and_extract "$nm" "$url" "$mdir"
+  # 动态根据 url 生成目标文件名，确保应对 .zip, .7z, .tar.xz
+  filename=$(basename "$url")
+  filename="${filename%%\?*}"
+  dest="$mdir/$filename"
+
+  download_and_extract "$nm" "$url" "$mdir" "$dest"
 }
 
 ## NOTE!
@@ -378,7 +370,7 @@ echo "NDK version               : ${ndkver_org}"
 echo "CMake version             : ${cmakever_org}"
 echo "JDK version               : ${jdk_version}"
 echo "With command line tools   : ${with_cmdline}"
-echo "Extra packages            : ${pkgs} (and p7zip)"
+echo "Extra packages            : ${pkgs}"
 echo "CPU architecture          : ${arch}"
 echo "------------------------------------------"
 
@@ -415,27 +407,30 @@ echo ""
 
 install_p7zip
 
+# Download the manifest.json file
 print_info "Downloading manifest file..."
 downloaded_manifest="$install_dir/manifest.json"
 curl -L -o "$downloaded_manifest" "$manifest" && print_success "Manifest file downloaded"
 echo ""
 
-# ================= ⚠️ 精准安装定位 =================
+# Install the Android SDK
+download_comp "Android SDK" ".android_sdk" "$install_dir/android-sdk" "android-sdk"
 
-# 1. 基础 SDK
-download_comp "Android SDK" ".android_sdk" "$install_dir/android-sdk"
-# 2. Build Tools 定位到标准文件夹
-download_comp "Android SDK Build Tools" ".build_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk/build-tools/$sdkver_org"
-# 3. Platform Tools
-download_comp "Android SDK Platform Tools" ".platform_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk/platform-tools"
-# 4. NDK 下载并定位到 ndk/版本号 (新增)
-download_comp "Android NDK" ".android_ndk | .${arch} | .${ndk_version}" "$install_dir/android-sdk/ndk/$ndkver_org"
-# 5. CMake 下载并定位到 cmake/版本号 (新增)
-download_comp "CMake" ".android_cmake | .${arch} | .${cmake_version}" "$install_dir/android-sdk/cmake/$cmakever_org"
+# Install build tools
+download_comp "Android SDK Build Tools" ".build_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk/build-tools/$sdkver_org" "android-sdk-build-tools"
+
+# Install platform tools
+download_comp "Android SDK Platform Tools" ".platform_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk/platform-tools" "android-sdk-platform-tools"
+
+# Install NDK (解压到 ndk/版本号 目录下)
+download_comp "Android NDK" ".android_ndk | .${arch} | .${ndk_version}" "$install_dir/android-sdk/ndk/$ndkver_org" "android-ndk"
+
+# Install CMake (解压到 cmake/版本号 目录下)
+download_comp "CMake" ".android_cmake | .${arch} | .${cmake_version}" "$install_dir/android-sdk/cmake/$cmakever_org" "android-cmake"
 
 if [ "$with_cmdline" = true ]; then
-  # 6. Cmdline Tools
-  download_comp "Command-line tools" ".cmdline_tools" "$install_dir/android-sdk/cmdline-tools/latest"
+  # Install the Command Line tools
+  download_comp "Command-line tools" ".cmdline_tools" "$install_dir/android-sdk/cmdline-tools/latest" "cmdline-tools"
 fi
 
 # Install JDK
@@ -465,4 +460,10 @@ else
 fi
 
 rm -vf "$downloaded_manifest"
-print_success "Downloads completed. You are ready to go!"
+print_success "================================================="
+print_success " Downloads completed. Environment is ready!"
+print_success " Returning to IDE automatically..."
+print_success "================================================="
+
+# 强制进程退出，通知 AndroidIDE TerminalActivity 结束并返回上级界面
+exit 0
