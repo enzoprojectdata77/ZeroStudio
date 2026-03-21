@@ -180,6 +180,14 @@ download_comp() {
   # Extract the Android SDK URL
   print_info "Extracting URL for $nm from manifest..."
   url=$(jq -r "${jq_query}" "$downloaded_manifest")
+  
+  # 拦截不可用的 "x" 或 "null" 链接
+  if [ "$url" == "x" ] || [ "$url" == "null" ] || [ -z "$url" ]; then
+    print_warn "Component $nm is not available for architecture $arch. Skipping..."
+    echo ""
+    return
+  fi
+
   print_success "Found URL: $url"
   echo ""
 
@@ -300,8 +308,8 @@ pkgs+=" $pkg_curl"
 echo "------------------------------------------"
 echo "Installation directory    : ${install_dir}"
 echo "SDK version               : ${sdkver_org}"
-echo "Ndk version               : ${ndkver_org}"
-echo "Cmake version               : ${cmakever_org}"
+echo "NDK version               : ${ndkver_org}"
+echo "CMake version             : ${cmakever_org}"
 echo "JDK version               : ${jdk_version}"
 echo "With command line tools   : ${with_cmdline}"
 echo "Extra packages            : ${pkgs}"
@@ -353,6 +361,10 @@ download_comp "Android SDK Build Tools" ".build_tools | .${arch} | .${sdk_versio
 
 # Install platform tools
 download_comp "Android SDK Platform Tools" ".platform_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk" "android-sdk-platform-tools"
+# 4. Install NDK
+download_comp "Android NDK" ".android_ndk | .${arch} | .${ndk_version}" "$install_dir/android-sdk" "android-ndk"
+# 5. Install CMake
+download_comp "CMake" ".android_cmake | .${arch} | .${cmake_version}" "$install_dir/android-sdk" "android-cmake"
 
 if [ "$with_cmdline" = true ]; then
   # Install the Command Line tools
