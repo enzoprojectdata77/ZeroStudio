@@ -18,10 +18,10 @@ ndkver_org=29.0.14033849
 cmakever_org=4.1.2
 with_cmdline=true
 assume_yes=false
-manifest="https://github.com/msmt2018/SDK-tool-for-Android-platform/releases/download/IDESdkDownJson2.1/manifest.json"
+manifest="https://github.com/msmt2018/SDK-tool-for-Android-platform/releases/download/IDESdkDownJson2.2/manifest.json"
 pkgm="pkg"
 pkg_curl="libcurl"
-pkgs="jq tar"
+pkgs="jq tar unzip"
 jdk_version="17"
 
 print_info() {
@@ -74,7 +74,7 @@ check_arg_value() {
 }
 
 check_command_exists() {
-  if command -v "$1" &>/dev/null; then
+  if ! command -v "$1" &>/dev/null; then
     return
   else
     print_err "Command '$1' not found!"
@@ -89,6 +89,45 @@ install_packages() {
   else
     $pkgm install $@
   fi
+}
+
+install_p7zip() {
+  print_info "Installing p7zip manually for 7z extraction support..."
+  local p7zip_url=""
+  case "$arch" in
+    "aarch64")
+      p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-aarch64-e9f3af7af65c6f737f41404dbd6babf727147861.deb"
+      ;;
+    "arm")
+      p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-arm-e9f3af7af65c6f737f41404dbd6babf727147861.deb"
+      ;;
+    "x86_64")
+      p7zip_url="https://github.com/msmt2018/termux-packages/releases/download/p7zip-17.06-1/debs-x86_64-e9f3af7af65c6f737f41404dbd6babf727147861.deb"
+      ;;
+    *)
+      print_warn "No pre-compiled p7zip found for $arch, you may fail to extract .7z files."
+      return
+      ;;
+  esac
+
+  local tmp_p7zip_dir="$install_dir/tmp_p7zip_$$"
+  mkdir -p "$tmp_p7zip_dir"
+  cd "$tmp_p7zip_dir"
+
+  print_info "Downloading p7zip for $arch..."
+  curl -L -o "p7zip.zip" "$p7zip_url" --http1.1
+
+  print_info "Extracting p7zip package..."
+  unzip -q p7zip.zip
+
+  print_info "Installing p7zip using dpkg..."
+  # 静默安装提取出的所有 .deb 文件
+  dpkg -i ./debs/*.deb || true
+
+  cd - > /dev/null
+  rm -rf "$tmp_p7zip_dir"
+  print_success "p7zip installed successfully."
+  echo ""
 }
 
 print_help() {
@@ -134,12 +173,14 @@ download_and_extract() {
     mkdir -p "$dir"
   fi
 
-  cd "$dir"
+  filename=$(basename "$url")
+  # 移除 URL 中可能存在的 Query 参数
+  filename="${filename%%\?*}"
+  dest="$dir/$filename"
 
   do_download=true
   if [ -f "$dest" ]; then
-    name=$(basename "$dest")
-    print_info "File ${name} already exists."
+    print_info "File ${filename} already exists."
     if is_yes "Do you want to skip the download process?"; then
       do_download=false
     fi
@@ -147,28 +188,53 @@ download_and_extract() {
   fi
 
   if [ "$do_download" = "true" ]; then
-    print_info "Downloading $name..."
+    print_info "Downloading $name from $url..."
     curl -L -o "$dest" "$url" --http1.1
     print_success "$name has been downloaded."
     echo ""
   fi
 
   if [ ! -f "$dest" ]; then
-    print_err "The downloaded file $name does not exist. Cannot proceed..."
+    print_err "The downloaded file $filename does not exist. Cannot proceed..."
     exit 1
   fi
 
-  # Extract the downloaded archive
-  print_info "Extracting downloaded archive..."
-  tar xvJf "$dest" && print_info "Extracted successfully"
+  print_info "Extracting downloaded archive $filename..."
+  
+  # 创建独立临时文件夹解压，防止污染最终目标文件夹
+  local tmp_extract_dir="$dir/tmp_extract_$$"
+  mkdir -p "$tmp_extract_dir"
 
-  echo ""
+  if [[ "$filename" == *.zip ]]; then
+    unzip -q "$dest" -d "$tmp_extract_dir"
+  elif [[ "$filename" == *.7z ]]; then
+    7za x "$dest" -o"$tmp_extract_dir"
+  elif [[ "$filename" == *.tar.xz ]]; then
+    tar xvJf "$dest" -C "$tmp_extract_dir"
+  elif [[ "$filename" == *.tar.gz ]]; then
+    tar xvzf "$dest" -C "$tmp_extract_dir"
+  else
+    tar xvf "$dest" -C "$tmp_extract_dir"
+  fi
 
-  # Delete the downloaded file
+  print_info "Extracted successfully"
   rm -vf "$dest"
 
-  # cd into the previous working directory
-  cd -
+  # 智能剥离顶层多余文件夹 (例如将 android-ndk-r29c/* 提出来)
+  cd "$tmp_extract_dir"
+  extracted_count=$(find . -maxdepth 1 -mindepth 1 | wc -l)
+  if [ "$extracted_count" -eq 1 ]; then
+      extracted_inner=$(find . -maxdepth 1 -mindepth 1 -type d | head -n 1)
+      if [ -n "$extracted_inner" ]; then
+          mv "$extracted_inner"/* . 2>/dev/null || true
+          rm -rf "$extracted_inner"
+      fi
+  fi
+  cd - > /dev/null
+
+  # 将纯净的文件移动到最终目标目录
+  cp -r "$tmp_extract_dir"/* "$dir"/ 2>/dev/null || true
+  rm -rf "$tmp_extract_dir"
 }
 
 download_comp() {
@@ -181,8 +247,8 @@ download_comp() {
   print_info "Extracting URL for $nm from manifest..."
   url=$(jq -r "${jq_query}" "$downloaded_manifest")
   
-  # 拦截不可用的 "x" 或 "null" 链接
-  if [ "$url" == "x" ] || [ "$url" == "null" ] || [ -z "$url" ]; then
+  # 拦截无效链接
+  if[ "$url" == "x" ] || [ "$url" == "null" ] || [ -z "$url" ]; then
     print_warn "Component $nm is not available for architecture $arch. Skipping..."
     echo ""
     return
@@ -191,8 +257,8 @@ download_comp() {
   print_success "Found URL: $url"
   echo ""
 
-  # Download and extract the Android SDK build tools
-  download_and_extract "$nm" "$url" "$mdir" "$mdir/$dname.tar.xz"
+  # 传入精准解压目录 (mdir)
+  download_and_extract "$nm" "$url" "$mdir"
 }
 
 ## NOTE!
@@ -312,7 +378,7 @@ echo "NDK version               : ${ndkver_org}"
 echo "CMake version             : ${cmakever_org}"
 echo "JDK version               : ${jdk_version}"
 echo "With command line tools   : ${with_cmdline}"
-echo "Extra packages            : ${pkgs}"
+echo "Extra packages            : ${pkgs} (and p7zip)"
 echo "CPU architecture          : ${arch}"
 echo "------------------------------------------"
 
@@ -347,28 +413,29 @@ print_info "Installing required packages.."
 install_packages $pkgs && print_success "Packages installed"
 echo ""
 
-# Download the manifest.json file
+install_p7zip
+
 print_info "Downloading manifest file..."
 downloaded_manifest="$install_dir/manifest.json"
 curl -L -o "$downloaded_manifest" "$manifest" && print_success "Manifest file downloaded"
 echo ""
 
-# Install the Android SDK
-download_comp "Android SDK" ".android_sdk" "$install_dir" "android-sdk"
+# ================= ⚠️ 精准安装定位 =================
 
-# Install build tools
-download_comp "Android SDK Build Tools" ".build_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk" "android-sdk-build-tools"
-
-# Install platform tools
-download_comp "Android SDK Platform Tools" ".platform_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk" "android-sdk-platform-tools"
-# 4. Install NDK
-download_comp "Android NDK" ".android_ndk | .${arch} | .${ndk_version}" "$install_dir/android-sdk" "android-ndk"
-# 5. Install CMake
-download_comp "CMake" ".android_cmake | .${arch} | .${cmake_version}" "$install_dir/android-sdk" "android-cmake"
+# 1. 基础 SDK
+download_comp "Android SDK" ".android_sdk" "$install_dir/android-sdk"
+# 2. Build Tools 定位到标准文件夹
+download_comp "Android SDK Build Tools" ".build_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk/build-tools/$sdkver_org"
+# 3. Platform Tools
+download_comp "Android SDK Platform Tools" ".platform_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk/platform-tools"
+# 4. NDK 下载并定位到 ndk/版本号 (新增)
+download_comp "Android NDK" ".android_ndk | .${arch} | .${ndk_version}" "$install_dir/android-sdk/ndk/$ndkver_org"
+# 5. CMake 下载并定位到 cmake/版本号 (新增)
+download_comp "CMake" ".android_cmake | .${arch} | .${cmake_version}" "$install_dir/android-sdk/cmake/$cmakever_org"
 
 if [ "$with_cmdline" = true ]; then
-  # Install the Command Line tools
-  download_comp "Command-line tools" ".cmdline_tools" "$install_dir/android-sdk" "cmdline-tools"
+  # 6. Cmdline Tools
+  download_comp "Command-line tools" ".cmdline_tools" "$install_dir/android-sdk/cmdline-tools/latest"
 fi
 
 # Install JDK
