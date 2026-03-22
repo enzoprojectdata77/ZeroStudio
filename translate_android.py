@@ -2,15 +2,14 @@ import os
 import argparse
 import json
 import re
+import time
 from openai import OpenAI
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # --- 核心配置 ---
 CHUNK_SIZE = 30  
-MAX_WORKERS = 6  
 TARGET_MODEL = "tencent/Hunyuan-MT-7B"
 
-# 目标文件夹列表（你要求的全量列表）
+# 你指定的语言文件夹列表
 LANG_FOLDERS = [
     "values", "values-ar-rSA", "values-bn-rIN", "values-de-rDE", "values-es-rES", 
     "values-fa", "values-fil", "values-fr-rFR", "values-hi-rIN", "values-in-rID", 
@@ -26,61 +25,82 @@ def fix_format(text):
     result = re.sub(r"%\s*(\d+\$)\s*([sd])", r"%\1\2", result)
     return result.replace("] ] >", "]]>").replace("\\ n", "\\n")
 
-def translate_chunk(client, model, chunk_data, target_lang):
+def safe_translate(client, model, chunk_data, target_lang):
+    """单次请求逻辑，增加重试和延时防止 RPM 限制"""
     prompt = f"Translate to {target_lang}. Keep placeholders (%s, %1$d) exactly. Return JSON."
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "You are a professional Android translator. Return JSON only."},
-                {"role": "user", "content": f"{prompt}\n\n{json.dumps(chunk_data, ensure_ascii=False)}"}
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.1
-        )
-        batch_res = json.loads(response.choices.message.content)
-        
-        # 日志输出：已在 YML 中 mask 了 key，这里可以安全输出翻译详情
-        print(f"\n📝 [Lang: {target_lang}] Batch Result:")
-        for k, v in batch_res.items():
-            print(f"   {k} -> {v}")
+    
+    for attempt in range(3): # 最多重试 3 次
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "You are a professional Android translator. Return JSON only."},
+                    {"role": "user", "content": f"{prompt}\n\n{json.dumps(chunk_data, ensure_ascii=False)}"}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1
+            )
+            batch_res = json.loads(response.choices.message.content)
             
-        return {k: fix_format(v) for k, v in batch_res.items()}
-    except Exception as e:
-        print(f"   ⚠️ Chunk Error: {e}")
-        return {k: v for k, v in chunk_data.items()}
+            print(f"   ✅ Batch translated ({len(batch_res)} items)")
+            # 适当留白，防止触发频率限制
+            time.sleep(0.5) 
+            return {k: fix_format(v) for k, v in batch_res.items()}
+            
+        except Exception as e:
+            print(f"   ⚠️ Attempt {attempt+1} failed: {e}")
+            if "balance" in str(e).lower():
+                print("   ❌ 余额不足或未实名，请检查账户。")
+                return {k: v for k, v in chunk_data.items()}
+            time.sleep(2) # 失败后等久一点
+            
+    return {k: v for k, v in chunk_data.items()}
 
-def process_file_with_regex(client, model, file_path, target_lang):
-    """正则方案：只改内容，不改格式、注释、空格、空行"""
+def process_file_sequentially(client, model, file_path, target_lang):
+    """顺序处理文件：读取 -> 提取 -> 翻译 -> 安全回填"""
     if not os.path.exists(file_path): return
     
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # 匹配 <string name="ID">VALUE</string>，排除不翻译的
-    pattern = re.compile(r'<string\s+name="([^"]+)"(?![^>]*translatable="false")>(.*?)</string>', re.DOTALL)
-    matches = pattern.findall(content)
-
-    to_translate = {name: val for name, val in matches if val and not val.startswith("@string/")}
-    if not to_translate: return
-
-    print(f"\n📂 [Processing] {file_path} ({len(to_translate)} items)")
-
-    keys = list(to_translate.keys())
-    chunks = [{k: to_translate[k] for k in keys[i:i+CHUNK_SIZE]} for i in range(0, len(keys), CHUNK_SIZE)]
-    translated_map = {}
+    # 提取 <string> 标签，排除 translatable="false"
+    pattern = re.compile(r'(<string\s+name="([^"]+)"(?![^>]*translatable="false")>)(.*?)(</string>)', re.DOTALL)
     
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = [executor.submit(translate_chunk, client, model, c, target_lang) for c in chunks]
-        for f in as_completed(futures):
-            translated_map.update(f.result())
+    matches = list(pattern.finditer(content))
+    to_translate_kv = {}
+    for m in matches:
+        key, val = m.group(2), m.group(3)
+        if val and not val.startswith("@string/"):
+            to_translate_kv[key] = val
 
-    # 原位精准回填
+    if not to_translate_kv: return
+
+    print(f"\n📂 [Processing] {file_path} | {len(to_translate_kv)} items")
+
+    # 顺序分片翻译（不再使用多线程，确保 API 稳定）
+    keys = list(to_translate_kv.keys())
+    translated_map = {}
+    for i in range(0, len(keys), CHUNK_SIZE):
+        chunk_keys = keys[i:i+CHUNK_SIZE]
+        chunk_data = {k: to_translate_kv[k] for k in chunk_keys}
+        res = safe_translate(client, model, chunk_data, target_lang)
+        translated_map.update(res)
+
+    # --- 安全回填（弃用 re.sub，改用索引查找替换，防止 \S 等正则报错） ---
     new_content = content
-    for name, trans_val in translated_map.items():
-        # 使用正向限定，确保只替换对应 ID 的内容
-        specific_pattern = re.compile(f'(<string\\s+name="{re.escape(name)}"[^>]*>)(.*?)(</string>)', re.DOTALL)
-        new_content = specific_pattern.sub(rf'\1{trans_val}\3', new_content)
+    # 从后往前替换，防止索引偏移影响后续替换
+    sorted_matches = sorted(list(pattern.finditer(content)), key=lambda x: x.start(), reverse=True)
+    
+    for m in sorted_matches:
+        key = m.group(2)
+        if key in translated_map:
+            prefix = m.group(1) # <string name="...">
+            suffix = m.group(4) # </string>
+            new_val = translated_map[key]
+            # 拼装新标签
+            new_tag = f"{prefix}{new_val}{suffix}"
+            # 替换原始位置
+            new_content = new_content[:m.start()] + new_tag + new_content[m.end():]
 
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(new_content)
@@ -91,21 +111,17 @@ if __name__ == "__main__":
     parser.add_argument("--files", default="strings.xml")
     args = parser.parse_args()
 
-    # 从环境变量读取 Key
     api_key = os.getenv("SF_API_KEY")
-    if not api_key:
-        print("❌ Error: SF_API_KEY environment variable is missing.")
-        exit(1)
-
     client = OpenAI(api_key=api_key, base_url=args.base_url)
     target_files = [f.strip() for f in args.files.replace(",", " ").split() if f.strip()]
     
+    # 一个模块接一个模块，一个文件接一个文件，一个语言接一个语言运行
     module_paths = ["core/resources/src/main/res/", "core/chatai/resources/src/main/res/"]
     
     for module in module_paths:
         for fname in target_files:
             for folder in LANG_FOLDERS:
                 f_path = os.path.join(module, folder, fname)
-                process_file_with_regex(client, TARGET_MODEL, f_path, folder)
+                process_file_sequentially(client, TARGET_MODEL, f_path, folder)
 
-    print("\n🎉 All tasks finished! Formats preserved.")
+    print("\n🎉 All tasks finished! Sequentially and safely.")
