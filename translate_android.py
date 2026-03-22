@@ -107,7 +107,7 @@ def process_file_sequentially(client, model, file_path, target_lang):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base_url", default="https://api.siliconflow.cn")
+    parser.add_argument("--base_url", default="https://api.siliconflow.cn/v1")
     parser.add_argument("--files", default="strings.xml")
     args = parser.parse_args()
 

@@ -8,10 +8,10 @@ on:
         required: true
       base_url:
         description: 'API Base URL'
-        default: 'https://api.siliconflow.cn'
+        default: 'https://api.siliconflow.cn/v1'
       target_files:
         description: 'Target XML files (e.g. strings.xml, titles.xml)'
-        default: 'strings.xml'
+        default: ''
         required: true
 
 jobs:

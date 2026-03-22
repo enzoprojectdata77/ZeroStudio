@@ -415,7 +415,7 @@ inline fun projectLanguageParameter(
     }
 
 enum class NdkVersion(val version: String) {
-    R29C("30.0.14904198-beta1"),
+    R38B("30.0.14904198-beta1"),
     R29C("29.0.14206865"),
     R29B("29.0.14033849"),
     R29A("29.0.13113456"),
