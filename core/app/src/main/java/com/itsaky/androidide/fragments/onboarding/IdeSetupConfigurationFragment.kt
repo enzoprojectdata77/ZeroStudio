@@ -126,12 +126,14 @@ class IdeSetupConfigurationFragment : OnboardingFragment(), SlidePolicy {
   fun buildIdeSetupArguments(): Array<String> {
     val args = mutableListOf<String>()
     args.setArgument(IdeSetupArgument.INSTALL_DIR, Environment.HOME.absolutePath)
-    
-    args.setArgument(IdeSetupArgument.SDK_VERSION, SdkVersion.fromDisplayName(content.sdkVersion.text.toString()).version)
-    args.setArgument(IdeSetupArgument.NDK_VERSION, NdkVersion.fromDisplayName(content.ndkVersion.text.toString()).version)
-    args.setArgument(IdeSetupArgument.CMAKE_VERSION, CmakeVersion.fromDisplayName(content.cmakeVersion.text.toString()).version)
-    args.setArgument(IdeSetupArgument.JDK_VERSION, JdkVersion.fromDisplayName(content.jdkVersion.text.toString()).version)
-    
+    args.setArgument(IdeSetupArgument.SDK_VERSION,
+       SdkVersion.fromDisplayName(content.sdkVersion.text).version)
+    args.setArgument(IdeSetupArgument.NDK_VERSION, 
+      NdkVersion.fromDisplayName(content.ndkVersion.text).version)
+    args.setArgument(IdeSetupArgument.CMAKE_VERSION, 
+      CmakeVersion.fromDisplayName(content.cmakeVersion.text).version)
+    args.setArgument(IdeSetupArgument.JDK_VERSION,
+      JdkVersion.fromDisplayName(content.jdkVersion.text).version)
     args.setArgument(IdeSetupArgument.ASSUME_YES)
     if (content.installGit.isChecked) {
       args.setArgument(IdeSetupArgument.WITH_GIT)

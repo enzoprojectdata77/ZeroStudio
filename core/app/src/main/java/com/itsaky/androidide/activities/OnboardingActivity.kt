@@ -38,7 +38,6 @@ import com.itsaky.androidide.R
 import com.itsaky.androidide.R.string
 import com.itsaky.androidide.app.configuration.IDEBuildConfigProvider
 import com.itsaky.androidide.app.configuration.IJdkDistributionProvider
-import com.itsaky.androidide.fragments.onboarding.DisclaimerFragment
 import com.itsaky.androidide.fragments.onboarding.GreetingFragment
 import com.itsaky.androidide.fragments.onboarding.IdeSetupConfigurationFragment
 import com.itsaky.androidide.fragments.onboarding.OnboardingInfoFragment
