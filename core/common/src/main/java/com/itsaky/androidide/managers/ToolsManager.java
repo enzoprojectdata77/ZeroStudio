@@ -92,7 +92,7 @@ public class ToolsManager {
   private static void installExtraTools() {
   
   //解压构建所需logger插件
-  installAsset("data/common/logger-runtime.aar",
+  installAsset("data/logger-runtime.aar",
    new File(Environment.PLUGIN_HOME , "logger"), false, 0);
   
   installAsset("data/common/plugin-api.jar", 
