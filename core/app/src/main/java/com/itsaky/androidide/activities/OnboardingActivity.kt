@@ -219,21 +219,9 @@ class OnboardingActivity : AppIntro2() {
         }
     }
 
-    // 全文件管理
+    // 全文件管理 / 基础存储
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         if (!android.os.Environment.isExternalStorageManager()) {
-            return false
-        }
-    }
-
-    // 基础媒体/读写
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        val mediaPerms = listOf(
-            Manifest.permission.READ_MEDIA_IMAGES,
-            Manifest.permission.READ_MEDIA_VIDEO,
-            Manifest.permission.READ_MEDIA_AUDIO
-        )
-        if (mediaPerms.any { ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED }) {
             return false
         }
     } else {

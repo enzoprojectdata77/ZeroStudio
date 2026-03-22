@@ -416,10 +416,10 @@ curl -L -o "$downloaded_manifest" "$manifest" && print_success "Manifest file do
 echo ""
 
 # Install the Android SDK
-download_comp "Android SDK" ".android_sdk" "$install_dir" "android-sdk"
+download_comp "Android SDK" ".android_sdk" "$install_dir/android-sdk"
 
 # Install build tools
-download_comp "Android SDK Build Tools" ".build_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk" "android-sdk-build-tools"
+download_comp "Android SDK Build Tools" ".build_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk/build-tools"
 
 # Install platform tools
 download_comp "Android SDK Platform Tools" ".platform_tools | .${arch} | .${sdk_version}" "$install_dir/android-sdk" "android-sdk-platform-tools"
