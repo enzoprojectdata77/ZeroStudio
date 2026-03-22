@@ -78,7 +78,8 @@ enum class NdkVersion(val version: String, val supportedArchs: Array<CpuArch>) {
     R28A1("28.2.13676358.A1", ALL),
     R29A("29.0.13113456",ARM_AARCH64),
     R29B("29.0.14033849", ALL),
-    R29C("29.0.14206865",ARM_AARCH64);
+    R29C("29.0.14206865",ARM_AARCH64),
+    R29C("30.0.14904198-beta1",ARM_AARCH64);
 
     val displayName = "NDK $version"
 

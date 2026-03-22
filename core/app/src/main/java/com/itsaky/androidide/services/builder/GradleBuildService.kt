@@ -274,7 +274,7 @@ class GradleBuildService : Service(), BuildService, IToolingApiClient,
       // Extract from assets
       if (
           !ResourceUtils.copyFileFromAssets(
-              ToolsManager.getCommonAsset("logger-runtime.aar"),
+              ToolsManager.getCommonAsset("data/common/logger-runtime.aar"),
               aar.absolutePath,
           )
       ) {

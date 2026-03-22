@@ -238,6 +238,7 @@
      },
      "android_ndk": {
           "aarch64": {
+               "_30_0_14904198_beta1": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r30/android-ndk-r30-beta1-aarch64-linux-android.tar.xz",
                "_29_0_14033849": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r29/android-ndk-r29-aarch64-linux-android.tar.xz",
                "_29_0_13113456": "https://github.com/ZeroAicy/AIDE-Ndk-Install/releases/download/v2.7.8/android-ndk-r29-beta1-aarch64.zip",
                "_29_0_14206865": "https://github.com/lzhiyong/termux-ndk/releases/download/android-ndk/android-ndk-r29-aarch64.7z",
@@ -257,12 +258,14 @@
                "_17_2_4988734": "https://github.com/jzinferno2/termux-ndk/releases/download/v1/android-ndk-r17c-aarch64.zip"
           },
           "x86_64": {
+               "_30_0_14904198_beta1": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r30/android-ndk-r30-beta1-armv7a-linux-androideabi.tar.xz",
                "_29_0_14033849": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r29/android-ndk-r29-x86_64-linux-android.tar.xz",
                "_28_2_13676358": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r28/android-ndk-r28c-x86_64-linux-android.tar.xz",
                "_27_3_13750724": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r27/android-ndk-r27d-x86_64-linux-android.tar.xz",
                "_26_3_11579264": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r26/android-ndk-r26d-x86_64-linux-android.tar.xz"
           },
           "arm": {
+               "_30_0_14904198_beta1": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r30/android-ndk-r30-beta1-x86_64-linux-android.tar.xz",
                "_29_0_14033849_beta4": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r29/android-ndk-r29-armv7a-linux-androideabi.tar.xz",
                "_28_2_13676358": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r28/android-ndk-r28c-armv7a-linux-androideabi.tar.xz",
                "_27_3_13750724": "https://github.com/HomuHomu833/android-ndk-custom/releases/download/r27/android-ndk-r27d-armv7a-linux-androideabi.tar.xz",

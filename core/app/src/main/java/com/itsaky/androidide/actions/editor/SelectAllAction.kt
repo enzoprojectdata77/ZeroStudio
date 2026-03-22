@@ -243,8 +243,8 @@ class SelectAllAction(context: Context, override val order: Int) : BaseEditorAct
             
             var trimmedStart = lineStartIdx
             var trimmedEnd = lineEndIdx
-            while (trimmedStart < trimmedEnd && content.charAt(trimmedStart).isWhitespace()) trimmedStart++
-            while (trimmedEnd > trimmedStart && content.charAt(trimmedEnd - 1).isWhitespace()) trimmedEnd--
+            while (trimmedStart < trimmedEnd && content[trimmedStart].isWhitespace()) trimmedStart++
+            while (trimmedEnd > trimmedStart && content[trimmedEnd - 1].isWhitespace()) trimmedEnd--
             
             // 如果剔除空白后比当前选区更大，则扩选到非空白边界
             if (leftIdx > trimmedStart || rightIdx < trimmedEnd) {
@@ -263,7 +263,7 @@ class SelectAllAction(context: Context, override val order: Int) : BaseEditorAct
             }
             
             // 终极回退: 当前行也已经完全选满了，则扩展至全选
-            if (leftIdx > 0 || rightIdx < content.length()) {
+            if (leftIdx > 0 || rightIdx < content.length) {
                 editor.selectAll()
             }
         }
@@ -279,9 +279,9 @@ class SelectAllAction(context: Context, override val order: Int) : BaseEditorAct
             )
 
             // 如果当前刚好选中了符号内部的完整内容，优先扩选至包含符号自身
-            if (left > 0 && right < content.length()) {
-                val lChar = content.charAt(left - 1)
-                val rChar = content.charAt(right)
+            if (left > 0 && right < content.length) {
+                val lChar = content[left - 1]
+                val rChar = content[right]
                 if (pairs.any { it.first == lChar && it.second == rChar }) {
                     return Pair(left - 1, right + 1)
                 }
@@ -290,7 +290,7 @@ class SelectAllAction(context: Context, override val order: Int) : BaseEditorAct
             // 限定向外搜索的最大字符数（针对大型源码文件做性能防御，只搜索上下 2500 字符）
             val maxSearchRange = 2500
             val searchStart = maxOf(0, left - maxSearchRange)
-            val searchEnd = minOf(content.length(), right + maxSearchRange)
+            val searchEnd = minOf(content.length, right + maxSearchRange)
 
             var bestPairResult: Pair<Int, Int>? = null
             var minDistance = Int.MAX_VALUE
@@ -306,7 +306,7 @@ class SelectAllAction(context: Context, override val order: Int) : BaseEditorAct
                 var stackLeft = 0
 
                 while (searchLeft >= searchStart) {
-                    val c = content.charAt(searchLeft)
+                    val c = content[searchLeft]
                     if (!isSameSymbol && c == closeChar) {
                         stackLeft++ // 这是内部配对的右符号
                     } else if (c == openChar) {
@@ -326,7 +326,7 @@ class SelectAllAction(context: Context, override val order: Int) : BaseEditorAct
                 var stackRight = 0
 
                 while (searchRight < searchEnd) {
-                    val c = content.charAt(searchRight)
+                    val c = content[searchRight]
                     if (!isSameSymbol && c == openChar) {
                         stackRight++ // 这是内部嵌套的左符号
                     } else if (c == closeChar) {

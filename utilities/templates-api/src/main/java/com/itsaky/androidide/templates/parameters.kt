@@ -380,7 +380,7 @@ inline fun <T : Enum<*>> enumParameter(
 inline fun projectNameParameter(crossinline configure: StringParameterBuilder.() -> Unit = {}) =
     stringParameter {
       name = string.project_app_name
-      default = "My Application"
+      default = "MyApplication"
       startIcon = { R.drawable.ic_android }
       constraints = listOf(NONEMPTY)
       configure()
@@ -415,6 +415,7 @@ inline fun projectLanguageParameter(
     }
 
 enum class NdkVersion(val version: String) {
+    R29C("30.0.14904198-beta1"),
     R29C("29.0.14206865"),
     R29B("29.0.14033849"),
     R29A("29.0.13113456"),
