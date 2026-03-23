@@ -51,8 +51,8 @@ class GradleProjectAnalyzerImpl : ProjectAnalyzer {
         }
 
         // 添加默认兜底仓库
-        repos.add(ScopedRepositoryInfo("google", "https://maven.google.com/", RepositoryType.GOOGLE, File(projectDir, "build.gradle")))
-        repos.add(ScopedRepositoryInfo("mavenCentral", "https://repo1.maven.org/maven2/", RepositoryType.MAVEN_CENTRAL, File(projectDir, "build.gradle")))
+        repos.add(ScopedRepositoryInfo("google", "https://dl.google.com/dl/android/maven2/", RepositoryType.GOOGLE, File(projectDir, "build.gradle")))
+        repos.add(ScopedRepositoryInfo("gradle", "https://plugins.gradle.org/m2", RepositoryType.MAVEN_CENTRAL, File(projectDir, "build.gradle")))
         
         return@withContext repos.distinctBy { it.url }
     }

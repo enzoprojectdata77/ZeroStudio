@@ -51,11 +51,6 @@ class DependencyUpdateFragment : BaseFragment() {
         savedInstanceState: Bundle?
     ): View {
         return ComposeView(requireContext()).apply {
-            // 修复说明：
-            // 在 Fragment 的 onCreateView 中创建 ComposeView 时，
-            // Android 框架会自动将 View 附加到 Fragment 的视图层级上。
-            // 因此，ComposeView 能够自动向上查找并找到 Fragment 提供的 LifecycleOwner。
-            // 不需要手动调用 setViewTreeLifecycleOwner，从而避开了缺包导致的报错。
             
             setContent {
                 MaterialTheme {
@@ -169,7 +164,6 @@ fun DependencyUpdateItem(
     var selectedVersion by remember { mutableStateOf(report.latestVersion) }
     val currentView = LocalView.current
     
-    // 核心修复：获取当前的组合上下文 (CompositionContext)
     // 这个 Context 包含了当前的 Lifecycle、SavedState 以及 Theme 信息。
     val compositionContext = rememberCompositionContext()
 
@@ -218,7 +212,6 @@ fun DependencyUpdateItem(
 }
 
 /**
- * 修复后的 PopupWindow。
  * 
  * 使用 [setParentCompositionContext] 替代了直接设置 ViewTreeLifecycleOwner。
  * 这是一个纯 Compose 的 API，不依赖 AndroidX Lifecycle 的特定类，因此不会报 Unresolved reference。
@@ -232,9 +225,6 @@ class VersionSelectionPopupWindow(
 
     init {
         val composeView = ComposeView(context).apply {
-            // 核心修复：将弹窗内的 Compose 环境连接到父级环境。
-            // 这会自动继承父级的 LifecycleOwner, SavedStateRegistryOwner 和 LocalConfiguration 等。
-            // 从而避免了找不到 ViewTreexxxOwner 类的错误。
             setParentCompositionContext(parentCompositionContext)
             
             setContent {

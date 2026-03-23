@@ -44,16 +44,16 @@ import com.itsaky.androidide.editor.language.treesitter.LogLanguage
 import com.itsaky.androidide.editor.language.treesitter.TSLanguageRegistry
 import com.itsaky.androidide.editor.language.treesitter.XMLLanguage
 import com.itsaky.androidide.editor.language.treesitter.TomlLanguage
-import com.itsaky.androidide.editor.language.treesitter.DartLanguage
+// import com.itsaky.androidide.editor.language.treesitter.DartLanguage
 import com.itsaky.androidide.editor.language.treesitter.CppLang
 import com.itsaky.androidide.editor.language.treesitter.CLang
 import com.itsaky.androidide.editor.language.treesitter.CmakeLanguage
-import com.itsaky.androidide.editor.language.treesitter.PythonLanguage
-import com.itsaky.androidide.editor.language.treesitter.MarkdownLanguage
-import com.itsaky.androidide.editor.language.treesitter.reStructuredTextLanguage
+// import com.itsaky.androidide.editor.language.treesitter.PythonLanguage
+// import com.itsaky.androidide.editor.language.treesitter.MarkdownLanguage
+// import com.itsaky.androidide.editor.language.treesitter.reStructuredTextLanguage
 import com.itsaky.androidide.editor.language.treesitter.YamlLanguage
-import com.itsaky.androidide.editor.language.treesitter.TypeScriptLanguage
-import com.itsaky.androidide.editor.language.treesitter.SqliteLanguage
+// import com.itsaky.androidide.editor.language.treesitter.TypeScriptLanguage
+// import com.itsaky.androidide.editor.language.treesitter.SqliteLanguage
 import com.itsaky.androidide.editor.language.treesitter.AidlLanguage
 import com.itsaky.androidide.editor.schemes.IDEColorSchemeProvider
 import com.itsaky.androidide.editor.ui.IDEEditor
@@ -157,7 +157,7 @@ open class EditorHandlerActivity : ProjectHandlerActivity(), IEditorHandler {
       TSLanguageRegistry.instance.register(JsonLanguage.TS_TYPE, JsonLanguage.FACTORY)
       TSLanguageRegistry.instance.register(TomlLanguage.TOML_TYPE, TomlLanguage.FACTORY)
       
-      TSLanguageRegistry.instance.register(DartLanguage.TS_TYPE, DartLanguage.FACTORY)
+      // TSLanguageRegistry.instance.register(DartLanguage.TS_TYPE, DartLanguage.FACTORY)
       TSLanguageRegistry.instance.register(AidlLanguage.TS_TYPE, AidlLanguage.FACTORY)
       // TSLanguageRegistry.instance.register(SqliteLanguage.TS_TYPE, SqliteLanguage.FACTORY)
 
