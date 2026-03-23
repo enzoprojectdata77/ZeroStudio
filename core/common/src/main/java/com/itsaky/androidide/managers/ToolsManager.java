@@ -91,8 +91,8 @@ public class ToolsManager {
    */
   private static void installExtraTools() {
   
-   ResourceUtils.copyFileFromAssets(getCommonAsset("logger-runtime.aar"),
-          new File(Environment.PLUGIN_HOME,"logger").getAbsolutePath());
+   // ResourceUtils.copyFileFromAssets(getCommonAsset("logger-runtime.aar"),
+          // new File(Environment.PLUGIN_HOME,"logger").getAbsolutePath());
           
    ResourceUtils.copyFileFromAssets(getCommonAsset("plugin-api.jar"),
           Environment.PLUGIN_HOME.getAbsolutePath());
@@ -102,8 +102,8 @@ public class ToolsManager {
           
           
   
-    // installAsset("data/common/logger-runtime.aar",
-        // new File(Environment.PLUGIN_HOME , "logger"), false, 0, null);
+    installAsset("data/common/logger-runtime.zip",
+        new File(Environment.PLUGIN_HOME , "logger"), true, 0, null);
   
     // installAsset("data/common/plugin-api.jar", 
         // Environment.PLUGIN_HOME, false, 0, null);
