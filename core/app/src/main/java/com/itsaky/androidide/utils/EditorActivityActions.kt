@@ -20,6 +20,7 @@ import android.content.Context
 import com.itsaky.androidide.actions.ActionItem.Location.EDITOR_FILE_TABS
 import com.itsaky.androidide.actions.ActionItem.Location.EDITOR_FILE_TREE
 import com.itsaky.androidide.actions.ActionItem.Location.EDITOR_TOOLBAR
+import com.itsaky.androidide.actions.ActionItem.Location.EDITOR_TEXT_ACTIONS
 import com.itsaky.androidide.actions.ActionsRegistry
 import com.itsaky.androidide.actions.build.ProjectSyncAction
 import com.itsaky.androidide.actions.build.QuickRunWithCancellationAction
@@ -115,7 +116,7 @@ class EditorActivityActions {
       registry.registerAction(OpenWithAction(context, order++))
       registry.registerAction(NewFileOrFolderAction(context, order++))
       registry.registerAction(RenameAction(context, order++))
-            registry.registerAction(RefactorRenameAction(context, order++))
+      registry.registerAction(RefactorRenameAction(context, order++))
       registry.registerAction(ConvertPathToAction(context, order++))
     }
 

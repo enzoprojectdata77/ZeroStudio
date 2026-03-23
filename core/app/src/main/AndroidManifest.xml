@@ -143,17 +143,19 @@
           <profileable
                android:shell="true"
                tools:targetApi="q" />
-
+          <meta-data
+               android:name="firebase_performance_logcat_enabled"
+               android:value="true" />
           <!-- lsp language Server  ## start -->
           <!-- <service -->
-               <!-- android:name="android.zero.studio.lsp.servers.workspace.WorkspaceSymbolService" -->
-               <!-- android:enabled="true" -->
-               <!-- android:exported="false" -->
-               <!-- android:process=":lsp_workspace_symbol"> -->
-               <!-- <intent-filter> -->
-                    <!-- <action -->
-                         <!-- android:name="com.itsaky.androidide.lsp.SERVICE_ACTION_android-ide-workspace-symbol-lsp" /> -->
-               <!-- </intent-filter> -->
+          <!-- android:name="android.zero.studio.lsp.servers.workspace.WorkspaceSymbolService" -->
+          <!-- android:enabled="true" -->
+          <!-- android:exported="false" -->
+          <!-- android:process=":lsp_workspace_symbol"> -->
+          <!-- <intent-filter> -->
+          <!-- <action -->
+          <!-- android:name="com.itsaky.androidide.lsp.SERVICE_ACTION_android-ide-workspace-symbol-lsp" /> -->
+          <!-- </intent-filter> -->
           <!-- </service> -->
 
      </application>

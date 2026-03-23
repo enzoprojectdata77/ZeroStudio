@@ -19,6 +19,31 @@ package com.itsaky.androidide.templates.base.root
 
 import com.itsaky.androidide.templates.base.ProjectTemplateBuilder
 
+private fun mavenUrl(url: String): String {
+    return if (data.useKts) {
+        "maven { url = uri(\"$url\") }" 
+    } else {
+        "maven { url \"$url\" }"
+    }
+}
+
+    
+val repositoriesBlock = """
+    ${mavenUrl("https://maven.aliyun.com/repository/gradle-plugin")}
+    ${mavenUrl("https://maven.aliyun.com/repository/public")}
+    ${mavenUrl("https://maven.aliyun.com/repository/google")}
+    ${mavenUrl("https://cache-redirector.jetbrains.com/intellij-third-party-dependencies/")}
+    ${mavenUrl("https://www.jetbrains.com/intellij-repository/releases/")}
+    ${mavenUrl("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies/")}
+    ${mavenUrl("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap/")}
+    ${mavenUrl("https://cache-redirector.jetbrains.com/kotlin.bintray.com/kotlin-plugin/")}
+    ${mavenUrl("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide/")}
+    ${mavenUrl("https://repo.itextsupport.com/android")}
+    ${mavenUrl("https://repo1.maven.org/maven2/")}
+    ${mavenUrl("https://jitpack.io")}
+""".trimIndent()
+
+
 internal fun ProjectTemplateBuilder.settingsGradleSrcStr(): String {
   return """
 pluginManagement {
@@ -26,14 +51,17 @@ pluginManagement {
     gradlePluginPortal()
     google()
     mavenCentral()
+    $repositoriesBlock
   }
 }
 
 dependencyResolutionManagement {
   repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
   repositories {
+    gradlePluginPortal()
     google()
     mavenCentral()
+    $repositoriesBlock
   }
 }
 

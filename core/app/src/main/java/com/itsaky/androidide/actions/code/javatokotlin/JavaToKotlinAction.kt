@@ -21,9 +21,11 @@ import android.zero.studio.kotlin.analysis.symbolic.J2kConverterHelper
 /**
  * Action to convert the current Java file to Kotlin using the Kotlin Compiler SDK.
  *
+ * 【内存泄漏修复优化】：取消 `private val context` 的修饰符，不保留该 Activity 的长期引用。
+ *
  * @author android_zero
  */
-class JavaToKotlinAction(private val context: Context, override val order: Int) : EditorRelatedAction() {
+class JavaToKotlinAction(context: Context, override val order: Int) : EditorRelatedAction() {
 
     override val id: String = "ide.editor.convert.java2kotlin"
 
@@ -101,8 +103,6 @@ class JavaToKotlinAction(private val context: Context, override val order: Int) 
             activity.getString(R.string.action_editor_java_to_kotlin_open_file),
             positiveClickListener = { dialog, _ ->
                 try {
-                    // Reflection call to open file in main activity logic if method exists
-                    // Or send an event bus message
                     val method = activity.javaClass.getMethod("openFile", File::class.java)
                     method.invoke(activity, file)
                 } catch (e: Exception) {

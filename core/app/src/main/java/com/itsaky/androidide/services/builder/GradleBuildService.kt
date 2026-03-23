@@ -186,6 +186,11 @@ class GradleBuildService : Service(), BuildService, IToolingApiClient,
   }
 
   override fun onDestroy() {
+    // 【内存泄漏修复优化】：强制停止所有的后台 gradlew 进程。
+    // 因为在 performBuildTasks 方法中，CompletableFuture 可能会因为底层进程僵死或还在执行导致 get() 方法无尽等待。
+    // 如果我们在销毁时没有杀掉进程，ForkJoinPool 工作线程将会持有这个 Service 对象并永远被阻塞。
+    killGradlewProcesses()
+    
     mBinder?.release()
     mBinder = null
 

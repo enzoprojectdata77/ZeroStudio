@@ -12,9 +12,13 @@ import com.itsaky.androidide.resources.R
 /**
  * 触发系统自定义文本操作菜单的 Action（自动收集系统应用扩展功能，如翻译、小爱同学等的intent浮动菜单）
  *
+ * 已修复问题：【内存泄漏修复优化】：
+ * 1. 移除了 private val context 和 private var currentEditor 强引用，避免泄漏 Activity
+ * 2. 所有的对象引用都在运行时从 ActionData 中获取，实现绝对的无状态安全。
+ *
  * @author android_zero
  */
-class SystemTextMenuAction(private val context: Context, override val order: Int) : EditorActionItem {
+class SystemTextMenuAction(context: Context, override val order: Int) : EditorActionItem {
 
     override val id: String = "ide.editor.selection.system_actions"
     
@@ -26,22 +30,23 @@ class SystemTextMenuAction(private val context: Context, override val order: Int
     override var icon: Drawable? = null
     override var requiresUIThread: Boolean = true
 
-    private var currentEditor: CodeEditor? = null
-
     init {
+        // 在初始化阶段加载图标，不再将 context 作为类的持久属性保存
         icon = ContextCompat.getDrawable(context, R.drawable.more_vert)
     }
 
     override fun prepare(data: ActionData) {
         super.prepare(data)
+        // 动态验证即可，不再使用 currentEditor 长期缓存
         val editor = data.get(CodeEditor::class.java)
-        if (editor != null) {
-            currentEditor = editor
-        }
+        enabled = editor != null
+        visible = editor != null
     }
 
     override suspend fun execAction(data: ActionData): Any {
-        val editor = currentEditor ?: return false
+        // 运行时动态获取 Editor 和 Context，彻底断开强引用关系
+        val editor = data.get(CodeEditor::class.java) ?: return false
+        val context = data.get(Context::class.java) ?: return false
 
         val text = editor.text
         val cursor = editor.cursor

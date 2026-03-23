@@ -261,20 +261,20 @@ plugins {
     // Native Build Logic (Separated CMake and NDK)
     val nativeBuildBlock = if (data.useCmake) {
         """
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "${data.cmakeVersion}"
+        externalNativeBuild {
+            cmake {
+                path = file("src/main/cpp/CMakeLists.txt")
+                version = "${data.cmakeVersion}"
+            }
         }
-    }
         """.trimIndent()
     } else if (data.useNdk) {
         """
-    externalNativeBuild {
-        ndkBuild {
-            path = file("src/main/jni/Android.mk")
+        externalNativeBuild {
+            ndkBuild {
+                path = file("src/main/jni/Android.mk")
+            }
         }
-    }
         """.trimIndent()
     } else ""
 
@@ -382,20 +382,20 @@ plugins {
 
     val nativeBuildBlock = if (data.useCmake) {
         """
-    externalNativeBuild {
-        cmake {
-            path file('src/main/cpp/CMakeLists.txt')
-            version '${data.cmakeVersion}'
+        externalNativeBuild {
+            cmake {
+                path file('src/main/cpp/CMakeLists.txt')
+                version '${data.cmakeVersion}'
+            }
         }
-    }
         """.trimIndent()
     } else if (data.useNdk) {
         """
-    externalNativeBuild {
-        ndkBuild {
-            path file('src/main/jni/Android.mk')
+        externalNativeBuild {
+            ndkBuild {
+                path file('src/main/jni/Android.mk')
+            }
         }
-    }
         """.trimIndent()
     } else ""
 

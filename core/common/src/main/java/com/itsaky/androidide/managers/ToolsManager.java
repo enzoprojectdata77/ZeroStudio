@@ -94,22 +94,22 @@ public class ToolsManager {
    // ResourceUtils.copyFileFromAssets(getCommonAsset("logger-runtime.aar"),
           // new File(Environment.PLUGIN_HOME,"logger").getAbsolutePath());
           
-   ResourceUtils.copyFileFromAssets(getCommonAsset("plugin-api.jar"),
-          Environment.PLUGIN_HOME.getAbsolutePath());
+   // ResourceUtils.copyFileFromAssets(getCommonAsset("plugin-api.jar"),
+          // Environment.PLUGIN_HOME.getAbsolutePath());
           
-   ResourceUtils.copyFileFromAssets(getCommonAsset("zerostudio-gradle-plugin-1.0.0.jar"),
-          new File(Environment.ANDROIDIDE_HOME, "init").getAbsolutePath());
+   // ResourceUtils.copyFileFromAssets(getCommonAsset("zerostudio-gradle-plugin-1.0.0.jar"),
+          // new File(Environment.ANDROIDIDE_HOME, "init").getAbsolutePath());
           
           
   
     installAsset("data/common/logger-runtime.zip",
         new File(Environment.PLUGIN_HOME , "logger"), true, 0, null);
   
-    // installAsset("data/common/plugin-api.jar", 
-        // Environment.PLUGIN_HOME, false, 0, null);
+    installAsset("data/common/plugin-api.jar", 
+        Environment.PLUGIN_HOME, false, 0, null);
   
-    // installAsset("data/common/zerostudio-gradle-plugin-1.0.0.jar", 
-        // new File(Environment.ANDROIDIDE_HOME , "init"), false, 0, null);
+    installAsset("data/common/zerostudio-gradle-plugin-1.0.0.jar", 
+        new File(Environment.ANDROIDIDE_HOME , "init"), false, 0, null);
   
     // 解压 compose 预览所需文件
     // installAsset("compose/compose-jars.zip",

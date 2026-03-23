@@ -1,3 +1,6 @@
+==
+FILE: core/app/src/main/java/com/itsaky/androidide/actions/code/OverrideMethodsAction.kt
+==
 package com.itsaky.androidide.actions.code
 
 import android.content.Context
@@ -18,15 +21,16 @@ import android.zero.studio.kotlin.analysis.symbolic.*
 /**
  * Action to override or implement methods from superclasses or interfaces.
  *
+ * 【内存泄漏修复优化】：取消 `private val context` 的修饰符，不保留该 Activity 的长期引用。
+ *
  * @author android_zero
  */
-class OverrideMethodsAction(private val context: Context, override val order: Int) : EditorRelatedAction() {
+class OverrideMethodsAction(context: Context, override val order: Int) : EditorRelatedAction() {
     
     override val id: String = "ide.editor.generate.override_methods"
 
     init {
         label = context.getString(R.string.action_override_methods)
-        // icon = ContextCompat.getDrawable(context, R.drawable.ic_override_method)
     }
 
     override fun prepare(data: ActionData) {
@@ -63,8 +67,6 @@ class OverrideMethodsAction(private val context: Context, override val order: In
             withContext(Dispatchers.Main) {
                 if (members.isNotEmpty()) {
                     showOverrideDialog(activity, members, editor)
-                } else {
-                    // Optionally, show a toast if no members are found
                 }
             }
         }
@@ -89,12 +91,8 @@ class OverrideMethodsAction(private val context: Context, override val order: In
                 val selectedMembers = members.filterIndexed { index, _ -> checkedItems[index] }
                 if (selectedMembers.isNotEmpty()) {
                     val generatedCode = CodeGenerator.generateOverrideMethods(selectedMembers)
-                    
-                    // Use the pre-calculated insertOffset from PsiSymbolResolver
                     val insertOffset = selectedMembers.first().insertOffset
-                    
                     val pos = editor.text.indexer.getCharPosition(insertOffset)
-                    
                     val textToInsert = "\n\n$generatedCode"
                     
                     editor.text.insert(pos.line, pos.column, textToInsert)
