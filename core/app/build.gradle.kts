@@ -82,6 +82,7 @@ android {
     "kotlin/kotlin.kotlin_builtins", 
     "THIRD-PARTY", 
     "META-INF/DEPENDENCIES", 
+    "META-INF/kotlin-stdlib.kotlin_module", 
     "META-INF/NOTICE.md", 
     "META-INF/plugin.xml", 
     "com/android/builder/model/version.properties", 
