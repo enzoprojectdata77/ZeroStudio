@@ -18,19 +18,23 @@
 package com.itsaky.androidide.templates.base.root
 
 import com.itsaky.androidide.templates.base.ProjectTemplateBuilder
-import com.itsaky.androidide.templates.base.*
-import com.itsaky.androidide.templates.*
 
-private fun mavenUrl(url: String): String {
+/**
+ * @author android_zero
+ */
+private fun ProjectTemplateBuilder.mavenUrl(url: String): String {
     return if (data.useKts) {
-        "maven { url = uri(\"$url\") }" 
+        "maven { url = uri(\"$url\") }"
     } else {
         "maven { url \"$url\" }"
     }
 }
 
-    
-val repositoriesBlock = """
+/**
+ * @author android_zero
+ */
+private val ProjectTemplateBuilder.repositoriesBlock: String
+    get() = """
     ${mavenUrl("https://maven.aliyun.com/repository/gradle-plugin")}
     ${mavenUrl("https://maven.aliyun.com/repository/public")}
     ${mavenUrl("https://maven.aliyun.com/repository/google")}
