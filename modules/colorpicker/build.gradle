@@ -21,11 +21,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '21'
     }
     buildFeatures {
         compose true
@@ -44,7 +44,7 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation libs.androidx.core.ktx
 
     implementation 'com.github.SmartToolFactory:Compose-Extended-Gestures:3.0.0'
     implementation 'com.github.SmartToolFactory:Compose-Extended-Colors:1.0.0-alpha07'
@@ -52,16 +52,17 @@ dependencies {
     implementation 'com.github.SmartToolFactory:Compose-Color-Detector:1.0.0'
     implementation 'com.github.SmartToolFactory:Compose-Colorful-Sliders:1.2.0'
     // Jetpack Compose
-    implementation "androidx.compose.ui:ui:$compose_version"
-    implementation "androidx.compose.ui:ui-tooling:$compose_version"
-    implementation "androidx.compose.material:material:$compose_version"
-    implementation "androidx.compose.runtime:runtime:$compose_version"
-    implementation "androidx.compose.material:material-icons-extended:$compose_version"
-    implementation "androidx.compose.material3:material3:1.1.1"
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.tooling
+    implementation libs.androidx.compose.runtime
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.material.icons.extended
 
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+    testImplementation libs.tests.junit
+    androidTestImplementation libs.tests.androidx.junit
+    androidTestImplementation libs.tests.androidx.espresso.core
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
+    debugImplementation libs.androidx.compose.ui.tooling
+
 }
