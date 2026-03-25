@@ -183,6 +183,7 @@ dependencies {
   implementation(libs.firebase.analytics)
   implementation(libs.firebase.crashlytics)
   implementation(libs.firebase.config)
+  implementation(libs.androidx.compose.material.icons.extended)
   
   //UI/UX
   implementation(libs.bundles.compose) //androidx compose

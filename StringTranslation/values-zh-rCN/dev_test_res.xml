@@ -5,13 +5,13 @@
      <!-- 在开发完成后迁移到对应文件内，这样就不会过于混乱 ，避免冗余-->
 
      <!-- <color name="test_tests">#FFBABAFF</color> -->
-     <string name="title_test">test</string>
+     <string name="title_test">测试</string>
 
 
-     <string name="title_template_description_bottomnavactivity">Bottom navigation view Activity</string>
+     <string name="title_template_description_bottomnavactivity">底部导航视图活动</string>
 
-     <string name="hint_android_ndk_version">Android NDK Version</string>
-     <string name="hint_android_cmake_version">CMake Version</string>
+     <string name="hint_android_ndk_version">安卓NDK版本</string>
+     <string name="hint_android_cmake_version">CMake版本</string>
 
 
  <!-- Common Actions -->
@@ -71,6 +71,7 @@
     <string name="no_animations_to_export">没有可导出的自定义动画</string>
     <string name="error_file_not_found">文件未找到: %s</string>
     <string name="animation_set_to">动画已设置为: %s</string>
+
 
 
 

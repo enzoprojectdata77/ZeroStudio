@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <!-- 关于：本xml用于开发阶段的resources资源统一存放，比如字符串，颜色等 -->
+     <!-- 在开发完成后迁移到对应文件内，这样就不会过于混乱 ，避免冗余-->
+
+     <!-- <color name="test_tests">#FFBABAFF</color> -->
+     <string name="title_test">ทดสอบ</string>
+
+
+     <string name="title_template_description_bottomnavactivity">กิจกรรมมุมมองการนำทางด้านล่าง</string>
+
+     <string name="hint_android_ndk_version">เวอร์ชัน Android NDK</string>
+     <string name="hint_android_cmake_version">เวอร์ชัน CMake</string>
+
+
+ <!-- Common Actions -->
+    <string name="action_more">มากกว่า</string>
+    <string name="action_change_theme">เปลี่ยนธีม</string>
+    <string name="title_select_theme">เลือกธีมเทอร์มินัล</string>
+
+    <!-- Context Menu Actions -->
+    <string name="context_menu_select_url_id">เลือก URL</string>
+    <string name="context_menu_share_transcript_id">แบ่งปันการถอดเสียง</string>
+    <string name="context_menu_reset_terminal_id">รีเซ็ตเทอร์มินัล</string>
+    <string name="context_menu_kill_process_id">ยุติกระบวนการ %0</string>
+    <string name="context_menu_toggle_keep_screen_on">เปิดหน้าจอไว้</string>
+    <string name="context_menu_help_id">เปิดความช่วยเหลือ</string>
+    <string name="context_menu_report_id">คำถามคำติชม</string>
+
+    <!-- Tab Management Actions -->
+    <string name="action_close_tab">ปิด</string>
+    <string name="action_close_other_sessions">ปิดเซสชันอื่นๆ</string>
+    <string name="action_close_other_tabs">ปิดอื่นๆ</string>
+    <string name="action_close_all_sessions">ปิดเซสชันทั้งหมด</string>
+    <string name="action_close_all_tabs">ปิดทั้งหมด</string>
+    <string name="action_rename_session">เปลี่ยนชื่อเซสชัน</string>
+    <string name="action_close_session">ปิดเซสชัน</string>
+
+
+    <!-- 终端会话相关 -->
+    <string name="dialog_title_run_command">ดำเนินการคำสั่งเทอร์มินัล</string>
+    <string name="dialog_hint_run_command">ป้อนคำสั่งที่จะดำเนินการในเซสชันเทอร์มินัลปัจจุบัน</string>
+    <string name="hint_enter_command">ตัวอย่างเช่น: apt update, adb install</string>
+    <string name="action_execute">ดำเนินการ</string>
+    <string name="error_empty_command">คำสั่งไม่สามารถเว้นว่างได้ โปรดป้อนคำสั่งที่ถูกต้อง</string>
+    
+    <string name="action_drag">ลาก</string>
+   
+    <!-- 会话状态提示 -->
+    <string name="session_status_finished">สิ้นสุดแล้ว (รหัสออก: %d)</string>
+    <string name="session_status_running">运行中</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="action_menu">เมนูการทำงาน</string>
+    <string name="terminal_icon">ไอคอนเทอร์มินัล</string>
+    <string name="close_tab">ปิดแท็บ</string>
+
+
+    <!-- Lottie Animation Preferences -->
+    <string name="pref_lottie_animation_title">เริ่มภาพเคลื่อนไหว</string>
+    <string name="pref_lottie_animation_summary">ปรับแต่งภาพเคลื่อนไหวที่แสดงเมื่อแอปเริ่มทำงาน</string>
+    <string name="action_import">นำเข้า</string>
+    <string name="action_export">ส่งออก</string>
+    <string name="import_success">นำเข้าสำเร็จ!</string>
+    <string name="import_failed">การนำเข้าล้มเหลว: %s</string>
+    <string name="export_success_to">ส่งออกไปยัง: %s สำเร็จแล้ว</string>
+    <string name="export_failed">การส่งออกล้มเหลว: %s</string>
+    <string name="error_file_picker">ไม่สามารถเปิดตัวเลือกไฟล์ได้: %s</string>
+    <string name="error_loading_animation">การโหลดภาพเคลื่อนไหวล้มเหลว: %s</string>
+    <string name="no_animations_to_export">ไม่มีภาพเคลื่อนไหวที่กำหนดเองที่จะส่งออก</string>
+    <string name="error_file_not_found">ไม่พบไฟล์: %s</string>
+    <string name="animation_set_to">ภาพเคลื่อนไหวได้รับการตั้งค่าเป็น: %s</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</resources>

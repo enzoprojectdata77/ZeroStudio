@@ -1,3 +1,7 @@
+/*
+ *  @author android_zero
+ */
+
 package com.itsaky.androidide.fragments
 
 import android.content.Intent
@@ -5,253 +9,336 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.viewModels
-import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.itsaky.androidide.activities.MainActivity
 import com.itsaky.androidide.activities.PreferencesActivity
 import com.itsaky.androidide.activities.TerminalActivity
-import com.itsaky.androidide.adapters.MainActionsListAdapter
-import com.itsaky.androidide.app.BaseApplication
-import com.itsaky.androidide.app.BaseIDEActivity
-import com.itsaky.androidide.common.databinding.LayoutDialogProgressBinding
-import com.itsaky.androidide.databinding.FragmentMainBinding
 import com.itsaky.androidide.models.MainScreenAction
-import com.itsaky.androidide.preferences.databinding.LayoutDialogTextInputBinding
-import com.itsaky.androidide.resources.R.string
-import com.itsaky.androidide.tasks.runOnUiThread
-import com.itsaky.androidide.utils.DialogUtils
-import com.itsaky.androidide.utils.Environment
-import com.itsaky.androidide.utils.flashError
-import com.itsaky.androidide.utils.flashSuccess
+import com.itsaky.androidide.resources.R
 import com.itsaky.androidide.viewmodel.MainViewModel
-import com.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-// import org.eclipse.jgit.api.Git
-// import org.eclipse.jgit.lib.ProgressMonitor
-import org.slf4j.LoggerFactory
+import com.itsaky.androidide.utils.*
 import java.io.File
-import java.util.concurrent.CancellationException
 import com.itsaky.androidide.fragments.git.function.*
 
 class MainFragment : BaseFragment() {
 
-  private val viewModel by viewModels<MainViewModel>(
-    ownerProducer = { requireActivity() })
-  private var binding: FragmentMainBinding? = null
+    private val viewModel by viewModels<MainViewModel>(ownerProducer = { requireActivity() })
 
-  companion object {
+    // 使用 Compose State 管理历史列表，确保数据变化时 UI 自动刷新
+    private val recentProjectsState = mutableStateListOf<ProjectHistory>()
 
-    private val log = LoggerFactory.getLogger(MainFragment::class.java)
-  }
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // 初始化时加载一次历史记录
+        refreshHistory()
 
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-    savedInstanceState: Bundle?
-  ): View {
-    binding = FragmentMainBinding.inflate(inflater, container, false)
-    return binding!!.root
-  }
-
-  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-
-    val actions = MainScreenAction.all().also { actions ->
-      val onClick = { action: MainScreenAction, _: View ->
-        when (action.id) {
-          MainScreenAction.ACTION_CREATE_PROJECT -> showCreateProject()
-          MainScreenAction.ACTION_OPEN_PROJECT -> pickDirectory()
-          MainScreenAction.ACTION_CLONE_REPO -> cloneGitRepo()
-          MainScreenAction.ACTION_OPEN_TERMINAL -> startActivity(
-            Intent(requireActivity(), TerminalActivity::class.java))
-
-          MainScreenAction.ACTION_PREFERENCES -> gotoPreferences()
-          // MainScreenAction.ACTION_DONATE -> BaseApplication.getBaseInstance().openDonationsPage()
-          MainScreenAction.ACTION_DOCS -> BaseApplication.getBaseInstance().openDocs()
-        }
-      }
-
-      actions.forEach { action ->
-        action.onClick = onClick
-
-        if (action.id == MainScreenAction.ACTION_OPEN_TERMINAL) {
-          action.onLongClick = { _: MainScreenAction, _: View ->
-            val intent = Intent(requireActivity(), TerminalActivity::class.java).apply {
-              putExtra(TERMUX_ACTIVITY.EXTRA_FAILSAFE_SESSION, true)
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                MaterialTheme {
+                    Surface(color = Color.White, modifier = Modifier.fillMaxSize()) {
+                        ZeroStudioMainLayout()
+                    }
+                }
             }
-            startActivity(intent)
-            true
-          }
         }
-      }
     }
 
-    binding!!.actions.adapter = MainActionsListAdapter(actions)
-  }
+    /**
+     * 刷新历史记录数据
+     */
+    private fun refreshHistory() {
+        val history = RecentProjectsManager.getHistory(requireContext())
+        recentProjectsState.clear()
+        recentProjectsState.addAll(history)
+    }
 
-  override fun onDestroyView() {
-    super.onDestroyView()
-    binding = null
-  }
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun ZeroStudioMainLayout() {
+        val scrollState = rememberScrollState()
 
-  private fun pickDirectory() {
-    pickDirectory(this::openProject)
-  }
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text("ZeroStudio", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp) },
+                    navigationIcon = {
+                        IconButton(onClick = { /* TODO: 关联 MainActivity 侧滑菜单 */ }) {
+                            Icon(Icons.Default.Menu, "Menu")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { /* TODO: 全局搜索 */ }) {
+                            Icon(Icons.Default.Search, "Search")
+                        }
+                        IconButton(onClick = { /* TODO: 个人中心 */ }) {
+                            Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(Color(0xFFF0F0F0))) {
+                                Icon(Icons.Outlined.Person, "User", modifier = Modifier.align(Alignment.Center))
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+                )
+            },
+            bottomBar = {
+                NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
+                    NavigationBarItem(selected = true, onClick = {}, icon = { Icon(Icons.Default.Home, null) }, label = { Text("首页") })
+                    NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.History, null) }, label = { Text("历程") })
+                    NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Build, null) }, label = { Text("工具") })
+                    NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Person, null) }, label = { Text("我的") })
+                }
+            }
+        ) { padding ->
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                // 左侧浮动轨道 (48dp 宽)
+                FloatingSideRail()
 
-  private fun showCreateProject() {
-    viewModel.setScreen(MainViewModel.SCREEN_TEMPLATE_LIST)
-  }
+                // 主内容区 (偏移 72dp 以躲避轨道)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(start = 72.dp, end = 16.dp, top = 12.dp)
+                ) {
+                    // 快速开始渐变卡片
+                    QuickStartGradientCard()
+                    
+                    Spacer(modifier = Modifier.height(28.dp))
 
-  fun openProject(root: File) {
-    (requireActivity() as MainActivity).openProject(root)
-  }
-   
-   private fun cloneGitRepo() {
-    // 弹出 ZeroCloneDialogBottomSheetFragment
-    // repoId 传空字符串表示新建（克隆）模式
-    ZeroCloneDialogBottomSheetFragment.newInstance(repoId = "")
-        .show(childFragmentManager, "CloneBottomSheet")
-  }
-  
-  //旧版克隆，已归档
-  // private fun cloneGitRepo() {
-    // val builder = DialogUtils.newMaterialDialogBuilder(requireContext())
-    // val binding = LayoutDialogTextInputBinding.inflate(layoutInflater)
-    // binding.name.setHint(string.git_clone_repo_url)
+                    // 最近项目与智能缓存
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        // 左列：项目列表
+                        Column(modifier = Modifier.weight(1.5f)) {
+                            SectionTitle("最近项目")
+                            if (recentProjectsState.isEmpty()) {
+                                Text("暂无历史项目", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(8.dp))
+                            } else {
+                                recentProjectsState.forEach { project ->
+                                    RecentProjectItem(project)
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.width(12.dp))
+                        
+                        // 右列：智能预存
+                        Column(modifier = Modifier.weight(0.8f)) {
+                            SectionTitle("智能预存")
+                            SmartCacheItem("Centiflor", "C", Color(0xFF009688))
+                            SmartCacheItem("AlphaCache", "P", Color(0xFF673AB7))
+                        }
+                    }
 
-    // builder.setView(binding.root)
-    // builder.setTitle(string.git_clone_repo)
-    // builder.setCancelable(true)
-    // builder.setPositiveButton(string.git_clone) { dialog, _ ->
-      // dialog.dismiss()
-      // val url = binding.name.editText?.text?.toString()
-      // doClone(url)
-    // }
-    // builder.setNegativeButton(android.R.string.cancel, null)
-    // builder.show()
-  // }
+                    Spacer(modifier = Modifier.height(28.dp))
+                    
+                    // 工具与服务
+                    SectionTitle("工具与服务")
+                    ToolsServiceGrid()
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+        }
+    }
 
-  // private fun doClone(repo: String?) {
-    // if (repo.isNullOrBlank()) {
-      // log.warn("Unable to clone repo. Invalid repo URL : {}'", repo)
-      // return
-    // }
+    @Composable
+    private fun QuickStartGradientCard() {
+        val cardGradient = Brush.linearGradient(
+            colors = listOf(Color(0xFF3F1D9B), Color(0xFF00A79D)),
+            start = Offset(0f, 0f),
+            end = Offset(1000f, 1000f)
+        )
 
-    // var url = repo.trim()
-    // if (!url.endsWith(".git")) {
-      // url += ".git"
-    // }
+        Card(
+            modifier = Modifier.fillMaxWidth().height(180.dp),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(4.dp)
+        ) {
+            Box(modifier = Modifier.fillMaxSize().background(cardGradient).padding(24.dp)) {
+                Column {
+                    Text("快速开始", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        QuickActionButton(Icons.Default.Add, "新建项目") {
+                            viewModel.setScreen(MainViewModel.SCREEN_TEMPLATE_LIST)
+                        }
+                        QuickActionButton(Icons.Default.FolderOpen, "打开项目") {
+                            pickDirectory()
+                        }
+                        QuickActionButton(Icons.Default.Share, "克隆仓库") {
+                            cloneGitRepo()
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-    // val builder = DialogUtils.newMaterialDialogBuilder(requireContext())
-    // val binding = LayoutDialogProgressBinding.inflate(layoutInflater)
+    @Composable
+    private fun QuickActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+        Surface(
+            onClick = onClick,
+            color = Color.White.copy(alpha = 0.2f),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            }
+        }
+    }
 
-    // binding.message.visibility = View.VISIBLE
+    @Composable
+    private fun RecentProjectItem(project: ProjectHistory) {
+        Surface(
+            onClick = { openProject(File(project.path)) },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+            color = Color(0xFFF8F9FB),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(42.dp).clip(CircleShape).background(project.color), contentAlignment = Alignment.Center) {
+                    Text(project.letter, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(project.name, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF212121))
+                    Text(project.path, fontSize = 10.sp, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Icon(Icons.Default.ChevronRight, null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
+            }
+        }
+    }
 
-    // builder.setTitle(string.git_clone_in_progress)
-    // builder.setMessage(url)
-    // builder.setView(binding.root)
-    // builder.setCancelable(false)
+    @Composable
+    private fun SmartCacheItem(name: String, letter: String, color: Color) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            color = Color(0xFFF8F9FB),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(color), contentAlignment = Alignment.Center) {
+                    Text(letter, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(name, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+            }
+        }
+    }
 
-    // val repoName = url.substringAfterLast('/').substringBeforeLast(".git")
-    // val targetDir = File(Environment.PROJECTS_DIR, repoName)
+    @Composable
+    private fun ToolsServiceGrid() {
+        val tools = listOf(
+            Icons.Default.Code to Color(0xFFE1BEE7),
+            Icons.Default.Terminal to Color(0xFFC8E6C9),
+            Icons.Default.Construction to Color(0xFFBBDEFB),
+            Icons.Default.Settings to Color(0xFFFFCCBC),
+            Icons.Default.CloudSync to Color(0xFFD1C4E9),
+            Icons.Default.BugReport to Color(0xFFFFF9C4)
+        )
 
-    // val progress = GitCloneProgressMonitor(binding.progress, binding.message)
-    // val coroutineScope = (activity as? BaseIDEActivity?)?.activityScope ?: viewLifecycleScope
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            items(tools) { (icon, color) ->
+                Surface(modifier = Modifier.size(56.dp), color = color, shape = RoundedCornerShape(16.dp)) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(icon, null, tint = Color.Black.copy(alpha = 0.6f), modifier = Modifier.size(26.dp))
+                    }
+                }
+            }
+        }
+    }
 
-    // var getDialog: Function0<AlertDialog?>? = null
+    @Composable
+    private fun FloatingSideRail() {
+        val railBrush = Brush.verticalGradient(listOf(Color(0xFF311B92), Color(0xFF009688)))
+        
+        Column(
+            modifier = Modifier
+                .padding(start = 12.dp, top = 24.dp)
+                .width(48.dp)
+                .wrapContentHeight()
+                .clip(RoundedCornerShape(24.dp))
+                .background(railBrush)
+                .padding(vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(28.dp)
+        ) {
+            RailIcon(Icons.Default.Terminal) { 
+                startActivity(Intent(requireActivity(), TerminalActivity::class.java))
+            }
+            RailIcon(Icons.Default.Settings) { 
+                startActivity(Intent(requireActivity(), PreferencesActivity::class.java))
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+            RailIcon(Icons.Default.Folder) { pickDirectory() }
+            RailIcon(Icons.Default.Update) { /* TODO */ }
+        }
+    }
 
-    // val cloneJob = coroutineScope.launch(Dispatchers.IO) {
+    @Composable
+    private fun RailIcon(icon: ImageVector, onClick: () -> Unit) {
+        Icon(icon, null, tint = Color.White, modifier = Modifier.size(24.dp).clickable { onClick() })
+    }
 
-      // val git = try {
-        // Git.cloneRepository()
-          // .setURI(url)
-          // .setDirectory(targetDir)
-          // .setProgressMonitor(progress)
-          // .call()
-      // } catch (err: Throwable) {
-        // if (!progress.isCancelled) {
-          // err.printStackTrace()
-          // withContext(Dispatchers.Main) {
-            // getDialog?.invoke()?.also { if (it.isShowing) it.dismiss() }
-            // showCloneError(err)
-          // }
-        // }
-        // null
-      // }
+    @Composable
+    private fun SectionTitle(text: String) {
+        Text(text, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF333333), modifier = Modifier.padding(vertical = 12.dp))
+    }
 
-      // try {
-        // git?.close()
-      // } finally {
-        // val success = git != null
-        // withContext(Dispatchers.Main) {
-          // getDialog?.invoke()?.also { dialog ->
-            // if (dialog.isShowing) dialog.dismiss()
-            // if (success) flashSuccess(string.git_clone_success)
-          // }
-        // }
-      // }
-    // }
 
-    // builder.setPositiveButton(android.R.string.cancel) { iface, _ ->
-      // iface.dismiss()
-      // progress.cancel()
-      // cloneJob.cancel(CancellationException("Cancelled by user"))
-    // }
+    private fun pickDirectory() {
+        pickDirectory(this::openProject)
+    }
 
-    // val dialog = builder.show()
-    // getDialog = { dialog }
-  // }
+    /**
+     * 打开项目并记录历史
+     */
+    fun openProject(root: File) {
+        // 持久化记录
+        RecentProjectsManager.addProject(requireContext(), root)
+        
+        // 刷新 UI 状态
+        refreshHistory()
+        
+        // 启动编辑器
+        (requireActivity() as MainActivity).openProject(root)
+    }
 
-  // private fun showCloneError(error: Throwable?) {
-    // if (error == null) {
-      // flashError(string.git_clone_failed)
-      // return
-    // }
+    private fun cloneGitRepo() {
+        ZeroCloneDialogBottomSheetFragment.newInstance(repoId = "")
+            .show(childFragmentManager, "CloneBottomSheet")
+    }
 
-    // val builder = DialogUtils.newMaterialDialogBuilder(requireContext())
-    // builder.setTitle(string.git_clone_failed)
-    // builder.setMessage(error.localizedMessage)
-    // builder.setPositiveButton(android.R.string.ok, null)
-    // builder.show()
-  // }
-
-  private fun gotoPreferences() {
-    startActivity(Intent(requireActivity(), PreferencesActivity::class.java))
-  }
-
-  // TODO(itsaky) : Improve this implementation
-  // class GitCloneProgressMonitor(val progress: LinearProgressIndicator,
-    // val message: TextView
-  // ) : ProgressMonitor {
-
-    // private var cancelled = false
-
-    // fun cancel() {
-      // cancelled = true
-    // }
-
-    // override fun start(totalTasks: Int) {
-      // runOnUiThread { progress.max = totalTasks }
-    // }
-
-    // override fun beginTask(title: String?, totalWork: Int) {
-      // runOnUiThread { message.text = title }
-    // }
-
-    // override fun update(completed: Int) {
-      // runOnUiThread { progress.progress = completed }
-    // }
-
-    // override fun showDuration(enabled: Boolean) {
-      // // no-op
-    // }
-
-    // override fun endTask() {}
-
-    // override fun isCancelled(): Boolean {
-      // return cancelled || Thread.currentThread().isInterrupted
-    // }
-  // }
+    override fun onDestroyView() {
+        super.onDestroyView()
+    }
 }

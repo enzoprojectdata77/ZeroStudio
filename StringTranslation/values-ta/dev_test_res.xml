@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <!-- 关于：本xml用于开发阶段的resources资源统一存放，比如字符串，颜色等 -->
+     <!-- 在开发完成后迁移到对应文件内，这样就不会过于混乱 ，避免冗余-->
+
+     <!-- <color name="test_tests">#FFBABAFF</color> -->
+     <string name="title_test">சோதனை</string>
+
+
+     <string name="title_template_description_bottomnavactivity">கீழே வழிசெலுத்தல் பார்வை செயல்பாடு</string>
+
+     <string name="hint_android_ndk_version">Android NDK பதிப்பு</string>
+     <string name="hint_android_cmake_version">CMake பதிப்பு</string>
+
+
+ <!-- Common Actions -->
+    <string name="action_more">மேலும்</string>
+    <string name="action_change_theme">தீம் மாற</string>
+    <string name="title_select_theme">டெர்மினல் தீம் ஒன்றைத் தேர்ந்தெடுக்கவும்</string>
+
+    <!-- Context Menu Actions -->
+    <string name="context_menu_select_url_id">URL ஐத் தேர்ந்தெடுக்கவும்</string>
+    <string name="context_menu_share_transcript_id">டிரான்ஸ்கிரிப்டைப் பகிரவும்</string>
+    <string name="context_menu_reset_terminal_id">முனையத்தை மீட்டமை</string>
+    <string name="context_menu_kill_process_id">செயல்முறை% 0</string>
+    <string name="context_menu_toggle_keep_screen_on">திரையை இயக்கவும்</string>
+    <string name="context_menu_help_id">உதவியைத் திறக்கவும்</string>
+    <string name="context_menu_report_id">பின்னூட்டக் கேள்வி</string>
+
+    <!-- Tab Management Actions -->
+    <string name="action_close_tab">மூடல்</string>
+    <string name="action_close_other_sessions">மற்ற அமர்வுகளை மூடு</string>
+    <string name="action_close_other_tabs">மற்றதை மூடு</string>
+    <string name="action_close_all_sessions">அனைத்து அமர்வுகளையும் மூடு</string>
+    <string name="action_close_all_tabs">அனைத்தையும் மூடு</string>
+    <string name="action_rename_session">அமர்வுக்கு மறுபெயரிடவும்</string>
+    <string name="action_close_session">அமர்வை மூடு</string>
+
+
+    <!-- 终端会话相关 -->
+    <string name="dialog_title_run_command">டெர்மினல் கட்டளையை இயக்கவும்</string>
+    <string name="dialog_hint_run_command">தற்போதைய டெர்மினல் அமர்வில் செயல்படுத்த வேண்டிய கட்டளையை உள்ளிடவும்</string>
+    <string name="hint_enter_command">உதாரணமாக: apt update, adb நிறுவல்</string>
+    <string name="action_execute">செயல்படுத்த</string>
+    <string name="error_empty_command">கட்டளை காலியாக இருக்கக்கூடாது, சரியான கட்டளையை உள்ளிடவும்</string>
+    
+    <string name="action_drag">இழுக்கவும்</string>
+   
+    <!-- 会话状态提示 -->
+    <string name="session_status_finished">முடிந்தது (வெளியேறு குறியீடு: %d)</string>
+    <string name="session_status_running">ஓடுகிறது</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="action_menu">செயல்பாட்டு மெனு</string>
+    <string name="terminal_icon">முனைய ஐகான்</string>
+    <string name="close_tab">தாவலை மூடவும்</string>
+
+
+    <!-- Lottie Animation Preferences -->
+    <string name="pref_lottie_animation_title">அனிமேஷனைத் தொடங்கவும்</string>
+    <string name="pref_lottie_animation_summary">பயன்பாடு தொடங்கும் போது காட்டப்படும் அனிமேஷனைத் தனிப்பயனாக்குங்கள்</string>
+    <string name="action_import">இறக்குமதி</string>
+    <string name="action_export">ஏற்றுமதி</string>
+    <string name="import_success">இறக்குமதி வெற்றி!</string>
+    <string name="import_failed">இறக்குமதி தோல்வி: %s</string>
+    <string name="export_success_to">%sக்கு வெற்றிகரமாக ஏற்றுமதி செய்யப்பட்டது</string>
+    <string name="export_failed">ஏற்றுமதி தோல்வி: %s</string>
+    <string name="error_file_picker">கோப்பு தேர்வியைத் திறக்க முடியவில்லை: %s</string>
+    <string name="error_loading_animation">அனிமேஷன் ஏற்றுவதில் தோல்வி: %s</string>
+    <string name="no_animations_to_export">ஏற்றுமதி செய்ய தனிப்பயன் அனிமேஷன்கள் இல்லை</string>
+    <string name="error_file_not_found">கோப்பு கிடைக்கவில்லை: %s</string>
+    <string name="animation_set_to">அனிமேஷன் அமைக்கப்பட்டுள்ளது: %s</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</resources>

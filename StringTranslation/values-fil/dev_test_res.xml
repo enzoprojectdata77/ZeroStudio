@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <!-- 关于：本xml用于开发阶段的resources资源统一存放，比如字符串，颜色等 -->
+     <!-- 在开发完成后迁移到对应文件内，这样就不会过于混乱 ，避免冗余-->
+
+     <!-- <color name="test_tests">#FFBABAFF</color> -->
+     <string name="title_test">pagsubok</string>
+
+
+     <string name="title_template_description_bottomnavactivity">Aktibidad sa view ng nabigasyon sa ibaba</string>
+
+     <string name="hint_android_ndk_version">Bersyon ng Android NDK</string>
+     <string name="hint_android_cmake_version">Bersyon ng CMake</string>
+
+
+ <!-- Common Actions -->
+    <string name="action_more">Higit pa</string>
+    <string name="action_change_theme">lumipat ng tema</string>
+    <string name="title_select_theme">Pumili ng terminal na tema</string>
+
+    <!-- Context Menu Actions -->
+    <string name="context_menu_select_url_id">Pumili ng URL</string>
+    <string name="context_menu_share_transcript_id">Ibahagi ang transcript</string>
+    <string name="context_menu_reset_terminal_id">i-reset ang terminal</string>
+    <string name="context_menu_kill_process_id">Wakasan ang proseso %0</string>
+    <string name="context_menu_toggle_keep_screen_on">Panatilihing naka-on ang screen</string>
+    <string name="context_menu_help_id">Buksan ang tulong</string>
+    <string name="context_menu_report_id">Tanong ng feedback</string>
+
+    <!-- Tab Management Actions -->
+    <string name="action_close_tab">pagsasara</string>
+    <string name="action_close_other_sessions">Isara ang iba pang mga session</string>
+    <string name="action_close_other_tabs">Isara ang iba</string>
+    <string name="action_close_all_sessions">Isara ang lahat ng session</string>
+    <string name="action_close_all_tabs">Isara lahat</string>
+    <string name="action_rename_session">Palitan ang pangalan ng session</string>
+    <string name="action_close_session">Isara ang session</string>
+
+
+    <!-- 终端会话相关 -->
+    <string name="dialog_title_run_command">Isagawa ang terminal command</string>
+    <string name="dialog_hint_run_command">Ipasok ang command na isasagawa sa kasalukuyang terminal session</string>
+    <string name="hint_enter_command">Halimbawa: apt update, adb install</string>
+    <string name="action_execute">ipatupad</string>
+    <string name="error_empty_command">Hindi maaaring walang laman ang utos, mangyaring maglagay ng wastong utos</string>
+    
+    <string name="action_drag">I-drag</string>
+   
+    <!-- 会话状态提示 -->
+    <string name="session_status_finished">Natapos na (exit code: %d)</string>
+    <string name="session_status_running">Tumatakbo</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="action_menu">Menu ng operasyon</string>
+    <string name="terminal_icon">icon ng terminal</string>
+    <string name="close_tab">isara ang tab</string>
+
+
+    <!-- Lottie Animation Preferences -->
+    <string name="pref_lottie_animation_title">Simulan ang animation</string>
+    <string name="pref_lottie_animation_summary">I-customize ang animation na ipinapakita kapag nagsimula ang app</string>
+    <string name="action_import">import</string>
+    <string name="action_export">I-export</string>
+    <string name="import_success">Matagumpay ang pag-import!</string>
+    <string name="import_failed">Nabigo ang pag-import: %s</string>
+    <string name="export_success_to">Matagumpay na na-export sa: %s</string>
+    <string name="export_failed">Nabigo ang pag-export: %s</string>
+    <string name="error_file_picker">Hindi mabuksan ang tagapili ng file: %s</string>
+    <string name="error_loading_animation">Nabigo ang pag-load ng animation: %s</string>
+    <string name="no_animations_to_export">Walang mga custom na animation na ie-export</string>
+    <string name="error_file_not_found">Hindi nahanap ang file: %s</string>
+    <string name="animation_set_to">Ang animation ay naitakda sa: %s</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</resources>
