@@ -1,0 +1,136 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.idea.wizard.template.impl
+
+import com.android.tools.idea.wizard.template.Template
+import com.android.tools.idea.wizard.template.WizardTemplateProvider
+import com.android.tools.idea.wizard.template.impl.activities.aiGlassesActivity.aiGlassesActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.aiStarter.aiStarterTemplate
+import com.android.tools.idea.wizard.template.impl.activities.androidTVActivity.androidTVActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.archStarterActivity.archStarterActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.basicActivity.basicActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.bottomNavigationActivity.bottomNavigationActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.composeActivityMaterial3.composeActivityMaterial3Template
+import com.android.tools.idea.wizard.template.impl.activities.composeNavigationUiActivityMaterial3.composeNavigationUiActivityMaterial3Template
+import com.android.tools.idea.wizard.template.impl.activities.composeTvActivity.composeTvActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.composeWearActivity.composeWearActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.composeWearActivity.composeWearActivityWithTileAndComplicationTemplate
+import com.android.tools.idea.wizard.template.impl.activities.cppEmptyActivity.cppEmptyActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.cppGameActivity.cppGameActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.emptyActivity.emptyActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.firebaseAiLogicActivity.firebaseAiLogicActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.fullscreenActivity.fullscreenActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.googleAdMobAdsActivity.googleAdMobAdsActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.googleMapsActivity.googleMapsActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.googlePayActivity.googlePayActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.googleWalletActivity.googleWalletActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.loginActivity.loginActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.navigationDrawerActivity.navigationDrawerActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.primaryDetailFlow.primaryDetailFlowTemplate
+import com.android.tools.idea.wizard.template.impl.activities.responsiveActivity.responsiveActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.scrollActivity.scrollActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.settingsActivity.settingsActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.tabbedActivity.tabbedActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.viewModelActivity.viewModelActivityTemplate
+import com.android.tools.idea.wizard.template.impl.activities.xrActivity.xrActivityTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.blankFragment.blankFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.fullscreenFragment.fullscreenFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.googleAdMobAdsFragment.googleAdMobAdsFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.googleMapsFragment.googleMapsFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.listFragment.listFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.loginFragment.loginFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.modalBottomSheet.modalBottomSheetTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.scrollFragment.scrollFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.settingsFragment.settingsFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.fragments.viewModelFragment.viewModelFragmentTemplate
+import com.android.tools.idea.wizard.template.impl.other.androidManifest.androidManifestTemplate
+import com.android.tools.idea.wizard.template.impl.other.appWidget.appWidgetTemplate
+import com.android.tools.idea.wizard.template.impl.other.automotiveMediaService.automotiveMediaServiceTemplate
+import com.android.tools.idea.wizard.template.impl.other.automotiveMessagingService.automotiveMessagingServiceTemplate
+import com.android.tools.idea.wizard.template.impl.other.broadcastReceiver.broadcastReceiverTemplate
+import com.android.tools.idea.wizard.template.impl.other.contentProvider.contentProviderTemplate
+import com.android.tools.idea.wizard.template.impl.other.customView.customViewTemplate
+import com.android.tools.idea.wizard.template.impl.other.emptyCalApp.emptyCalAppTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.aidlFile.aidlFileTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.layoutResourceFile.layoutResourceFileTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.shortcutResourceFile.shortcutsResourceFileTemplate
+import com.android.tools.idea.wizard.template.impl.other.files.valueResourceFile.valueResourceFileTemplate
+import com.android.tools.idea.wizard.template.impl.other.folders.folderTemplates
+import com.android.tools.idea.wizard.template.impl.other.intentService.intentServiceTemplate
+import com.android.tools.idea.wizard.template.impl.other.service.serviceTemplate
+import com.android.tools.idea.wizard.template.impl.other.sliceProvider.sliceProviderTemplate
+import com.android.tools.idea.wizard.template.impl.other.wearDeclarativeWatchFace.wearDeclarativeWatchFaceTemplate
+
+/** Implementation of the Android Wizard Template plugin extension point. */
+class WizardTemplateProviderImpl : WizardTemplateProvider() {
+  override fun getTemplates(): List<Template> =
+    listOf(
+      composeActivityMaterial3Template,
+      firebaseAiLogicActivityTemplate,
+      composeNavigationUiActivityMaterial3Template,
+      archStarterActivityTemplate,
+      aiStarterTemplate,
+      xrActivityTemplate,
+      aiGlassesActivityTemplate,
+      androidTVActivityTemplate,
+      basicActivityTemplate,
+      composeWearActivityWithTileAndComplicationTemplate,
+      composeWearActivityTemplate,
+      composeTvActivityTemplate,
+      bottomNavigationActivityTemplate,
+      emptyActivityTemplate,
+      fullscreenActivityTemplate,
+      googleAdMobAdsActivityTemplate,
+      googleMapsActivityTemplate,
+      googlePayActivityTemplate,
+      googleWalletActivityTemplate,
+      loginActivityTemplate,
+      primaryDetailFlowTemplate,
+      navigationDrawerActivityTemplate,
+      responsiveActivityTemplate,
+      settingsActivityTemplate,
+      scrollActivityTemplate,
+      tabbedActivityTemplate,
+      viewModelActivityTemplate,
+      cppGameActivityTemplate,
+      cppEmptyActivityTemplate, // Keep last as per UX design
+      blankFragmentTemplate,
+      fullscreenFragmentTemplate,
+      googleAdMobAdsFragmentTemplate,
+      googleMapsFragmentTemplate,
+      listFragmentTemplate,
+      loginFragmentTemplate,
+      modalBottomSheetTemplate,
+      settingsFragmentTemplate,
+      scrollFragmentTemplate,
+      viewModelFragmentTemplate,
+      androidManifestTemplate,
+      appWidgetTemplate,
+      automotiveMediaServiceTemplate,
+      automotiveMessagingServiceTemplate,
+      emptyCalAppTemplate,
+      broadcastReceiverTemplate,
+      contentProviderTemplate,
+      customViewTemplate,
+      intentServiceTemplate,
+      serviceTemplate,
+      sliceProviderTemplate,
+      wearDeclarativeWatchFaceTemplate,
+    ) + folderTemplates + fileTemplates
+
+  private val fileTemplates = listOf(aidlFileTemplate, layoutResourceFileTemplate, shortcutsResourceFileTemplate, valueResourceFileTemplate)
+}

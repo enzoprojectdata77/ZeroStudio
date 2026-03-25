@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <!-- 关于：本xml用于开发阶段的resources资源统一存放，比如字符串，颜色等 -->
+     <!-- 在开发完成后迁移到对应文件内，这样就不会过于混乱 ，避免冗余-->
+
+     <!-- <color name="test_tests">#FFBABAFF</color> -->
+     <string name="title_test">পরীক্ষা</string>
+
+
+     <string name="title_template_description_bottomnavactivity">নীচের নেভিগেশন দৃশ্য কার্যকলাপ</string>
+
+     <string name="hint_android_ndk_version">অ্যান্ড্রয়েড এনডিকে সংস্করণ</string>
+     <string name="hint_android_cmake_version">CMake সংস্করণ</string>
+
+
+ <!-- Common Actions -->
+    <string name="action_more">আরও</string>
+    <string name="action_change_theme">থিম পরিবর্তন করুন</string>
+    <string name="title_select_theme">একটি টার্মিনাল থিম চয়ন করুন</string>
+
+    <!-- Context Menu Actions -->
+    <string name="context_menu_select_url_id">URL নির্বাচন করুন</string>
+    <string name="context_menu_share_transcript_id">ট্রান্সক্রিপ্ট শেয়ার করুন</string>
+    <string name="context_menu_reset_terminal_id">টার্মিনাল রিসেট করুন</string>
+    <string name="context_menu_kill_process_id">প্রক্রিয়া %0 বন্ধ করুন</string>
+    <string name="context_menu_toggle_keep_screen_on">পর্দা চালু রাখুন</string>
+    <string name="context_menu_help_id">সাহায্য খুলুন</string>
+    <string name="context_menu_report_id">প্রতিক্রিয়া প্রশ্ন</string>
+
+    <!-- Tab Management Actions -->
+    <string name="action_close_tab">বন্ধ</string>
+    <string name="action_close_other_sessions">অন্যান্য সেশন বন্ধ করুন</string>
+    <string name="action_close_other_tabs">অন্য বন্ধ</string>
+    <string name="action_close_all_sessions">সব সেশন বন্ধ</string>
+    <string name="action_close_all_tabs">সব বন্ধ করুন</string>
+    <string name="action_rename_session">সেশনের নাম পরিবর্তন করুন</string>
+    <string name="action_close_session">অধিবেশন বন্ধ করুন</string>
+
+
+    <!-- 终端会话相关 -->
+    <string name="dialog_title_run_command">টার্মিনাল কমান্ড চালান</string>
+    <string name="dialog_hint_run_command">বর্তমান টার্মিনাল সেশনে যে কমান্ডটি কার্যকর করা হবে তা লিখুন</string>
+    <string name="hint_enter_command">যেমন: apt update, adb install</string>
+    <string name="action_execute">বাস্তবায়ন</string>
+    <string name="error_empty_command">কমান্ডটি খালি হতে পারে না, দয়া করে একটি বৈধ কমান্ড লিখুন</string>
+    
+    <string name="action_drag">টেনে আনুন</string>
+   
+    <!-- 会话状态提示 -->
+    <string name="session_status_finished">শেষ হয়েছে (প্রস্থান কোড: %d)</string>
+    <string name="session_status_running">চলছে</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="action_menu">অপারেশন মেনু</string>
+    <string name="terminal_icon">টার্মিনাল আইকন</string>
+    <string name="close_tab">ট্যাব বন্ধ করুন</string>
+
+
+    <!-- Lottie Animation Preferences -->
+    <string name="pref_lottie_animation_title">অ্যানিমেশন শুরু করুন</string>
+    <string name="pref_lottie_animation_summary">অ্যাপটি শুরু হলে প্রদর্শিত অ্যানিমেশন কাস্টমাইজ করুন</string>
+    <string name="action_import">আমদানি</string>
+    <string name="action_export">导出</string>
+    <string name="import_success">আমদানি সফল!</string>
+    <string name="import_failed">আমদানি ব্যর্থ হয়েছে: %s</string>
+    <string name="export_success_to">সফলভাবে রপ্তানি করা হয়েছে: %s</string>
+    <string name="export_failed">রপ্তানি ব্যর্থ হয়েছে: %s</string>
+    <string name="error_file_picker">ফাইল নির্বাচক খুলতে অক্ষম: %s</string>
+    <string name="error_loading_animation">অ্যানিমেশন লোডিং ব্যর্থ হয়েছে: %s৷</string>
+    <string name="no_animations_to_export">রপ্তানি করার জন্য কোনো কাস্টম অ্যানিমেশন নেই</string>
+    <string name="error_file_not_found">ফাইল পাওয়া যায়নি: %s</string>
+    <string name="animation_set_to">অ্যানিমেশন সেট করা হয়েছে: %s</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</resources>

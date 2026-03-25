@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <!-- 关于：本xml用于开发阶段的resources资源统一存放，比如字符串，颜色等 -->
+     <!-- 在开发完成后迁移到对应文件内，这样就不会过于混乱 ，避免冗余-->
+
+     <!-- <color name="test_tests">#FFBABAFF</color> -->
+     <string name="title_test">test</string>
+
+
+     <string name="title_template_description_bottomnavactivity">Vedere de navigare de jos Activitate</string>
+
+     <string name="hint_android_ndk_version">Versiunea Android NDK</string>
+     <string name="hint_android_cmake_version">Versiunea CMake</string>
+
+
+ <!-- Common Actions -->
+    <string name="action_more">Mai mult</string>
+    <string name="action_change_theme">切换主题</string>
+    <string name="title_select_theme">Alegeți o temă de terminal</string>
+
+    <!-- Context Menu Actions -->
+    <string name="context_menu_select_url_id">Selectați adresa URL</string>
+    <string name="context_menu_share_transcript_id">Distribuiți transcrierea</string>
+    <string name="context_menu_reset_terminal_id">resetați terminalul</string>
+    <string name="context_menu_kill_process_id">Terminați procesul %0</string>
+    <string name="context_menu_toggle_keep_screen_on">Ține ecranul aprins</string>
+    <string name="context_menu_help_id">打开帮助</string>
+    <string name="context_menu_report_id">Întrebare de feedback</string>
+
+    <!-- Tab Management Actions -->
+    <string name="action_close_tab">închidere</string>
+    <string name="action_close_other_sessions">Închideți celelalte sesiuni</string>
+    <string name="action_close_other_tabs">Închideți altul</string>
+    <string name="action_close_all_sessions">Închideți toate sesiunile</string>
+    <string name="action_close_all_tabs">Închideți totul</string>
+    <string name="action_rename_session">Redenumiți sesiunea</string>
+    <string name="action_close_session">Închideți sesiunea</string>
+
+
+    <!-- 终端会话相关 -->
+    <string name="dialog_title_run_command">Executați comanda terminalului</string>
+    <string name="dialog_hint_run_command">Introduceți comanda care urmează să fie executată în sesiunea curentă de terminal</string>
+    <string name="hint_enter_command">De exemplu: apt update, adb install</string>
+    <string name="action_execute">implementează</string>
+    <string name="error_empty_command">Comanda nu poate fi goală, vă rugăm să introduceți o comandă validă</string>
+    
+    <string name="action_drag">Trageți</string>
+   
+    <!-- 会话状态提示 -->
+    <string name="session_status_finished">Încheiat (cod de ieșire: %d)</string>
+    <string name="session_status_running">Funcţionare</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="action_menu">Meniul de operare</string>
+    <string name="terminal_icon">pictograma terminalului</string>
+    <string name="close_tab">închide fila</string>
+
+
+    <!-- Lottie Animation Preferences -->
+    <string name="pref_lottie_animation_title">Începeți animația</string>
+    <string name="pref_lottie_animation_summary">Personalizați animația afișată la pornirea aplicației</string>
+    <string name="action_import">导入</string>
+    <string name="action_export">Export</string>
+    <string name="import_success">Import cu succes!</string>
+    <string name="import_failed">Importarea nu a reușit: %s</string>
+    <string name="export_success_to">Exportat cu succes în: %s</string>
+    <string name="export_failed">Export eșuat: %s</string>
+    <string name="error_file_picker">Nu se poate deschide selectorul de fișiere: %s</string>
+    <string name="error_loading_animation">Încărcarea animației nu a reușit: %s</string>
+    <string name="no_animations_to_export">Nu există animații personalizate de exportat</string>
+    <string name="error_file_not_found">Fișierul nu a fost găsit: %s</string>
+    <string name="animation_set_to">Animația a fost setată la: %s</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</resources>

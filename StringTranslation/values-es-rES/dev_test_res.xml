@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <!-- 关于：本xml用于开发阶段的resources资源统一存放，比如字符串，颜色等 -->
+     <!-- 在开发完成后迁移到对应文件内，这样就不会过于混乱 ，避免冗余-->
+
+     <!-- <color name="test_tests">#FFBABAFF</color> -->
+     <string name="title_test">prueba</string>
+
+
+     <string name="title_template_description_bottomnavactivity">Vista de navegación inferior Actividad</string>
+
+     <string name="hint_android_ndk_version">Versión Android NDK</string>
+     <string name="hint_android_cmake_version">Versión CMake</string>
+
+
+ <!-- Common Actions -->
+    <string name="action_more">Más</string>
+    <string name="action_change_theme">cambiar de tema</string>
+    <string name="title_select_theme">Elija un tema de terminal</string>
+
+    <!-- Context Menu Actions -->
+    <string name="context_menu_select_url_id">选择 URL</string>
+    <string name="context_menu_share_transcript_id">Compartir transcripción</string>
+    <string name="context_menu_reset_terminal_id">terminal de reinicio</string>
+    <string name="context_menu_kill_process_id">Terminar el proceso %0</string>
+    <string name="context_menu_toggle_keep_screen_on">Mantenga la pantalla encendida</string>
+    <string name="context_menu_help_id">Abrir ayuda</string>
+    <string name="context_menu_report_id">Pregunta de retroalimentación</string>
+
+    <!-- Tab Management Actions -->
+    <string name="action_close_tab">cierre</string>
+    <string name="action_close_other_sessions">Cerrar otras sesiones</string>
+    <string name="action_close_other_tabs">Cerrar otro</string>
+    <string name="action_close_all_sessions">Cerrar todas las sesiones</string>
+    <string name="action_close_all_tabs">Cerrar todo</string>
+    <string name="action_rename_session">Cambiar nombre de sesión</string>
+    <string name="action_close_session">Cerrar sesión</string>
+
+
+    <!-- 终端会话相关 -->
+    <string name="dialog_title_run_command">Ejecutar comando de terminal</string>
+    <string name="dialog_hint_run_command">Ingrese el comando que se ejecutará en la sesión de terminal actual</string>
+    <string name="hint_enter_command">Por ejemplo: actualización apta, instalación adb</string>
+    <string name="action_execute">执行</string>
+    <string name="error_empty_command">El comando no puede estar vacío, ingrese un comando válido</string>
+    
+    <string name="action_drag">Arrastrar</string>
+   
+    <!-- 会话状态提示 -->
+    <string name="session_status_finished">Finalizado (código de salida: %d)</string>
+    <string name="session_status_running">Correr</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="action_menu">Menú de operación</string>
+    <string name="terminal_icon">icono terminal</string>
+    <string name="close_tab">cerrar pestaña</string>
+
+
+    <!-- Lottie Animation Preferences -->
+    <string name="pref_lottie_animation_title">Iniciar animación</string>
+    <string name="pref_lottie_animation_summary">Personaliza la animación que se muestra cuando se inicia la aplicación.</string>
+    <string name="action_import">importar</string>
+    <string name="action_export">Exportar</string>
+    <string name="import_success">¡Importación exitosa!</string>
+    <string name="import_failed">Error de importación: %s</string>
+    <string name="export_success_to">Exportado exitosamente a: %s</string>
+    <string name="export_failed">Exportación fallida: %s</string>
+    <string name="error_file_picker">No se puede abrir el selector de archivos: %s</string>
+    <string name="error_loading_animation">Error al cargar la animación: %s</string>
+    <string name="no_animations_to_export">No hay animaciones personalizadas para exportar.</string>
+    <string name="error_file_not_found">Archivo no encontrado: %s</string>
+    <string name="animation_set_to">La animación se ha configurado en: %s</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</resources>

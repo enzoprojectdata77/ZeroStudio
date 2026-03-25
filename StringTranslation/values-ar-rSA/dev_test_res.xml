@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <!-- 关于：本xml用于开发阶段的resources资源统一存放，比如字符串，颜色等 -->
+     <!-- 在开发完成后迁移到对应文件内，这样就不会过于混乱 ，避免冗余-->
+
+     <!-- <color name="test_tests">#FFBABAFF</color> -->
+     <string name="title_test">امتحان</string>
+
+
+     <string name="title_template_description_bottomnavactivity">نشاط عرض التنقل السفلي</string>
+
+     <string name="hint_android_ndk_version">نسخة أندرويد NDK</string>
+     <string name="hint_android_cmake_version">نسخة كميك</string>
+
+
+ <!-- Common Actions -->
+    <string name="action_more">أكثر</string>
+    <string name="action_change_theme">تبديل الموضوع</string>
+    <string name="title_select_theme">اختر سمة المحطة</string>
+
+    <!-- Context Menu Actions -->
+    <string name="context_menu_select_url_id">حدد عنوان URL</string>
+    <string name="context_menu_share_transcript_id">مشاركة النص</string>
+    <string name="context_menu_reset_terminal_id">إعادة تعيين المحطة</string>
+    <string name="context_menu_kill_process_id">إنهاء العملية %0</string>
+    <string name="context_menu_toggle_keep_screen_on">أبقِ الشاشة قيد التشغيل</string>
+    <string name="context_menu_help_id">افتح المساعدة</string>
+    <string name="context_menu_report_id">سؤال ردود الفعل</string>
+
+    <!-- Tab Management Actions -->
+    <string name="action_close_tab">إنهاء</string>
+    <string name="action_close_other_sessions">إغلاق الجلسات الأخرى</string>
+    <string name="action_close_other_tabs">إغلاق أخرى</string>
+    <string name="action_close_all_sessions">إغلاق كافة الجلسات</string>
+    <string name="action_close_all_tabs">إغلاق الكل</string>
+    <string name="action_rename_session">إعادة تسمية الجلسة</string>
+    <string name="action_close_session">إغلاق الجلسة</string>
+
+
+    <!-- 终端会话相关 -->
+    <string name="dialog_title_run_command">تنفيذ الأمر الطرفي</string>
+    <string name="dialog_hint_run_command">أدخل الأمر الذي سيتم تنفيذه في الجلسة الطرفية الحالية</string>
+    <string name="hint_enter_command">على سبيل المثال: التحديث المناسب، تثبيت بنك التنمية الآسيوي</string>
+    <string name="action_execute">ينفذ</string>
+    <string name="error_empty_command">لا يمكن أن يكون الأمر فارغًا، الرجاء إدخال أمر صالح</string>
+    
+    <string name="action_drag">يجر</string>
+   
+    <!-- 会话状态提示 -->
+    <string name="session_status_finished">انتهى (رمز الخروج: %d)</string>
+    <string name="session_status_running">جري</string>
+
+    <!-- Accessibility / Content Descriptions -->
+    <string name="action_menu">قائمة التشغيل</string>
+    <string name="terminal_icon">أيقونة المحطة</string>
+    <string name="close_tab">إغلاق علامة التبويب</string>
+
+
+    <!-- Lottie Animation Preferences -->
+    <string name="pref_lottie_animation_title">ابدأ الرسوم المتحركة</string>
+    <string name="pref_lottie_animation_summary">قم بتخصيص الرسوم المتحركة المعروضة عند بدء تشغيل التطبيق</string>
+    <string name="action_import">يستورد</string>
+    <string name="action_export">يصدّر</string>
+    <string name="import_success">تم الاستيراد بنجاح!</string>
+    <string name="import_failed">فشل الاستيراد: %s</string>
+    <string name="export_success_to">تم التصدير بنجاح إلى: %s</string>
+    <string name="export_failed">فشل التصدير: %s</string>
+    <string name="error_file_picker">غير قادر على فتح محدد الملفات: %s</string>
+    <string name="error_loading_animation">فشل تحميل الرسوم المتحركة: %s</string>
+    <string name="no_animations_to_export">لا توجد رسوم متحركة مخصصة للتصدير</string>
+    <string name="error_file_not_found">لم يتم العثور على الملف: %s</string>
+    <string name="animation_set_to">تم ضبط الرسوم المتحركة على: %s</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</resources>
