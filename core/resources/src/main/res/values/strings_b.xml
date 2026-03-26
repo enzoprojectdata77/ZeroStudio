@@ -67,7 +67,7 @@
      <string name="main_clone_repo">Clone Git</string>
      <string name="main_recent_projects">Recent Projects</string>
      <string name="main_frequent_projects">Frequent Projects</string>
-     <string name="main_tools_services">Tools & Services</string>
+     <string name="main_tools_services">Tools &amp; Services</string>
      <string name="main_empty_history">No recent projects</string>
      <string name="main_action_open">Open</string>
      <string name="main_nav_home">Home</string>

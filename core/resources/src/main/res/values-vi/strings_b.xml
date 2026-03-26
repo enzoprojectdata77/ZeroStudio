@@ -51,7 +51,7 @@
      <string name="main_clone_repo">Sao chép Git</string>
      <string name="main_recent_projects">Dự án gần đây</string>
      <string name="main_frequent_projects">Dự án thường dùng</string>
-     <string name="main_tools_services">Công cụ & Dịch vụ</string>
+     <string name="main_tools_services">Công cụ &amp; Dịch vụ</string>
      <string name="main_empty_history">Chưa có dự án lịch sử</string>
      <string name="main_action_open">Mở</string>
      <string name="main_nav_home">Trang chủ</string>

@@ -60,7 +60,7 @@
      <string name="main_clone_repo">Git klonen</string>
      <string name="main_recent_projects">Letzte Projekte</string>
      <string name="main_frequent_projects">Häufige Projekte</string>
-     <string name="main_tools_services">Tools & Dienste</string>
+     <string name="main_tools_services">Tools &amp; Dienste</string>
      <string name="main_empty_history">Keine bisherigen Projekte</string>
      <string name="main_action_open">Öffnen</string>
      <string name="main_nav_home">Startseite</string>

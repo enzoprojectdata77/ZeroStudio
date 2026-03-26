@@ -51,7 +51,7 @@
      <string name="main_clone_repo">Salin Git</string>
      <string name="main_recent_projects">Proyek Terbaru</string>
      <string name="main_frequent_projects">Proyek Sering Digunakan</string>
-     <string name="main_tools_services">Alat & Layanan</string>
+     <string name="main_tools_services">Alat &amp; Layanan</string>
      <string name="main_empty_history">Tidak ada riwayat proyek</string>
      <string name="main_action_open">Buka</string>
      <string name="main_nav_home">Beranda</string>
