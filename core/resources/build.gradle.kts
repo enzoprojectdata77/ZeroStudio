@@ -42,16 +42,16 @@ dependencies {
 // @author android_zero  github：android-zeros
 tasks.register<ZeroAutoTranslateTask>("translateStrings") {
     // 添加翻译的源文件 (使用逗号隔开)
-    sourceXmlPaths = "core/resources/src/main/res/values/strings.xml, core/resources/src/main/res/values/dev_test_res.xml, core/resources/src/main/res/values/strings_git.xml, core/resources/src/main/res/values/termux_app_strings.xml, core/resources/src/main/res/values/termux_shared_strings.xml"
+    sourceXmlPaths = "core/resources/src/main/res/values/dev_test_res.xml"
+    // sourceXmlPaths = "core/resources/src/main/res/values/strings.xml, core/resources/src/main/res/values/dev_test_res.xml, core/resources/src/main/res/values/strings_git.xml, core/resources/src/main/res/values/termux_app_strings.xml, core/resources/src/main/res/values/termux_shared_strings.xml"
 
     // 添加翻译引擎 (轮询负载均衡，提高稳定性和速度)
-    translationEngines = "BING_WEB, GOOGLE_GTX, GOOGLE_WEB, DEEPSEEK"
+    translationEngines = "GOOGLE_GTX, GOOGLE_WEB"
 
     // 设置 DeepSeek 密钥 (请替换为您自己的有效密钥)
-    deepSeekApiKey = "sk-cf9c210045b24eb9b6ea25da5ea44972"
+    deepSeekApiKey = ""
 
-    // 设置并发数 (建议 3-5，避免过快被封 IP)
-    concurrency = 5
+    concurrency = 2
 
     // 设置输出和备份路径
     translationOutputDirName = "StringTranslation"

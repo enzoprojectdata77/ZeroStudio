@@ -351,7 +351,7 @@ class MainFragment : BaseFragment() {
     }
 
     /**
-     * 高性能的项目打开逻辑
+     * 项目打开逻辑
      */
     private fun openProjectAndRecord(root: File) {
         viewLifecycleScope.launch {
