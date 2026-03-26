@@ -2,17 +2,17 @@
 <resources>
 
      <string name="title_template_description_bottomnavactivity">Activité de vue de navigation inférieure</string>
-     <string name="hint_android_ndk_version">Version d'Android NDK</string>
+     <string name="hint_android_ndk_version">Version d\'Android NDK</string>
      <string name="hint_android_cmake_version">Version de CMake</string>
      <string name="action_more">Plus</string>
      <string name="action_change_theme">Changer de thème</string>
      <string name="title_select_theme">Choisir le thème du terminal</string>
-     <string name="context_menu_select_url_id">Sélectionner l'URL</string>
+     <string name="context_menu_select_url_id">Sélectionner l\'URL</string>
      <string name="context_menu_share_transcript_id">Partager la transcription</string>
      <string name="context_menu_reset_terminal_id">Réinitialiser le terminal</string>
-     <string name="context_menu_kill_process_id">Arrêter le processus %0</string>
+     <string name="context_menu_kill_process_id">Arrêter le processus %1$s</string>
      <string name="context_menu_toggle_keep_screen_on">Rester allumé</string>
-     <string name="context_menu_help_id">Ouvrir l'aide</string>
+     <string name="context_menu_help_id">Ouvrir l\'aide</string>
      <string name="context_menu_report_id">Signaler un problème</string>
      <string name="action_close_tab">Fermer</string>
      <string name="action_close_other_sessions">Fermer les autres sessions</string>
@@ -29,18 +29,18 @@
      <string name="action_drag">Glisser</string>
      <string name="session_status_finished">Terminé (code de sortie : %d)</string>
      <string name="session_status_running">En cours</string>
-     <string name="action_menu">Menu d'action</string>
+     <string name="action_menu">Menu d\'action</string>
      <string name="terminal_icon">Icône du terminal</string>
-     <string name="close_tab">Fermer l'onglet</string>
+     <string name="close_tab">Fermer l\'onglet</string>
      <string name="pref_lottie_animation_title">Animation de démarrage</string>
-     <string name="pref_lottie_animation_summary">Personnaliser l'animation au lancement</string>
+     <string name="pref_lottie_animation_summary">Personnaliser l\'animation au lancement</string>
      <string name="action_import">Importer</string>
      <string name="action_export">Exporter</string>
      <string name="import_success">Import réussi !</string>
-     <string name="import_failed">Échec de l'import : %s</string>
+     <string name="import_failed">Échec de l\'import : %s</string>
      <string name="export_success_to">Exporté vers : %s</string>
-     <string name="export_failed">Échec de l'export : %s</string>
-     <string name="error_file_picker">Impossible d'ouvrir le sélecteur : %s</string>
+     <string name="export_failed">Échec de l\'export : %s</string>
+     <string name="error_file_picker">Impossible d\'ouvrir le sélecteur : %s</string>
      <string name="error_loading_animation">Échec du chargement : %s</string>
      <string name="no_animations_to_export">Aucune animation personnalisée à exporter</string>
      <string name="error_file_not_found">Fichier introuvable : %s</string>

@@ -58,7 +58,7 @@
      <string name="main_nav_history">Історія</string>
      <string name="main_nav_tools">Інструменти</string>
      <string name="main_nav_mine">Мої</string>
-     <string name="msg_unimplemented_feature">Функція незабаром з'явиться</string>
+     <string name="msg_unimplemented_feature">Функція незабаром з \'явиться</string>
 
      <string name="title_template_description_tablayout_tabactivity">Активність TabLayout: Компоненти управління багатосторінковими інтерфейсами</string>
      <string name="title_template_description_basicactivity">Демонстрація базової діяльності</string>

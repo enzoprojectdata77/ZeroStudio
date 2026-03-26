@@ -10,7 +10,7 @@
      <string name="context_menu_select_url_id">Seleziona URL</string>
      <string name="context_menu_share_transcript_id">Condividi trascrizione</string>
      <string name="context_menu_reset_terminal_id">Ripristina terminale</string>
-     <string name="context_menu_kill_process_id">Termina processo %0</string>
+     <string name="context_menu_kill_process_id">Termina processo %1$s</string>
      <string name="context_menu_toggle_keep_screen_on">Mantieni schermo acceso</string>
      <string name="context_menu_help_id">Apri aiuto</string>
      <string name="context_menu_report_id">Segnala problema</string>
@@ -33,7 +33,7 @@
      <string name="terminal_icon">Icona terminale</string>
      <string name="close_tab">Chiudi scheda</string>
      <string name="pref_lottie_animation_title">Animazione di avvio</string>
-     <string name="pref_lottie_animation_summary">Personalizza animazione all'avvio dell'app</string>
+     <string name="pref_lottie_animation_summary">Personalizza animazione all\'avvio dell\'app</string>
      <string name="action_import">Importa</string>
      <string name="action_export">Esporta</string>
      <string name="import_success">Importazione riuscita!</string>

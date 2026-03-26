@@ -78,20 +78,15 @@ dependencies {
     implementation(projects.core.actions)
     
     // implementation(fileTree(mapOf("dir" to "lib", "include" to listOf("*.jar", "*.aar"))))
+    implementation(files("libs/CreateKotlincJar-2.1.10.jar"))
     implementation(files("libs/kotlin-compiler-2.2.0.jar"))
-    implementation(files("libs/kotlin-compiler-2.2.0b.jar"))
     
-    
-        implementation(files("libs/j2k-services-222-1.8.21-377-IJ4167.29.jar"))
+    implementation(files("libs/j2k-services-222-1.8.21-377-IJ4167.29.jar"))
     implementation(files("libs/j2k-idea-233-1.9.30-dev-2838-IJ9999.jar"))
     implementation(files("libs/j2k-new-233-1.9.30-dev-2838-IJ9999.jar"))
     implementation(files("libs/j2k-old-233-1.9.30-dev-2838-IJ9999.jar"))
     implementation(files("libs/j2k-old-post-processing-233-1.9.30-dev-2838-IJ9999.jar"))
     implementation(files("libs/j2k-post-processing-233-1.9.30-dev-2838-IJ9999.jar"))
-    // implementation(files("libs/kotlin-plugin.jar"))
-    // implementation(files("libs/kotlin-plugin.2.jar"))
-    // implementation(files("libs/kotlin-plugin.3.jar"))
-    // implementation(files("libs/kotlin-plugin.4.jar"))
     implementation(libs.xml.javax.stream) //本地仓库资源：gradle/libs
     implementation(libs.com.github.fwcd.ktfmt) //本地仓库资源：gradle/libs
     implementation(libs.org.jetbrains.fernflower) //本地仓库资源：gradle/libs
