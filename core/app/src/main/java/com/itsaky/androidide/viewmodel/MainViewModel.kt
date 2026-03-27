@@ -38,9 +38,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * 分发UI 事件流
- */
 sealed class MainEvent {
     data class OpenProjectSuccess(val projectDir: File) : MainEvent()
     data class ShowMessage(val messageResId: Int, val isError: Boolean = false) : MainEvent()
@@ -97,7 +94,7 @@ class MainViewModel : ViewModel() {
     }
 
     /**
-     * 项目打开逻辑
+     * 项目打开
      */
     fun openProject(context: Context, root: File) {
         if (isOpeningProject) return
@@ -105,24 +102,20 @@ class MainViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.Default) {
             try {
-                // 验证目录有效性 (I/O)
                 val isValid = withContext(Dispatchers.IO) { root.exists() && root.isDirectory }
                 if (!isValid) {
                     _mainEvents.tryEmit(MainEvent.ShowMessage(com.itsaky.androidide.resources.R.string.msg_opened_project_does_not_exist, true))
                     return@launch
                 }
 
-                // 异步写入历史记录 (I/O)
+                // 异步写入记录
                 RecentProjectsManager.addProjectAsync(context, root)
 
-                // 配置项目环境缓存 (I/O)
                 withContext(Dispatchers.IO) {
                     IProjectManager.getInstance().openProject(root)
                 }
 
-                // 触发 UI 进行 Intent 跳转
                 _mainEvents.tryEmit(MainEvent.OpenProjectSuccess(root))
-
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -131,9 +124,6 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    /**
-     * 后台检查并恢复上次打开的项目
-     */
     fun checkAndOpenLastProject() {
         if (!GeneralPreferences.autoOpenProjects) return
         val openedProject = GeneralPreferences.lastOpenedProject

@@ -16,6 +16,7 @@
  *
  * @author android_zero
  */
+// FILE: core/app/src/main/java/com/itsaky/androidide/activities/MainActivity.kt
 package com.itsaky.androidide.activities
 
 import android.content.Intent
@@ -44,7 +45,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import com.itsaky.androidide.resources.R
+import com.itsaky.androidide.R
 import com.itsaky.androidide.activities.editor.EditorActivityKt
 import com.itsaky.androidide.app.EdgeToEdgeIDEActivity
 import com.itsaky.androidide.fragments.MainFragment
@@ -90,7 +91,7 @@ class MainActivity : EdgeToEdgeIDEActivity() {
 
     override fun bindLayout(): View {
         return ComposeView(this).apply {
-            id = R.id.fragment_containers_parent
+            id = View.generateViewId()
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 MaterialTheme {
@@ -101,9 +102,8 @@ class MainActivity : EdgeToEdgeIDEActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onCreate(null)
         
-        // 观察单次交互事件
         lifecycleScope.launch {
             viewModel.mainEvents.collect { event ->
                 when (event) {
@@ -131,7 +131,7 @@ class MainActivity : EdgeToEdgeIDEActivity() {
             onBackPressedCallback.isEnabled = screen != MainViewModel.SCREEN_MAIN
         }
 
-        if (savedInstanceState == null && viewModel.currentScreen.value == -1) {
+        if (viewModel.currentScreen.value == -1) {
             viewModel.setScreen(MainViewModel.SCREEN_MAIN)
         }
 
@@ -140,7 +140,6 @@ class MainActivity : EdgeToEdgeIDEActivity() {
 
     @Composable
     private fun MainActivityScreen(viewModel: MainViewModel) {
-        // 监听 LiveData
         var currentScreen by remember { mutableIntStateOf(MainViewModel.SCREEN_MAIN) }
 
         DisposableEffect(viewModel.currentScreen) {
@@ -150,6 +149,10 @@ class MainActivity : EdgeToEdgeIDEActivity() {
                 viewModel.currentScreen.removeObserver(observer)
             }
         }
+
+        val mainId = remember { View.generateViewId() }
+        val listId = remember { View.generateViewId() }
+        val detailsId = remember { View.generateViewId() }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -162,10 +165,6 @@ class MainActivity : EdgeToEdgeIDEActivity() {
                     .background(MaterialTheme.colorScheme.surface),
                 factory = { context ->
                     FrameLayout(context).apply {
-                        val mainId = R.id.compose_container_main
-                        val listId = R.id.compose_container_template_list
-                        val detailsId = R.id.compose_container_template_details
-
                         val mainContainer = FragmentContainerView(context).apply { id = mainId }
                         val listContainer = FragmentContainerView(context).apply { id = listId }
                         val detailsContainer = FragmentContainerView(context).apply { id = detailsId }
@@ -174,21 +173,18 @@ class MainActivity : EdgeToEdgeIDEActivity() {
                         addView(listContainer, FrameLayout.LayoutParams(-1, -1))
                         addView(detailsContainer, FrameLayout.LayoutParams(-1, -1))
 
-                        if (supportFragmentManager.findFragmentById(mainId) == null) {
-                            supportFragmentManager.beginTransaction()
-                                .add(mainId, MainFragment(), "tag_main")
-                                .add(listId, TemplateListFragment(), "tag_list")
-                                .add(detailsId, TemplateDetailsFragment(), "tag_details")
-                                .commitNowAllowingStateLoss()
-                        }
+                        supportFragmentManager.beginTransaction()
+                            .replace(mainId, MainFragment(), "tag_main")
+                            .replace(listId, TemplateListFragment(), "tag_list")
+                            .replace(detailsId, TemplateDetailsFragment(), "tag_details")
+                            .commitNowAllowingStateLoss()
                     }
                 },
                 update = { view ->
-                    val mainContainer = view.findViewById<View>(R.id.compose_container_main)
-                    val listContainer = view.findViewById<View>(R.id.compose_container_template_list)
-                    val detailsContainer = view.findViewById<View>(R.id.compose_container_template_details)
+                    val mainContainer = view.findViewById<View>(mainId)
+                    val listContainer = view.findViewById<View>(listId)
+                    val detailsContainer = view.findViewById<View>(detailsId)
 
-                    // 控制可见性切换
                     mainContainer?.isVisible = currentScreen == MainViewModel.SCREEN_MAIN
                     listContainer?.isVisible = currentScreen == MainViewModel.SCREEN_TEMPLATE_LIST
                     detailsContainer?.isVisible = currentScreen == MainViewModel.SCREEN_TEMPLATE_DETAILS
