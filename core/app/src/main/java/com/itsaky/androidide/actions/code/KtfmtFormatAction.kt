@@ -1,3 +1,19 @@
+/*
+ *  This file is part of AndroidIDE.
+ *
+ *  AndroidIDE is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  AndroidIDE is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package com.itsaky.androidide.actions.code
 
 import android.content.Context
@@ -12,7 +28,6 @@ import com.itsaky.androidide.formatprovider.ktfmt.KtfmtEnv
 import com.itsaky.androidide.tasks.launchAsyncWithProgress
 import com.itsaky.androidide.utils.flashError
 import com.itsaky.androidide.utils.flashSuccess
-import io.github.rosemoe.sora.text.Content
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,7 +43,7 @@ class KtfmtFormatAction(private val context: Context, override val order: Int) :
     override val id: String = "ide.editor.code.ktfmt_format"
 
     init {
-        label = "Format with Ktfmt"
+        label = context.getString(R.string.format_ktfmt_settings)
         icon = ContextCompat.getDrawable(context, R.drawable.ic_format_code)
     }
 
@@ -51,7 +66,7 @@ class KtfmtFormatAction(private val context: Context, override val order: Int) :
             lifecycleOwner.lifecycleScope.launchAsyncWithProgress(
                 context = Dispatchers.Main,
                 configureFlashbar = { builder, _ ->
-                    builder.message("Downloading ktfmt dependencies...")
+                    builder.message(R.string.ktfmt_downloading_msg)
                 }
             ) { flashbar, cancelChecker ->
                 
@@ -62,11 +77,10 @@ class KtfmtFormatAction(private val context: Context, override val order: Int) :
                 withContext(Dispatchers.Main) {
                     flashbar.dismiss()
                     if (success) {
-                        activity.flashSuccess("Ktfmt installed successfully!")
-                        // 递归调用自身执行后续格式化
+                        activity.flashSuccess(R.string.ktfmt_install_success)
                         doFormatting(editor, file, activity)
                     } else {
-                        activity.flashError("Failed to download Ktfmt.")
+                        activity.flashError(R.string.ktfmt_install_failed)
                     }
                 }
             }
@@ -83,7 +97,6 @@ class KtfmtFormatAction(private val context: Context, override val order: Int) :
         (activity as androidx.fragment.app.FragmentActivity).lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val originalText = editor.text.toString()
-                
                 val formattedText = formatter.format(originalText)
                 
                 if (formattedText != originalText && formattedText.isNotBlank()) {
@@ -92,7 +105,7 @@ class KtfmtFormatAction(private val context: Context, override val order: Int) :
                         editor.text.replace(0, 0, editor.text.lineCount - 1, editor.text.getColumnCount(editor.text.lineCount - 1), formattedText)
                         editor.text.endBatchEdit()
                         
-                        activity.flashSuccess("Formatted via Ktfmt.")
+                        activity.flashSuccess(R.string.ktfmt_formatted_msg)
                     }
                 }
             } catch (e: Exception) {

@@ -1,3 +1,19 @@
+/*
+ *  This file is part of AndroidIDE.
+ *
+ *  AndroidIDE is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  AndroidIDE is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package com.itsaky.androidide.formatprovider.ktfmt
 
 import android.content.Context
@@ -12,8 +28,7 @@ import java.io.File
 /**
  * CLI 版本的 Ktfmt 格式化提供器
  *
- * 通过 TermuxCommand 将源码输入至 stdin，通过 stdout 获取格式化后的内容。
- * 进程执行完毕后资源立即销毁。
+ * 通过 TermuxCommand 进行格式化交互。支持 Stdin 管道传输和 File 路径传递两种模式。
  * 
  * @author android_zero
  */
@@ -47,23 +62,48 @@ class KtfmtCliFormatter(
             args.add("--quiet")
         }
 
-        args.add("--stdin-name=${file.absolutePath}")
+        val mode = KtfmtPreferences.formatMode
 
-        val result = runBlocking {
-            TermuxCommand.run(context) {
-                label("Ktfmt CLI")
-                executable(Environment.JAVA.absolutePath)
-                args(*args.toTypedArray())
-                workingDir(projectRoot.absolutePath)
-                stdin(source)
+        if (mode == "stdin") {
+            args.add("--stdin-name=${file.absolutePath}")
+            args.add("-")
+
+            val result = runBlocking {
+                TermuxCommand.run(context) {
+                    label("Ktfmt CLI (Stdin)")
+                    executable(Environment.JAVA.absolutePath)
+                    args(*args.toTypedArray())
+                    workingDir(projectRoot.absolutePath)
+                    stdin(source)
+                }
             }
-        }
 
-        if (result.isSuccess) {
-            return result.stdout
+            if (result.isSuccess) {
+                return result.stdout
+            } else {
+                throw RuntimeException("Ktfmt formatting failed. Code: ${result.exitCode}\nError: ${result.stderr}")
+            }
         } else {
-            // 解析失败时抛出异常，由上层处理
-            throw RuntimeException("Ktfmt formatting failed. Code: ${result.exitCode}\nError: ${result.stderr}")
+            // File 模式 (默认 & 更稳定)
+            file.writeText(source)
+            
+            args.add(file.absolutePath)
+
+            val result = runBlocking {
+                TermuxCommand.run(context) {
+                    label("Ktfmt CLI (File)")
+                    executable(Environment.JAVA.absolutePath)
+                    args(*args.toTypedArray())
+                    workingDir(projectRoot.absolutePath)
+                }
+            }
+
+            if (result.isSuccess) {
+                // 读取已在硬盘中被格式化好的文件内容并返回
+                return file.readText()
+            } else {
+                throw RuntimeException("Ktfmt formatting failed. Code: ${result.exitCode}\nError: ${result.stderr}")
+            }
         }
     }
 }

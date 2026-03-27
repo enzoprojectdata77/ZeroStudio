@@ -8,39 +8,6 @@
      <string name="title_test">test</string>
 
 
-     <!-- Ktfmt 设置页面 -->
-     <string name="format_ktfmt_settings">Ktfmt formatting</string>
-     <string name="format_ktfmt_settings_desc">Use Facebook ktfmt command-line tool to natively format Kotlin code. Supports *.kt and *.kts files.</string>
-
-     <!-- 格式化风格选项 -->
-     <string name="ktfmt_style_title">Formatting style</string>
-     <string name="ktfmt_style_summary">Choose the indentation and layout specifications used by ktfmt.</string>
-
-     <!-- 保留未使用的导入 -->
-     <string name="ktfmt_keep_imports_title">Retain unused imports</string>
-     <string name="ktfmt_keep_imports_desc">Disable automatic deletion of unused import statements</string>
-
-     <!-- EditorConfig 支持 -->
-     <string name="ktfmt_editorconfig_title">Enable .editorconfig</string>
-     <string name="ktfmt_editorconfig_desc">If a .editorconfig file exists in the project root path, its configuration will be applied first.</string>
-
-     <!-- 安静模式 -->
-     <string name="ktfmt_quiet_title">Quiet mode</string>
-     <string name="ktfmt_quiet_desc">Suppress all unnecessary terminal output except for errors.</string>
-
-     <!-- 运行时提示 -->
-     <string name="ktfmt_downloading_msg">Downloading ktfmt dependency library (0.62)...</string>
-     <string name="ktfmt_install_success">Ktfmt has been successfully deployed.</string>
-     <string name="ktfmt_install_failed">Ktfmt download failed, please check your network connection.</string>
-     <string name="ktfmt_formatted_msg">The code has been formatted using Ktfmt.</string>
-
-
-
-
-
-
-
-
 
 
 
