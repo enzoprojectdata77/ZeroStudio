@@ -44,6 +44,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import com.itsaky.androidide.resources.R
 import com.itsaky.androidide.activities.editor.EditorActivityKt
 import com.itsaky.androidide.app.EdgeToEdgeIDEActivity
 import com.itsaky.androidide.fragments.MainFragment
@@ -58,6 +59,10 @@ import com.itsaky.androidide.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 
+/**
+ * 首页 Activity (Compose + MVVM)
+ * @author android_zero
+ */
 class MainActivity : EdgeToEdgeIDEActivity() {
 
     private val viewModel by viewModels<MainViewModel>()
@@ -85,7 +90,7 @@ class MainActivity : EdgeToEdgeIDEActivity() {
 
     override fun bindLayout(): View {
         return ComposeView(this).apply {
-            id = View.generateViewId()
+            id = R.id.fragment_containers_parent
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 MaterialTheme {
@@ -126,7 +131,7 @@ class MainActivity : EdgeToEdgeIDEActivity() {
             onBackPressedCallback.isEnabled = screen != MainViewModel.SCREEN_MAIN
         }
 
-        if (viewModel.currentScreen.value == -1 && viewModel.previousScreen == -1) {
+        if (savedInstanceState == null && viewModel.currentScreen.value == -1) {
             viewModel.setScreen(MainViewModel.SCREEN_MAIN)
         }
 
@@ -135,6 +140,7 @@ class MainActivity : EdgeToEdgeIDEActivity() {
 
     @Composable
     private fun MainActivityScreen(viewModel: MainViewModel) {
+        // 监听 LiveData
         var currentScreen by remember { mutableIntStateOf(MainViewModel.SCREEN_MAIN) }
 
         DisposableEffect(viewModel.currentScreen) {
@@ -144,11 +150,6 @@ class MainActivity : EdgeToEdgeIDEActivity() {
                 viewModel.currentScreen.removeObserver(observer)
             }
         }
-        
-        // 动态 View ID
-        val mainId = remember { View.generateViewId() }
-        val listId = remember { View.generateViewId() }
-        val detailsId = remember { View.generateViewId() }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -161,6 +162,10 @@ class MainActivity : EdgeToEdgeIDEActivity() {
                     .background(MaterialTheme.colorScheme.surface),
                 factory = { context ->
                     FrameLayout(context).apply {
+                        val mainId = R.id.compose_container_main
+                        val listId = R.id.compose_container_template_list
+                        val detailsId = R.id.compose_container_template_details
+
                         val mainContainer = FragmentContainerView(context).apply { id = mainId }
                         val listContainer = FragmentContainerView(context).apply { id = listId }
                         val detailsContainer = FragmentContainerView(context).apply { id = detailsId }
@@ -169,18 +174,21 @@ class MainActivity : EdgeToEdgeIDEActivity() {
                         addView(listContainer, FrameLayout.LayoutParams(-1, -1))
                         addView(detailsContainer, FrameLayout.LayoutParams(-1, -1))
 
-                        supportFragmentManager.beginTransaction()
-                            .replace(mainId, MainFragment())
-                            .replace(listId, TemplateListFragment())
-                            .replace(detailsId, TemplateDetailsFragment())
-                            .commitNowAllowingStateLoss()
+                        if (supportFragmentManager.findFragmentById(mainId) == null) {
+                            supportFragmentManager.beginTransaction()
+                                .add(mainId, MainFragment(), "tag_main")
+                                .add(listId, TemplateListFragment(), "tag_list")
+                                .add(detailsId, TemplateDetailsFragment(), "tag_details")
+                                .commitNowAllowingStateLoss()
+                        }
                     }
                 },
                 update = { view ->
-                    val mainContainer = view.findViewById<View>(mainId)
-                    val listContainer = view.findViewById<View>(listId)
-                    val detailsContainer = view.findViewById<View>(detailsId)
+                    val mainContainer = view.findViewById<View>(R.id.compose_container_main)
+                    val listContainer = view.findViewById<View>(R.id.compose_container_template_list)
+                    val detailsContainer = view.findViewById<View>(R.id.compose_container_template_details)
 
+                    // 控制可见性切换
                     mainContainer?.isVisible = currentScreen == MainViewModel.SCREEN_MAIN
                     listContainer?.isVisible = currentScreen == MainViewModel.SCREEN_TEMPLATE_LIST
                     detailsContainer?.isVisible = currentScreen == MainViewModel.SCREEN_TEMPLATE_DETAILS
@@ -190,16 +198,16 @@ class MainActivity : EdgeToEdgeIDEActivity() {
     }
 
     override fun onApplySystemBarInsets(insets: Insets) {
-        // Compose 系统已自动处理，无需手动设置
+        // Compose 系统已自动处理
     }
 
     private fun askProjectOpenPermission(root: File) {
         DialogUtils.newMaterialDialogBuilder(this)
-            .setTitle(com.itsaky.androidide.resources.R.string.title_confirm_open_project)
-            .setMessage(getString(com.itsaky.androidide.resources.R.string.msg_confirm_open_project, root.absolutePath))
+            .setTitle(R.string.title_confirm_open_project)
+            .setMessage(getString(R.string.msg_confirm_open_project, root.absolutePath))
             .setCancelable(false)
-            .setPositiveButton(com.itsaky.androidide.resources.R.string.yes) { _, _ -> openProject(root) }
-            .setNegativeButton(com.itsaky.androidide.resources.R.string.no, null)
+            .setPositiveButton(R.string.yes) { _, _ -> openProject(root) }
+            .setNegativeButton(R.string.no, null)
             .show()
     }
 
