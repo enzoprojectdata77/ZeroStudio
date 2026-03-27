@@ -134,11 +134,11 @@ class MainFragment : BaseFragment() {
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(scrollState)
-                        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 100.dp) 
+                        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 92.dp) 
                 ) {
                     QuickStartGradientCard()
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.weight(1.5f)) {
@@ -172,8 +172,8 @@ class MainFragment : BaseFragment() {
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        // 半透明白色背景
-                        .background(Color(0xF0FFFFFF)) 
+                        // 全透明白色背景
+                        .background(Color.Transparent) 
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     SectionTitle(stringResource(R.string.main_tools_services))
