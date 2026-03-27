@@ -60,15 +60,11 @@ class MainViewModel : ViewModel() {
     internal val creatingProject = MutableLiveData(false)
 
     val currentScreen: LiveData<Int> = _currentScreen
-
-    val previousScreen: Int
-        get() = _previousScreen.get()
+    val previousScreen: Int get() = _previousScreen.get()
 
     var isTransitionInProgress: Boolean
         get() = _isTransitionInProgress.value ?: false
-        set(value) {
-            _isTransitionInProgress.value = value
-        }
+        set(value) { _isTransitionInProgress.value = value }
 
     private val _mainEvents = MutableSharedFlow<MainEvent>(extraBufferCapacity = 5)
     val mainEvents: SharedFlow<MainEvent> = _mainEvents.asSharedFlow()
@@ -94,7 +90,7 @@ class MainViewModel : ViewModel() {
     }
 
     /**
-     * 项目打开
+     * 项目打开逻辑
      */
     fun openProject(context: Context, root: File) {
         if (isOpeningProject) return
@@ -104,18 +100,18 @@ class MainViewModel : ViewModel() {
             try {
                 val isValid = withContext(Dispatchers.IO) { root.exists() && root.isDirectory }
                 if (!isValid) {
-                    _mainEvents.tryEmit(MainEvent.ShowMessage(com.itsaky.androidide.resources.R.string.msg_opened_project_does_not_exist, true))
+                    _mainEvents.emit(MainEvent.ShowMessage(com.itsaky.androidide.resources.R.string.msg_opened_project_does_not_exist, true))
                     return@launch
                 }
 
-                // 异步写入记录
                 RecentProjectsManager.addProjectAsync(context, root)
 
                 withContext(Dispatchers.IO) {
                     IProjectManager.getInstance().openProject(root)
                 }
 
-                _mainEvents.tryEmit(MainEvent.OpenProjectSuccess(root))
+                // 通知主线程切换界面
+                _mainEvents.emit(MainEvent.OpenProjectSuccess(root))
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -134,15 +130,15 @@ class MainViewModel : ViewModel() {
             val exists = withContext(Dispatchers.IO) { project.exists() }
             
             if (!exists) {
-                _mainEvents.tryEmit(MainEvent.ShowMessage(com.itsaky.androidide.resources.R.string.msg_opened_project_does_not_exist, false))
+                _mainEvents.emit(MainEvent.ShowMessage(com.itsaky.androidide.resources.R.string.msg_opened_project_does_not_exist, false))
                 return@launch
             }
 
             if (GeneralPreferences.confirmProjectOpen) {
-                _mainEvents.tryEmit(MainEvent.RequestConfirmOpen(project))
+                _mainEvents.emit(MainEvent.RequestConfirmOpen(project))
             } else {
                 withContext(Dispatchers.IO) { IProjectManager.getInstance().openProject(project) }
-                _mainEvents.tryEmit(MainEvent.OpenProjectSuccess(project))
+                _mainEvents.emit(MainEvent.OpenProjectSuccess(project))
             }
         }
     }

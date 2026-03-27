@@ -1,3 +1,21 @@
+/*
+ *  This file is part of AndroidIDE.
+ *
+ *  AndroidIDE is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  AndroidIDE is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * @author android_zero
+ */
 package com.itsaky.androidide.fragments
 
 import android.content.Intent
@@ -45,10 +63,6 @@ import com.itsaky.androidide.fragments.git.function.ZeroCloneDialogBottomSheetFr
 import kotlinx.coroutines.launch
 import java.io.File
 
-/**
- * ZeroStudio 首页 (Jetpack Compose 驱动)
- * @author android_zero
- */
 class MainFragment : BaseFragment() {
 
     private val viewModel by viewModels<MainViewModel>(ownerProducer = { requireActivity() })
@@ -72,7 +86,6 @@ class MainFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        // 每次回到主页时，异步刷新历史记录
         viewLifecycleScope.launch {
             val list = RecentProjectsManager.getHistoryAsync(requireContext())
             historyState.clear()
@@ -84,19 +97,18 @@ class MainFragment : BaseFragment() {
     @Composable
     private fun ZeroStudioMainLayout() {
         val scrollState = rememberScrollState()
-        val context = LocalContext.current
 
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("ZeroStudio", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp) },
+                    title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp) },
                     navigationIcon = {
-                        IconButton(onClick = { /* TODO */ }) { Icon(Icons.Default.Menu, "Menu") }
+                        IconButton(onClick = { }) { Icon(Icons.Default.Menu, "Menu") }
                     },
                     actions = {
-                        IconButton(onClick = { /* TODO */ }) { Icon(Icons.Default.Search, "Search") }
-                        IconButton(onClick = { /* TODO */ }) {
-                            Box(modifier = Modifier.size(30.dp).clip(CircleShape).background(Color(0xFFEEEEEE))) {
+                        IconButton(onClick = { }) { Icon(Icons.Default.Search, "Search") }
+                        IconButton(onClick = { }) {
+                            Box(modifier = Modifier.size(28.dp).clip(CircleShape).background(Color(0xFFEEEEEE))) {
                                 Icon(Icons.Outlined.Person, "User", modifier = Modifier.align(Alignment.Center))
                             }
                         }
@@ -118,22 +130,18 @@ class MainFragment : BaseFragment() {
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(horizontal = 16.dp, vertical = 12.dp) // 恢复正常的水平边距 (取消左侧轨道)
+                    .padding(horizontal = 16.dp, vertical = 12.dp) // 左轨道空隙
             ) {
-                // 快速开始渐变卡片
                 QuickStartGradientCard()
                 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // 最近项目与高频项目
                 Row(modifier = Modifier.fillMaxWidth()) {
-                    // 左列：最近打开
                     Column(modifier = Modifier.weight(1.5f)) {
                         SectionTitle(stringResource(R.string.main_recent_projects))
                         if (historyState.isEmpty()) {
                             Text(stringResource(R.string.main_empty_history), fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(8.dp))
                         } else {
-                            // 按时间排序显示前几个
                             historyState.sortedByDescending { it.timestamp }.take(4).forEach { project ->
                                 RecentProjectItem(project)
                             }
@@ -142,11 +150,9 @@ class MainFragment : BaseFragment() {
                     
                     Spacer(modifier = Modifier.width(12.dp))
                     
-                    // 右列：高频项目 (原智能预存)
                     Column(modifier = Modifier.weight(0.9f)) {
                         SectionTitle(stringResource(R.string.main_frequent_projects))
                         if (historyState.isNotEmpty()) {
-                            // 按打开次数排序显示前几个
                             historyState.sortedByDescending { it.openCount }.take(3).forEach { project ->
                                 FrequentProjectItem(project)
                             }
@@ -156,11 +162,10 @@ class MainFragment : BaseFragment() {
                     }
                 }
 
-                // 利用 weight 将工具栏推到底部（如果内容不够高的话），或者通过 Spacer 保持距离
+                // 将工具服务推到屏幕最底部
                 Spacer(modifier = Modifier.weight(1f, fill = false))
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                //工具与服务 
                 SectionTitle(stringResource(R.string.main_tools_services))
                 ToolsServiceGrid()
             }
@@ -189,10 +194,10 @@ class MainFragment : BaseFragment() {
                             viewModel.setScreen(MainViewModel.SCREEN_TEMPLATE_LIST)
                         }
                         QuickActionButton(Icons.Default.FolderOpen, stringResource(R.string.main_open_project)) {
-                            pickDirectory()
+                            pickDirectory { openProject(it) }
                         }
                         QuickActionButton(Icons.Default.Share, stringResource(R.string.main_clone_repo)) {
-                            cloneGitRepo()
+                            ZeroCloneDialogBottomSheetFragment.newInstance(repoId = "").show(childFragmentManager, "CloneBottomSheet")
                         }
                     }
                 }
@@ -205,10 +210,10 @@ class MainFragment : BaseFragment() {
         Surface(
             onClick = onClick,
             color = Color.White.copy(alpha = 0.15f),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(10.dp)
         ) {
-            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = Color.White, modifier = Modifier.size(16.dp))
+            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, null, tint = Color.White, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(label, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Medium)
             }
@@ -216,82 +221,52 @@ class MainFragment : BaseFragment() {
     }
 
     /**
-     * 最近项目
+     * 高度与文字减小的高对比度 UI
      */
     @Composable
     private fun RecentProjectItem(project: ProjectHistory) {
         Surface(
-            onClick = { openProjectAndRecord(File(project.path)) },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).height(50.dp), // 高度减小
-            color = Color(0xFFF2F4F7), // 更明显的卡片背景色
-            shape = RoundedCornerShape(12.dp)
+            onClick = { openProject(File(project.path)) },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp).height(40.dp),
+            color = Color(0xFFEBEFF5), // 深色对比底
+            shape = RoundedCornerShape(10.dp)
         ) {
-            Row(modifier = Modifier.padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                // 图标减小 15% (约 32dp)
-                Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(project.color), contentAlignment = Alignment.Center) {
-                    Text(project.letter, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Row(modifier = Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(26.dp).clip(CircleShape).background(project.color), contentAlignment = Alignment.Center) {
+                    Text(project.letter, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
-                    Text(
-                        text = project.name, 
-                        fontWeight = FontWeight.Bold, 
-                        fontSize = 13.sp, // 字体减小
-                        color = Color(0xFF212121),
-                        maxLines = 1, // 不换行
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = project.path, 
-                        fontSize = 9.sp, // 字体减小
-                        color = Color.Gray, 
-                        maxLines = 1, // 不换行
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Text(project.name, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF1E1E1E), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(project.path, fontSize = 8.sp, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                Text(stringResource(R.string.main_action_open), color = Color(0xFF00897B), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.main_action_open), color = Color(0xFF00897B), fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
 
-    /**
-     * 高频项目 - 替代智能预存
-     */
     @Composable
     private fun FrequentProjectItem(project: ProjectHistory) {
         Surface(
-            onClick = { openProjectAndRecord(File(project.path)) },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).height(40.dp),
-            color = Color(0xFFF2F4F7),
-            shape = RoundedCornerShape(10.dp)
+            onClick = { openProject(File(project.path)) },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp).height(34.dp),
+            color = Color(0xFFEBEFF5),
+            shape = RoundedCornerShape(8.dp)
         ) {
-            Row(modifier = Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(project.color), contentAlignment = Alignment.Center) {
+            Row(modifier = Modifier.padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(18.dp).clip(CircleShape).background(project.color), contentAlignment = Alignment.Center) {
                     Text(project.letter, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = project.name, 
-                    fontSize = 11.sp, 
-                    fontWeight = FontWeight.Medium, 
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                // 显示热度 (打开次数)
+                Text(project.name, fontSize = 10.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Text("🔥${project.openCount}", fontSize = 9.sp, color = Color(0xFFFF5252))
             }
         }
     }
 
-    /**
-     * 工具与服务
-     */
     @Composable
     private fun ToolsServiceGrid() {
         val context = LocalContext.current
-        
-        // 数据结构：Icon, 背景色, 点击事件
         val tools = listOf(
             Triple(Icons.Default.Settings, Color(0xFFFFCCBC)) {
                 startActivity(Intent(requireActivity(), PreferencesActivity::class.java))
@@ -314,20 +289,18 @@ class MainFragment : BaseFragment() {
         )
 
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(vertical = 4.dp)
         ) {
             items(tools) { (icon, color, action) ->
-                // 尺寸减小 30% (原56dp -> 40dp)
                 Surface(
                     onClick = action,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(32.dp), // 尺寸减小 30%
                     color = color,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        // 图标也等比例减小 (原26dp -> 18dp)
-                        Icon(icon, null, tint = Color.DarkGray.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                        Icon(icon, null, tint = Color.DarkGray.copy(alpha = 0.8f), modifier = Modifier.size(16.dp))
                     }
                 }
             }
@@ -336,33 +309,10 @@ class MainFragment : BaseFragment() {
 
     @Composable
     private fun SectionTitle(text: String) {
-        Text(
-            text = text, 
-            fontSize = 14.sp, 
-            fontWeight = FontWeight.ExtraBold, 
-            color = Color(0xFF424242), 
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        Text(text, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF333333), modifier = Modifier.padding(bottom = 6.dp))
     }
 
-
-    private fun pickDirectory() {
-        pickDirectory { file -> openProjectAndRecord(file) }
-    }
-
-    /**
-     * 项目打开逻辑
-     */
-    private fun openProjectAndRecord(root: File) {
-        viewLifecycleScope.launch {
-            RecentProjectsManager.addProjectAsync(requireContext(), root)
-            
-            (requireActivity() as MainActivity).openProject(root)
-        }
-    }
-
-    private fun cloneGitRepo() {
-        ZeroCloneDialogBottomSheetFragment.newInstance(repoId = "")
-            .show(childFragmentManager, "CloneBottomSheet")
+    private fun openProject(root: File) {
+        (requireActivity() as MainActivity).openProject(root)
     }
 }

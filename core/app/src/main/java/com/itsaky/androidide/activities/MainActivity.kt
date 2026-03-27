@@ -16,7 +16,6 @@
  *
  * @author android_zero
  */
-// FILE: core/app/src/main/java/com/itsaky/androidide/activities/MainActivity.kt
 package com.itsaky.androidide.activities
 
 import android.content.Intent
@@ -25,25 +24,6 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.graphics.Insets
-import androidx.core.view.isVisible
-import androidx.fragment.app.FragmentContainerView
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.itsaky.androidide.R
 import com.itsaky.androidide.activities.editor.EditorActivityKt
@@ -61,7 +41,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * 首页 Activity (Compose + MVVM)
+ * A modern MainActivity built with Compose + MVM architecture + Material3
  * @author android_zero
  */
 class MainActivity : EdgeToEdgeIDEActivity() {
@@ -90,20 +70,38 @@ class MainActivity : EdgeToEdgeIDEActivity() {
     }
 
     override fun bindLayout(): View {
-        return ComposeView(this).apply {
-            id = View.generateViewId()
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                MaterialTheme {
-                    MainActivityScreen(viewModel)
-                }
-            }
+        return FrameLayout(this).apply {
+            id = android.R.id.content
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(null)
+        super.onCreate(savedInstanceState)
         
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .add(android.R.id.content, MainFragment(), "tag_main")
+                .add(android.R.id.content, TemplateListFragment(), "tag_list")
+                .add(android.R.id.content, TemplateDetailsFragment(), "tag_details")
+                .commitNowAllowingStateLoss()
+        }
+
+        viewModel.currentScreen.observe(this) { screen ->
+            if (screen == -1) return@observe
+            
+            val mainFrag = supportFragmentManager.findFragmentByTag("tag_main")
+            val listFrag = supportFragmentManager.findFragmentByTag("tag_list")
+            val detailsFrag = supportFragmentManager.findFragmentByTag("tag_details")
+
+            supportFragmentManager.beginTransaction().apply {
+                mainFrag?.let { if (screen == MainViewModel.SCREEN_MAIN) show(it) else hide(it) }
+                listFrag?.let { if (screen == MainViewModel.SCREEN_TEMPLATE_LIST) show(it) else hide(it) }
+                detailsFrag?.let { if (screen == MainViewModel.SCREEN_TEMPLATE_DETAILS) show(it) else hide(it) }
+            }.commitAllowingStateLoss()
+
+            onBackPressedCallback.isEnabled = screen != MainViewModel.SCREEN_MAIN
+        }
+
         lifecycleScope.launch {
             viewModel.mainEvents.collect { event ->
                 when (event) {
@@ -111,7 +109,6 @@ class MainActivity : EdgeToEdgeIDEActivity() {
                         val intent = Intent(this@MainActivity, EditorActivityKt::class.java).apply {
                             addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                            putExtra("extra_project_path", event.projectDir.absolutePath)
                         }
                         startActivity(intent)
                     }
@@ -126,75 +123,11 @@ class MainActivity : EdgeToEdgeIDEActivity() {
 
         viewModel.checkAndOpenLastProject()
 
-        viewModel.currentScreen.observe(this) { screen ->
-            if (screen == -1) return@observe
-            onBackPressedCallback.isEnabled = screen != MainViewModel.SCREEN_MAIN
-        }
-
-        if (viewModel.currentScreen.value == -1) {
+        if (viewModel.currentScreen.value == -1 && viewModel.previousScreen == -1) {
             viewModel.setScreen(MainViewModel.SCREEN_MAIN)
         }
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
-    }
-
-    @Composable
-    private fun MainActivityScreen(viewModel: MainViewModel) {
-        var currentScreen by remember { mutableIntStateOf(MainViewModel.SCREEN_MAIN) }
-
-        DisposableEffect(viewModel.currentScreen) {
-            val observer = Observer<Int> { newScreen -> currentScreen = newScreen }
-            viewModel.currentScreen.observe(this@MainActivity, observer)
-            onDispose {
-                viewModel.currentScreen.removeObserver(observer)
-            }
-        }
-
-        val mainId = remember { View.generateViewId() }
-        val listId = remember { View.generateViewId() }
-        val detailsId = remember { View.generateViewId() }
-
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.surface
-        ) { padding ->
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .background(MaterialTheme.colorScheme.surface),
-                factory = { context ->
-                    FrameLayout(context).apply {
-                        val mainContainer = FragmentContainerView(context).apply { id = mainId }
-                        val listContainer = FragmentContainerView(context).apply { id = listId }
-                        val detailsContainer = FragmentContainerView(context).apply { id = detailsId }
-
-                        addView(mainContainer, FrameLayout.LayoutParams(-1, -1))
-                        addView(listContainer, FrameLayout.LayoutParams(-1, -1))
-                        addView(detailsContainer, FrameLayout.LayoutParams(-1, -1))
-
-                        supportFragmentManager.beginTransaction()
-                            .replace(mainId, MainFragment(), "tag_main")
-                            .replace(listId, TemplateListFragment(), "tag_list")
-                            .replace(detailsId, TemplateDetailsFragment(), "tag_details")
-                            .commitNowAllowingStateLoss()
-                    }
-                },
-                update = { view ->
-                    val mainContainer = view.findViewById<View>(mainId)
-                    val listContainer = view.findViewById<View>(listId)
-                    val detailsContainer = view.findViewById<View>(detailsId)
-
-                    mainContainer?.isVisible = currentScreen == MainViewModel.SCREEN_MAIN
-                    listContainer?.isVisible = currentScreen == MainViewModel.SCREEN_TEMPLATE_LIST
-                    detailsContainer?.isVisible = currentScreen == MainViewModel.SCREEN_TEMPLATE_DETAILS
-                }
-            )
-        }
-    }
-
-    override fun onApplySystemBarInsets(insets: Insets) {
-        // Compose 系统已自动处理
     }
 
     private fun askProjectOpenPermission(root: File) {
