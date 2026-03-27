@@ -125,49 +125,60 @@ class MainFragment : BaseFragment() {
                 }
             }
         ) { padding ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 16.dp, vertical = 12.dp) // 左轨道空隙
             ) {
-                QuickStartGradientCard()
-                
-                Spacer(modifier = Modifier.height(24.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 100.dp) 
+                ) {
+                    QuickStartGradientCard()
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.weight(1.5f)) {
-                        SectionTitle(stringResource(R.string.main_recent_projects))
-                        if (historyState.isEmpty()) {
-                            Text(stringResource(R.string.main_empty_history), fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(8.dp))
-                        } else {
-                            historyState.sortedByDescending { it.timestamp }.take(4).forEach { project ->
-                                RecentProjectItem(project)
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.weight(1.5f)) {
+                            SectionTitle(stringResource(R.string.main_recent_projects))
+                            if (historyState.isEmpty()) {
+                                Text(stringResource(R.string.main_empty_history), fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(8.dp))
+                            } else {
+                                historyState.sortedByDescending { it.timestamp }.take(4).forEach { project ->
+                                    RecentProjectItem(project)
+                                }
                             }
                         }
-                    }
-                    
-                    Spacer(modifier = Modifier.width(12.dp))
-                    
-                    Column(modifier = Modifier.weight(0.9f)) {
-                        SectionTitle(stringResource(R.string.main_frequent_projects))
-                        if (historyState.isNotEmpty()) {
-                            historyState.sortedByDescending { it.openCount }.take(3).forEach { project ->
-                                FrequentProjectItem(project)
+                        
+                        Spacer(modifier = Modifier.width(12.dp))
+                        
+                        Column(modifier = Modifier.weight(0.9f)) {
+                            SectionTitle(stringResource(R.string.main_frequent_projects))
+                            if (historyState.isNotEmpty()) {
+                                historyState.sortedByDescending { it.openCount }.take(3).forEach { project ->
+                                    FrequentProjectItem(project)
+                                }
+                            } else {
+                                Text(stringResource(R.string.main_empty_history), fontSize = 12.sp, color = Color.Gray)
                             }
-                        } else {
-                            Text(stringResource(R.string.main_empty_history), fontSize = 12.sp, color = Color.Gray)
                         }
                     }
                 }
 
-                // 将工具服务推到屏幕最底部
-                Spacer(modifier = Modifier.weight(1f, fill = false))
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                SectionTitle(stringResource(R.string.main_tools_services))
-                ToolsServiceGrid()
+                // 工具与服务区域
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        // 半透明白色背景
+                        .background(Color(0xF0FFFFFF)) 
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    SectionTitle(stringResource(R.string.main_tools_services))
+                    ToolsServiceGrid()
+                }
             }
         }
     }
@@ -186,18 +197,26 @@ class MainFragment : BaseFragment() {
             elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize().background(cardGradient).padding(20.dp)) {
-                Column {
+                Column(modifier = Modifier.fillMaxSize()) {
                     Text(stringResource(R.string.main_quick_start), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.weight(1f))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        QuickActionButton(Icons.Default.Add, stringResource(R.string.main_new_project)) {
-                            viewModel.setScreen(MainViewModel.SCREEN_TEMPLATE_LIST)
-                        }
-                        QuickActionButton(Icons.Default.FolderOpen, stringResource(R.string.main_open_project)) {
-                            pickDirectory { openProject(it) }
-                        }
-                        QuickActionButton(Icons.Default.Share, stringResource(R.string.main_clone_repo)) {
-                            ZeroCloneDialogBottomSheetFragment.newInstance(repoId = "").show(childFragmentManager, "CloneBottomSheet")
+                    
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            QuickActionButton(Icons.Default.Add, stringResource(R.string.main_new_project)) {
+                                viewModel.setScreen(MainViewModel.SCREEN_TEMPLATE_LIST)
+                            }
+                            QuickActionButton(Icons.Default.FolderOpen, stringResource(R.string.main_open_project)) {
+                                pickDirectory { openProject(it) }
+                            }
+                            QuickActionButton(Icons.Default.Share, stringResource(R.string.main_clone_repo)) {
+                                ZeroCloneDialogBottomSheetFragment.newInstance(repoId = "").show(childFragmentManager, "CloneBottomSheet")
+                            }
                         }
                     }
                 }
@@ -212,10 +231,15 @@ class MainFragment : BaseFragment() {
             color = Color.White.copy(alpha = 0.15f),
             shape = RoundedCornerShape(10.dp)
         ) {
-            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, null, tint = Color.White, modifier = Modifier.size(14.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(label, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 15.dp), 
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 图标尺寸
+                Icon(icon, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                // 文字尺寸
+                Text(label, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -293,14 +317,16 @@ class MainFragment : BaseFragment() {
             contentPadding = PaddingValues(vertical = 4.dp)
         ) {
             items(tools) { (icon, color, action) ->
+                //工具与服务按钮
                 Surface(
                     onClick = action,
-                    modifier = Modifier.size(32.dp), // 尺寸减小 30%
+                    modifier = Modifier.size(42.dp),
                     color = color,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(icon, null, tint = Color.DarkGray.copy(alpha = 0.8f), modifier = Modifier.size(16.dp))
+                        //工具与服务内部Icon的尺寸
+                        Icon(icon, null, tint = Color.DarkGray.copy(alpha = 0.8f), modifier = Modifier.size(24.dp))
                     }
                 }
             }
