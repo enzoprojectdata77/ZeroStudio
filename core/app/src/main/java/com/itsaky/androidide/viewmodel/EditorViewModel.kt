@@ -17,7 +17,6 @@
 package com.itsaky.androidide.viewmodel
 
 import android.view.Gravity.CENTER
-import androidx.annotation.GravityInt
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -33,138 +32,100 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.io.IOException
 import java.util.Collections
 
-/** ViewModel for data used in [com.itsaky.androidide.activities.editor.EditorActivityKt] */
-@Suppress("PropertyName")
 class EditorViewModel : ViewModel() {
 
   internal val _isBuildInProgress = MutableLiveData(false)
   internal val _isInitializing = MutableLiveData(false)
-  // internal val _statusText = MutableLiveData<Pair<CharSequence, @GravityInt Int>>("" to CENTER)
   internal val _statusText = MutableLiveData<Pair<CharSequence, Int>>("" to CENTER)
   
   internal val _displayedFile = MutableLiveData(-1)
   internal val _startDrawerOpened = MutableLiveData(false)
   internal val _isSyncNeeded = MutableLiveData(false)
-
   internal val _filesModified = MutableLiveData(false)
   internal val _filesSaving = MutableLiveData(false)
 
-  private val _openedFiles = MutableLiveData<OpenedFilesCache>()
-  private val _isBoundToBuildService = MutableLiveData(false)
-  private val _files = MutableLiveData<MutableList<File>>(ArrayList())
+  @PublishedApi
+  internal val _openedFiles = MutableLiveData<OpenedFilesCache>()
+  @PublishedApi
+  internal val _isBoundToBuildService = MutableLiveData(false)
+  @PublishedApi
+  internal val _files = MutableLiveData<MutableList<File>>(ArrayList())
 
-  /**
-   * Holds information about the currently selected editor fragment. First value in the pair is the
-   * index of the editor opened. Second value is the file that is opened.
-   */
-  private val mCurrentFile = MutableLiveData<Pair<Int, File?>?>(null)
+  @PublishedApi
+  internal val mCurrentFile = MutableLiveData<Pair<Int, File?>?>(null)
+
+  @PublishedApi
+  internal val fileIoMutex = Mutex()
 
   var areFilesModified: Boolean
     get() = _filesModified.value ?: false
-    set(value) {
-      _filesModified.value = value
-    }
+    set(value) { _filesModified.value = value }
 
   var areFilesSaving: Boolean
     get() = _filesSaving.value ?: false
-    set(value) {
-      _filesSaving.value = value
-    }
+    set(value) { _filesSaving.value = value }
 
   var openedFilesCache: OpenedFilesCache?
     get() = _openedFiles.value
-    set(value) {
-      this._openedFiles.value = value
-    }
+    set(value) { this._openedFiles.value = value }
 
   var isBoundToBuildSerice: Boolean
     get() = _isBoundToBuildService.value ?: false
-    set(value) {
-      _isBoundToBuildService.value = value
-    }
+    set(value) { _isBoundToBuildService.value = value }
 
   var isBuildInProgress: Boolean
     get() = _isBuildInProgress.value ?: false
-    set(value) {
-      _isBuildInProgress.value = value
-    }
+    set(value) { _isBuildInProgress.value = value }
 
   var isInitializing: Boolean
     get() = _isInitializing.value ?: false
-    set(value) {
-      _isInitializing.value = value
-    }
+    set(value) { _isInitializing.value = value }
 
   var statusText: CharSequence
     get() = this._statusText.value?.first ?: ""
-    set(value) {
-      _statusText.value = value to (_statusText.value?.second ?: 0)
-    }
+    set(value) { _statusText.value = value to (_statusText.value?.second ?: 0) }
 
   var statusGravity: Int
     get() = this._statusText.value?.second ?: CENTER
-    set(value) {
-      _statusText.value = (_statusText.value?.first ?: "") to value
-    }
+    set(value) { _statusText.value = (_statusText.value?.first ?: "") to value }
 
   var displayedFileIndex: Int
     get() = _displayedFile.value!!
-    set(value) {
-      _displayedFile.value = value
-    }
+    set(value) { _displayedFile.value = value }
 
   var startDrawerOpened: Boolean
     get() = _startDrawerOpened.value ?: false
-    set(value) {
-      _startDrawerOpened.value = value
-    }
+    set(value) { _startDrawerOpened.value = value }
 
   var isSyncNeeded: Boolean
     get() = _isSyncNeeded.value ?: false
-    set(value) {
-      _isSyncNeeded.value = value
-    }
+    set(value) { _isSyncNeeded.value = value }
 
   internal var files: MutableList<File>
     get() = this._files.value ?: Collections.emptyList()
-    set(value) {
-      this._files.value = value
-    }
+    set(value) { this._files.value = value }
 
   private inline fun updateFiles(crossinline action: (files: MutableList<File>) -> Unit) {
-    val files = this.files
-    action(files)
-    this.files = files
+    val currentFiles = this.files
+    action(currentFiles)
+    this.files = currentFiles
   }
 
-  /**
-   * Add the given file to the list of opened files.
-   *
-   * @param file The file that has been opened.
-   */
-  fun addFile(file: File) = updateFiles { files ->
-    files.add(file)
+  fun addFile(file: File) = updateFiles { it.add(file) }
+
+  fun removeFile(index: Int) = updateFiles { 
+    it.removeAt(index)
+    if (it.isEmpty()) mCurrentFile.value = null
   }
 
-  /**
-   * Remove the file at the given index from the list of opened files.
-   *
-   * @param index The index of the closed file.
-   */
-  fun removeFile(index: Int) = updateFiles { files ->
-    files.removeAt(index)
-
-    if (files.isEmpty()) {
-      mCurrentFile.value = null
-    }
-  }
-
-  fun removeAllFiles() = updateFiles { files ->
-    files.clear()
+  fun removeAllFiles() = updateFiles { 
+    it.clear()
     setCurrentFile(-1, null)
   }
 
@@ -173,170 +134,65 @@ class EditorViewModel : ViewModel() {
     mCurrentFile.value = index to file
   }
 
-  fun updateFile(index: Int, newFile: File) = updateFiles { files ->
-    files[index] = newFile
-  }
+  fun updateFile(index: Int, newFile: File) = updateFiles { it[index] = newFile }
+  fun getOpenedFile(index: Int): File = files[index]
+  fun getOpenedFileCount(): Int = files.size
+  fun getOpenedFiles(): List<File> = Collections.unmodifiableList(files)
+  fun observeFiles(owner: LifecycleOwner?, obs: Observer<MutableList<File>?>?) = _files.observe(owner!!, obs!!)
+  fun getCurrentFileIndex(): Int = mCurrentFile.value?.first ?: -1
+  fun getCurrentFile(): File? = mCurrentFile.value?.second
 
-  /**
-   * Get the opened file at the given index.
-   *
-   * @param index The index of the file.
-   * @return The file at the given index.
-   */
-  fun getOpenedFile(index: Int): File {
-    return files[index]
-  }
-
-  /**
-   * Get the number of files opened.
-   *
-   * @return The number of files opened.
-   */
-  fun getOpenedFileCount(): Int {
-    return files.size
-  }
-
-  /**
-   * Get the list of currently opened files.
-   *
-   * @return The list of opened files.
-   */
-  fun getOpenedFiles(): List<File> {
-    return Collections.unmodifiableList(files)
-  }
-
-  /**
-   * Add an observer to the list of opened files.
-   *
-   * @param lifecycleOwner The lifecycle owner.
-   * @param observer The observer.
-   */
-  fun observeFiles(lifecycleOwner: LifecycleOwner?, observer: Observer<MutableList<File>?>?) {
-    _files.observe(lifecycleOwner!!, observer!!)
-  }
-
-  fun getCurrentFileIndex(): Int {
-    return mCurrentFile.value?.first ?: -1
-  }
-
-  fun getCurrentFile(): File? {
-    return mCurrentFile.value?.second
-  }
-
-  /**
-   * Get the [OpenedFilesCache] if it is already loaded, otherwise read the cache from the file system
-   * and invoke the given callback.
-   *
-   * If the cache is already loaded, [result] is called on the same thread. Otherwise, it is
-   * always called on the main/UI thread.
-   */
   inline fun getOrReadOpenedFilesCache(crossinline result: (OpenedFilesCache?) -> Unit) {
-    return openedFilesCache?.let(result) ?: run {
-      viewModelScope.launch(Dispatchers.IO) {
-        val cache = try {
+    openedFilesCache?.let { 
+        result(it) 
+        return 
+    }
+    
+    viewModelScope.launch(Dispatchers.IO) {
+      val cache = fileIoMutex.withLock {
+        try {
           val cacheFile = getOpenedFilesCache(false)
           if (cacheFile.exists() && cacheFile.length() > 0L) {
             cacheFile.bufferedReader().use(OpenedFilesCache::parse)
           } else null
-        } catch (err: IOException) {
-          // ignore exception
-          null
-        }
-
-        withContext(Dispatchers.Main) {
-          result(cache)
-        }
-      }.also { job ->
-        handleOpenedFilesCacheJobCompletion(job, "read")
+        } catch (err: IOException) { null }
       }
-      Unit
-    }
-  }
-
-  fun handleOpenedFilesCacheJobCompletion(it: Job, operation: String) {
-    it.invokeOnCompletion { err ->
-      if (err != null) {
-        ILogger.ROOT.error("[EditorViewModel] Failed to {} opened files cache", operation, err)
-      }
+      withContext(Dispatchers.Main.immediate) { result(cache) }
     }
   }
 
   fun writeOpenedFiles(cache: OpenedFilesCache?) {
     viewModelScope.launch(Dispatchers.IO) {
-      try {
-        val file = getOpenedFilesCache(true)
-
-        if (cache == null) {
-          // Only delete if file exists
-          if (file.exists()) {
-            file.delete()
-          }
-          return@launch
-        }
-
-        // Ensure parent directory exists before writing
-        file.parentFile?.let { parentDir ->
-          if (!parentDir.exists()) {
-            val created = parentDir.mkdirs()
-            if (!created && !parentDir.exists()) {
-              ILogger.ROOT.error("Failed to create parent directory: ${parentDir.absolutePath}")
-              return@launch
-            }
-          }
-        }
-
-        // Create the file if it doesn't exist
-        if (!file.exists()) {
-          val created = file.createNewFile()
-          if (!created) {
-            ILogger.ROOT.error("Failed to create cache file: ${file.absolutePath}")
-            return@launch
-          }
-        }
-
-        val gson = GsonBuilder().setPrettyPrinting().create()
-        val string = gson.toJson(cache)
-
-        // Use try-catch for the actual file writing
+      fileIoMutex.withLock {
         try {
-          file.writeText(string)
-          ILogger.ROOT.debug("Successfully wrote opened files cache to: ${file.absolutePath}")
-        } catch (e: Exception) {
-          ILogger.ROOT.error("Failed to write opened files cache", e)
-          // If writing fails, clean up the empty file
-          if (file.exists() && file.length() == 0L) {
-            file.delete()
+          val file = getOpenedFilesCache(true)
+          if (cache == null) {
+            if (file.exists()) file.delete()
+            return@withLock
           }
+
+          file.parentFile?.let { if (!it.exists()) it.mkdirs() }
+          if (!file.exists()) file.createNewFile()
+
+          val gson = GsonBuilder().setPrettyPrinting().create()
+          file.writeText(gson.toJson(cache))
+          
+        } catch (e: Exception) {
+          ILogger.ROOT.error("Error in writeOpenedFiles", e)
         }
-      } catch (e: Exception) {
-        ILogger.ROOT.error("Error in writeOpenedFiles", e)
       }
-    }.also { job -> handleOpenedFilesCacheJobCompletion(job, "write") }
+    }
   }
 
   @PublishedApi
   internal fun getOpenedFilesCache(forWrite: Boolean = false): File {
-    var file = Environment.getProjectCacheDir(IProjectManager.getInstance().projectDir)
-    file = File(file, "editor/openedFiles.json")
+    val dir = Environment.getProjectCacheDir(IProjectManager.getInstance().projectDir)
+    val file = File(dir, "editor/openedFiles.json")
 
     if (file.exists() && forWrite) {
-      try {
-        FileUtils.rename(file, "${file.name}.bak")
-      } catch (e: Exception) {
-        ILogger.ROOT.warn("Failed to create backup of cache file", e)
-      }
+      try { FileUtils.rename(file, "${file.name}.bak") } catch (e: Exception) {}
     }
-
-    // Ensure parent directory exists
-    file.parentFile?.let { parentDir ->
-      if (!parentDir.exists()) {
-        val created = parentDir.mkdirs()
-        if (!created && !parentDir.exists()) {
-          ILogger.ROOT.error("Failed to create parent directory: ${parentDir.absolutePath}")
-        }
-      }
-    }
-
+    file.parentFile?.let { if (!it.exists()) it.mkdirs() }
     return file
   }
 }

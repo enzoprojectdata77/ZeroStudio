@@ -245,7 +245,6 @@ dependencies {
   implementation(projects.modules.mtDataFilesProvider)
   implementation(projects.modules.deviceCompat)
   implementation(projects.core.git)
-  implementation(projects.core.kotlin)
   implementation(projects.core.layoutEditor)
   // implementation(projects.core.chatai.app)
   // implementation(projects.core.chatai.ai)

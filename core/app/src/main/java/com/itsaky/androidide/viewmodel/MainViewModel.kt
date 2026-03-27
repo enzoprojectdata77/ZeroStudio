@@ -13,72 +13,147 @@
  *
  *  You should have received a copy of the GNU General Public License
  *   along with AndroidIDE.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * @author android_zero
  */
-
 package com.itsaky.androidide.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.itsaky.androidide.preferences.internal.GeneralPreferences
+import com.itsaky.androidide.projects.IProjectManager
 import com.itsaky.androidide.templates.Template
+import com.itsaky.androidide.utils.RecentProjectsManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * [ViewModel] for main activity.
- *
- * @author Akash Yadav
+ * 分发UI 事件流
  */
+sealed class MainEvent {
+    data class OpenProjectSuccess(val projectDir: File) : MainEvent()
+    data class ShowMessage(val messageResId: Int, val isError: Boolean = false) : MainEvent()
+    data class RequestConfirmOpen(val projectDir: File) : MainEvent()
+}
+
 class MainViewModel : ViewModel() {
 
-  companion object {
-
-    // The values assigned to these variables reflect the order in which the screens are presented
-    // to the user. A screen with a lower value is displayed before a screen with a higher value.
-    // For example, SCREEN_MAIN is the first screen visible to the user, followed by SCREEN_TEMPLATE_LIST,
-    // and then SCREEN_TEMPLATE_DETAILS.
-    //
-    // These values are used as unique identifiers for the screens as well as for determining whether
-    // the screen change transition should be forward or backward.
-    const val SCREEN_MAIN = 0
-    const val SCREEN_TEMPLATE_LIST = 1
-    const val SCREEN_TEMPLATE_DETAILS = 2
-  }
-
-  private val _currentScreen = MutableLiveData(-1)
-  private val _previousScreen = AtomicInteger(-1)
-  private val _isTransitionInProgress = MutableLiveData(false)
-
-  internal val template = MutableLiveData<Template<*>>(null)
-  internal val creatingProject = MutableLiveData(false)
-
-  val currentScreen: LiveData<Int> = _currentScreen
-
-  val previousScreen: Int
-    get() = _previousScreen.get()
-
-  var isTransitionInProgress: Boolean
-    get() = _isTransitionInProgress.value ?: false
-    set(value) {
-      _isTransitionInProgress.value = value
+    companion object {
+        const val SCREEN_MAIN = 0
+        const val SCREEN_TEMPLATE_LIST = 1
+        const val SCREEN_TEMPLATE_DETAILS = 2
     }
 
-  fun setScreen(screen: Int) {
-    _previousScreen.set(_currentScreen.value ?: SCREEN_MAIN)
-    _currentScreen.value = screen
-  }
+    private val _currentScreen = MutableLiveData(-1)
+    private val _previousScreen = AtomicInteger(-1)
+    private val _isTransitionInProgress = MutableLiveData(false)
 
-  fun postTransition(owner: LifecycleOwner, action: Runnable) {
-    if (isTransitionInProgress) {
-      _isTransitionInProgress.observe(owner, object : Observer<Boolean> {
-        override fun onChanged(t: Boolean) {
-          _isTransitionInProgress.removeObserver(this)
-          action.run()
+    internal val template = MutableLiveData<Template<*>?>(null)
+    internal val creatingProject = MutableLiveData(false)
+
+    val currentScreen: LiveData<Int> = _currentScreen
+
+    val previousScreen: Int
+        get() = _previousScreen.get()
+
+    var isTransitionInProgress: Boolean
+        get() = _isTransitionInProgress.value ?: false
+        set(value) {
+            _isTransitionInProgress.value = value
         }
-      })
-    } else {
-      action.run()
+
+    private val _mainEvents = MutableSharedFlow<MainEvent>(extraBufferCapacity = 5)
+    val mainEvents: SharedFlow<MainEvent> = _mainEvents.asSharedFlow()
+
+    private var isOpeningProject = false
+
+    fun setScreen(screen: Int) {
+        _previousScreen.set(_currentScreen.value ?: SCREEN_MAIN)
+        _currentScreen.value = screen
     }
-  }
+
+    fun postTransition(owner: LifecycleOwner, action: Runnable) {
+        if (isTransitionInProgress) {
+            _isTransitionInProgress.observe(owner, object : Observer<Boolean> {
+                override fun onChanged(t: Boolean) {
+                    _isTransitionInProgress.removeObserver(this)
+                    action.run()
+                }
+            })
+        } else {
+            action.run()
+        }
+    }
+
+    /**
+     * 项目打开逻辑
+     */
+    fun openProject(context: Context, root: File) {
+        if (isOpeningProject) return
+        isOpeningProject = true
+
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                // 验证目录有效性 (I/O)
+                val isValid = withContext(Dispatchers.IO) { root.exists() && root.isDirectory }
+                if (!isValid) {
+                    _mainEvents.tryEmit(MainEvent.ShowMessage(com.itsaky.androidide.resources.R.string.msg_opened_project_does_not_exist, true))
+                    return@launch
+                }
+
+                // 异步写入历史记录 (I/O)
+                RecentProjectsManager.addProjectAsync(context, root)
+
+                // 配置项目环境缓存 (I/O)
+                withContext(Dispatchers.IO) {
+                    IProjectManager.getInstance().openProject(root)
+                }
+
+                // 触发 UI 进行 Intent 跳转
+                _mainEvents.tryEmit(MainEvent.OpenProjectSuccess(root))
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isOpeningProject = false
+            }
+        }
+    }
+
+    /**
+     * 后台检查并恢复上次打开的项目
+     */
+    fun checkAndOpenLastProject() {
+        if (!GeneralPreferences.autoOpenProjects) return
+        val openedProject = GeneralPreferences.lastOpenedProject
+        if (openedProject == GeneralPreferences.NO_OPENED_PROJECT || openedProject.isEmpty()) return
+
+        viewModelScope.launch(Dispatchers.Default) {
+            val project = File(openedProject)
+            val exists = withContext(Dispatchers.IO) { project.exists() }
+            
+            if (!exists) {
+                _mainEvents.tryEmit(MainEvent.ShowMessage(com.itsaky.androidide.resources.R.string.msg_opened_project_does_not_exist, false))
+                return@launch
+            }
+
+            if (GeneralPreferences.confirmProjectOpen) {
+                _mainEvents.tryEmit(MainEvent.RequestConfirmOpen(project))
+            } else {
+                withContext(Dispatchers.IO) { IProjectManager.getInstance().openProject(project) }
+                _mainEvents.tryEmit(MainEvent.OpenProjectSuccess(project))
+            }
+        }
+    }
 }

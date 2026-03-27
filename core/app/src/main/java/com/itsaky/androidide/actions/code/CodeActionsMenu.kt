@@ -6,7 +6,6 @@ import androidx.core.content.ContextCompat
 import com.itsaky.androidide.actions.*
 import com.itsaky.androidide.resources.R
 import com.itsaky.androidide.actions.code.jumpsymbol.GoToSymbolAction
-import com.itsaky.androidide.actions.code.javatokotlin.JavaToKotlinAction
 import com.itsaky.androidide.actions.code.OrganizeImportsAction
 /**
  * @param context The application context, used for retrieving resources.
@@ -27,8 +26,7 @@ class CodeActionsMenu(context: Context, override val order: Int) : EditorRelated
         var order = 0
 
         addAction(JumpToLineAction(context, order++))
-        addAction(OverrideMethodsAction(context, order++))
-        addAction(JavaToKotlinAction(context, order++))
+        addAction(KtfmtFormatAction(context, order++))
         addAction(GoToSymbolAction(context, order++))
         addAction(OrganizeImportsAction(context, order++))
         

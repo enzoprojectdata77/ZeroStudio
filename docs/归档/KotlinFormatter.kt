@@ -1,94 +1,73 @@
 package com.itsaky.androidide.formatprovider
 
-import com.pinterest.ktlint.rule.engine.api.Code
-import com.pinterest.ktlint.rule.engine.api.EditorConfigOverride
-import com.pinterest.ktlint.rule.engine.api.KtLintRuleEngine
-import com.pinterest.ktlint.rule.engine.core.api.editorconfig.INDENT_SIZE_PROPERTY
-import com.pinterest.ktlint.rule.engine.core.api.editorconfig.INDENT_STYLE_PROPERTY
-import com.pinterest.ktlint.rule.engine.core.api.editorconfig.MAX_LINE_LENGTH_PROPERTY
-import com.pinterest.ktlint.ruleset.standard.StandardRuleSetProvider
-import org.ec4j.core.model.PropertyType
+import com.facebook.ktfmt.format.Formatter as Ktfmt
+import com.facebook.ktfmt.format.FormattingOptions as KtfmtOptions
+import com.facebook.ktfmt.format.ParseError
+import java.io.PrintStream
 
 /**
- * 一个强大且健壮的 Kotlin (.kt) 和 Kotlin Script (.kts) 文件代码格式化器。
+ * Represents formatting options for the Kotlin code formatter.
+ * This class acts as a bridge between IDE settings and the underlying ktfmt formatter options.
  *
- * 此格式化器基于现代的 `ktlint-rule-engine` 核心（版本 1.x API），
- * 利用 KtLint 的标准规则集，提供符合官方 Kotlin 风格指南的格式化功能。
- * 它通过类型安全的 EditorConfig 覆盖机制进行配置，确保了稳定性和精确性。
+ * @property indentSize The number of spaces to use for a single indentation level. Defaults to 4.
+ * @property maxLineLength The maximum line length before the formatter attempts to wrap. Defaults to 100.
+ * @property organizeImports If true, unused imports will be removed and the remaining ones will be sorted. Defaults to true.
+ */
+data class KotlinFormatOptions(
+    val indentSize: Int = 4,
+    val maxLineLength: Int = 100,
+    val organizeImports: Boolean = true
+)
+
+/**
+ * A powerful code formatter for Kotlin files that uses the 'ktfmt' library from Facebook.
+ * It is designed to produce consistent, idiomatic Kotlin code and handles complex reflowing 
+ * and chained calls gracefully.
  *
- * @param options 格式化选项，用于动态配置 KtLint 引擎的行为。
+ * This implementation is resilient to parsing errors, returning the original source code
+ * if the formatter encounters syntax that it cannot handle.
+ *
+ * @param options Configuration for the formatter. See [KotlinFormatOptions] for details.
+ * @param errorStream A [PrintStream] to which formatting errors will be logged. Defaults to `System.err`.
  */
 class KotlinFormatter(
-    private val options: KotlinFormatOptions = KotlinFormatOptions()
+    private val options: KotlinFormatOptions = KotlinFormatOptions(),
+    private val errorStream: PrintStream = System.err
 ) : CodeFormatter {
 
     /**
-     * KtLint 规则引擎实例。
-     * 这是一个相对重量级的对象，因此使用 lazy 初始化，仅在首次需要时创建。
-     * 它被配置为使用标准规则集和用户提供的格式化选项。
-     */
-    private val ktLintRuleEngine: KtLintRuleEngine by lazy {
-        // 使用 EditorConfigOverride 来以类型安全的方式传递格式化选项。
-        // 这取代了旧 API 中的 userData Map<String, String>。
-        val editorConfigOverride = EditorConfigOverride.from(
-            INDENT_STYLE_PROPERTY to if (options.useTabs) PropertyType.IndentStyleValue.tab else PropertyType.IndentStyleValue.space,
-            INDENT_SIZE_PROPERTY to options.indentSize,
-            MAX_LINE_LENGTH_PROPERTY to options.maxLineLength
-        )
-
-        KtLintRuleEngine(
-            // 从 StandardRuleSetProvider 获取所有标准规则的 RuleProvider。
-            // 这是现代 API 的标准做法。
-            ruleProviders = StandardRuleSetProvider().getRuleProviders(),
-            editorConfigOverride = editorConfigOverride
-        )
-    }
-
-    /**
-     * 格式化给定的 Kotlin 源代码字符串。
+     * Formats the given Kotlin source code string according to the configured options.
      *
-     * @param source 要格式化的源代码。
-     * @return 格式化后的代码字符串。如果格式化过程中发生严重错误，则返回原始源代码。
+     * If the source code contains syntax errors that prevent `ktfmt` from parsing it,
+     * this method will catch the exception, log an error message, and return the original,
+     * unformatted source string.
+     *
+     * @param source The Kotlin source code to format.
+     * @return The formatted code, or the original source if formatting fails.
      */
     override fun format(source: String): String {
-        if (source.isBlank()) {
-            return source
-        }
-
         return try {
-            // 使用 Code.fromSnippet 创建一个代码对象。
-            // 它可以区分普通 Kotlin 文件和脚本文件 (.kts)。
-            val code = Code.fromSnippet(
-                content = source,
-                script = options.isKtsFile
+            // Map our internal options to ktfmt's options for consistency and abstraction.
+            val ktfmtOptions = KtfmtOptions(
+                maxWidth = options.maxLineLength,
+                blockIndent = options.indentSize,
+                continuationIndent = options.indentSize * 2, // A common and readable convention is twice the block indent.
+                removeUnusedImports = options.organizeImports
+                // 'manageTrailingCommas' is a new experimental flag in some ktfmt versions.
+                // We'll leave it as default unless explicitly configured.
             )
-
-            // 调用 KtLintRuleEngine 的 format 方法。
-            // 这个方法会应用所有规则并自动修正可修复的违规。
-            ktLintRuleEngine.format(code)
+            Ktfmt.format(ktfmtOptions, source)
+        } catch (e: ParseError) {
+            // ktfmt can throw ParseError on syntactically incorrect code, which is expected
+            // during live editing. We gracefully return the original source.
+            // Logging provides useful debug information without crashing the application.
+            errorStream.println("ktfmt formatting failed due to a parsing error. This is often expected for incomplete code. Details: ${e.message}")
+            source
         } catch (e: Exception) {
-            // 捕获 KtLint 在解析或格式化过程中可能抛出的任何异常，
-            // 例如 KtLintParseException（语法错误）或 KtLintRuleException（规则执行错误）。
-            System.err.println("ktlint formatting failed, returning original source. Reason: ${e.javaClass.simpleName} - ${e.message}")
-            e.printStackTrace()
+            // Catch any other unexpected exceptions from the formatter.
+            errorStream.println("An unexpected error occurred during ktfmt formatting. Returning original source.")
+            e.printStackTrace(errorStream)
             source
         }
     }
 }
-
-/**
- * 用于 Kotlin 格式化的数据类选项。
- *
- * 这些选项与 ktlint 的核心 EditorConfig 属性相对应，提供了类型安全的配置方式。
- *
- * @param indentSize 缩进大小。
- * @param useTabs 是否使用制表符（Tab）进行缩进，如果为 false，则使用空格。
- * @param maxLineLength 每行的最大长度。
- * @param isKtsFile 文件是否为 Kotlin 脚本 (.kts)。
- */
-data class KotlinFormatOptions(
-    val indentSize: Int = 4,
-    val useTabs: Boolean = false,
-    val maxLineLength: Int = 120,
-    val isKtsFile: Boolean = false
-)

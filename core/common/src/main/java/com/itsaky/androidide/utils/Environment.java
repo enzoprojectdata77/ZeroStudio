@@ -69,6 +69,10 @@ public final class Environment {
   public static File PROTOC_BIN; // Protobuf 编译器
   public static File CMAKE_HOME;
   public static File CMAKE_BIN;
+  
+  // plugin
+  public static File FORMAT_KOTLIN_KTFMT;
+
 
   public static final String PLUGIN_API_JAR_RELATIVE_PATH = "libs/plugin-api.jar";
 
@@ -146,11 +150,13 @@ public final class Environment {
     
     KOTLINC_HOME = mkdirIfNotExits(new File(HOME, ".kotlinc"));
     
+    //plugin
     File idePluginDir = mkdirIfNotExits(new File(ANDROIDIDE_HOME, "ideplugin"));
     PLUGIN_HOME = mkdirIfNotExits(new File(ANDROIDIDE_HOME, "plugin"));
     KOTLIN_LSP_HOME = mkdirIfNotExits(new File(idePluginDir, "kotlinLanguageServices"));
     KOTLIN_LSP_LAUNCHER = new File(KOTLIN_LSP_HOME, "bin/kotlin-language-server");
     KOTLIN_LSP_LIBS_JAR_DIR = new File(KOTLIN_LSP_HOME, "lib");
+    FORMAT_KOTLIN_KTFMT = mkdirIfNotExits(new File(idePluginDir, "ktfmt"));
     
     JAVA_HOME = new File(PREFIX, "opt/openjdk");
     ANDROIDIDE = createFileIfNotExists(new File(PREFIX, "share/AndroidIDE.properties"));

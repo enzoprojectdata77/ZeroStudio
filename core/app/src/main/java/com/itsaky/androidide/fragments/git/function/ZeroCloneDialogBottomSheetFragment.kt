@@ -98,7 +98,8 @@ import com.catpuppyapp.puppygit.dto.NameAndPath
 import com.catpuppyapp.puppygit.dto.NameAndPathType
 import com.github.git24j.core.Clone
 import com.github.git24j.core.Remote
-import com.itsaky.androidide.resources.R
+// import com.itsaky.androidide.resources.R
+import com.catpuppyapp.puppygit.play.pro.R
 import com.catpuppyapp.puppygit.screen.shared.SharedState
 import com.catpuppyapp.puppygit.style.MyStyleKt
 import com.catpuppyapp.puppygit.ui.theme.Theme

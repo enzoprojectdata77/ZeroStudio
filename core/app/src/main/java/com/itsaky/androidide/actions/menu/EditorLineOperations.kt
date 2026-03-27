@@ -24,11 +24,9 @@ import com.itsaky.androidide.editor.language.treesitter.TreeSitterLanguage
 import com.itsaky.androidide.editor.ui.IDEEditor
 import com.itsaky.androidide.editor.utils.*
 import com.itsaky.androidide.formatprovider.*
-import com.itsaky.androidide.formatprovider.treesitter.*
 import com.itsaky.androidide.models.Position
 import com.itsaky.androidide.models.Range
 import com.itsaky.androidide.treesitter.*
-// import com.itsaky.androidide.editor.treesitter.*
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -39,7 +37,7 @@ import kotlin.collections.ArrayList
 import kotlin.math.min
 import android.widget.BaseAdapter
 import android.widget.ImageView
-
+import com.itsaky.androidide.formatprovider.ktfmt.KtfmtCliFormatter
 /**
  * @author android_zero
  * Changes on 2025/11/13:
@@ -666,51 +664,49 @@ object EditorLineOperations {
         mapOf<String, CodeFormatter>(
             "xml" to XmlFormatter(),
             "java" to JavaFormatter(JavaFormatOptions()),
-            "kt" to KotlinFormatter(KotlinFormatOptions()),
-            "kts" to KotlinFormatter(KotlinFormatOptions()),
 
-            "gradle" to GradleGroovyFormatter(),
-            "smali" to SmaliFormatter(),
-            "html" to HtmlFormatter(),
-            "htm" to HtmlFormatter(),
-            "css" to CssFormatter(),
-            "scss" to CssFormatter(),
-            "less" to CssFormatter(),
-            "c" to CLikeTreeSitterFormatter("c"),
-            "cpp" to CLikeTreeSitterFormatter("cpp"), "cxx" to CLikeTreeSitterFormatter("cpp"), "cc" to CLikeTreeSitterFormatter("cpp"),
-            "h" to CLikeTreeSitterFormatter("c"), "hpp" to CLikeTreeSitterFormatter("cpp"), "hh" to CLikeTreeSitterFormatter("cpp"),
-            "cs" to CLikeTreeSitterFormatter("csharp"),
-            "objc" to CLikeTreeSitterFormatter("objectivec"), "m" to CLikeTreeSitterFormatter("objectivec"),
-            "js" to CLikeTreeSitterFormatter("javascript"), "mjs" to CLikeTreeSitterFormatter("javascript"), "cjs" to CLikeTreeSitterFormatter("javascript"),
-            "jsx" to CLikeTreeSitterFormatter("javascript"), 
-            "ts" to CLikeTreeSitterFormatter("typescript"),
-            "tsx" to CLikeTreeSitterFormatter("tsx"),
-            "py" to PythonTreeSitterFormatter(),
-            "sh" to ShellTreeSitterFormatter(), "bash" to ShellTreeSitterFormatter(), "zsh" to ShellTreeSitterFormatter(), "ksh" to ShellTreeSitterFormatter(),
-            "go" to GoTreeSitterFormatter(),
-            "rust" to CLikeTreeSitterFormatter("rust"), "rs" to CLikeTreeSitterFormatter("rust"),
-            "ruby" to RubyTreeSitterFormatter(), "rb" to RubyTreeSitterFormatter(),
-            "lua" to LuaTreeSitterFormatter(),
-            "php" to CLikeTreeSitterFormatter("php"),
-            "perl" to ShellTreeSitterFormatter(), "pl" to ShellTreeSitterFormatter(),
-            "swift" to CLikeTreeSitterFormatter("swift"),
-            "json" to JsonFormatter(),
-            "jsonc" to JsonFormatter(),
-            "yaml" to YamlFormatter(), "yml" to YamlFormatter(),
-            "toml" to TomlFormatter(),
-            "ini" to IniFormatter(),
-            "properties" to IniFormatter(),
-            "conf" to IniFormatter(),
-            "cfg" to IniFormatter(),
-            "sql" to SqlFormatter(),
-            "md" to MarkdownFormatter(), "markdown" to MarkdownFormatter(),
-            "dockerfile" to DockerfileFormatter(), "Dockerfile" to DockerfileFormatter(),
-            "cmake" to IniFormatter(),
-            "gitignore" to object : CodeFormatter {
-                override fun format(source: String): String {
-                    return source.lines().filter { l -> l.isNotBlank() }.joinToString("\n")
-                }
-            },
+            // "gradle" to GradleGroovyFormatter(),
+            // "smali" to SmaliFormatter(),
+            // "html" to HtmlFormatter(),
+            // "htm" to HtmlFormatter(),
+            // "css" to CssFormatter(),
+            // "scss" to CssFormatter(),
+            // "less" to CssFormatter(),
+            // "c" to CLikeTreeSitterFormatter("c"),
+            // "cpp" to CLikeTreeSitterFormatter("cpp"), "cxx" to CLikeTreeSitterFormatter("cpp"), "cc" to CLikeTreeSitterFormatter("cpp"),
+            // "h" to CLikeTreeSitterFormatter("c"), "hpp" to CLikeTreeSitterFormatter("cpp"), "hh" to CLikeTreeSitterFormatter("cpp"),
+            // "cs" to CLikeTreeSitterFormatter("csharp"),
+            // "objc" to CLikeTreeSitterFormatter("objectivec"), "m" to CLikeTreeSitterFormatter("objectivec"),
+            // "js" to CLikeTreeSitterFormatter("javascript"), "mjs" to CLikeTreeSitterFormatter("javascript"), "cjs" to CLikeTreeSitterFormatter("javascript"),
+            // "jsx" to CLikeTreeSitterFormatter("javascript"), 
+            // "ts" to CLikeTreeSitterFormatter("typescript"),
+            // "tsx" to CLikeTreeSitterFormatter("tsx"),
+            // "py" to PythonTreeSitterFormatter(),
+            // "sh" to ShellTreeSitterFormatter(), "bash" to ShellTreeSitterFormatter(), "zsh" to ShellTreeSitterFormatter(), "ksh" to ShellTreeSitterFormatter(),
+            // "go" to GoTreeSitterFormatter(),
+            // "rust" to CLikeTreeSitterFormatter("rust"), "rs" to CLikeTreeSitterFormatter("rust"),
+            // "ruby" to RubyTreeSitterFormatter(), "rb" to RubyTreeSitterFormatter(),
+            // "lua" to LuaTreeSitterFormatter(),
+            // "php" to CLikeTreeSitterFormatter("php"),
+            // "perl" to ShellTreeSitterFormatter(), "pl" to ShellTreeSitterFormatter(),
+            // "swift" to CLikeTreeSitterFormatter("swift"),
+            // "json" to JsonFormatter(),
+            // "jsonc" to JsonFormatter(),
+            // "yaml" to YamlFormatter(), "yml" to YamlFormatter(),
+            // "toml" to TomlFormatter(),
+            // "ini" to IniFormatter(),
+            // "properties" to IniFormatter(),
+            // "conf" to IniFormatter(),
+            // "cfg" to IniFormatter(),
+            // "sql" to SqlFormatter(),
+            // "md" to MarkdownFormatter(), "markdown" to MarkdownFormatter(),
+            // "dockerfile" to DockerfileFormatter(), "Dockerfile" to DockerfileFormatter(),
+            // "cmake" to IniFormatter(),
+            // "gitignore" to object : CodeFormatter {
+                // override fun format(source: String): String {
+                    // return source.lines().filter { l -> l.isNotBlank() }.joinToString("\n")
+                // }
+            // },
         )
     
     fun formatCode(editor: CodeEditor, file: File): Boolean {

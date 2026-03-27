@@ -1,3 +1,0 @@
--keep class com.facebook.ktfmt.** { *; }
--keep class org.javacs.kt.** { *; }
--keep class com.itsaky.androidide.formatprovider.** { *; }

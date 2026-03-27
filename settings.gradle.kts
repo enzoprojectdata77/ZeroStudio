@@ -159,7 +159,6 @@ include(
   ":core:resources",
   ":core:git",
   ":core:layout-editor",
-  ":core:kotlin",
   ":core:zero-mcp-server",
   // ":core:chatai:app",
   // ":core:chatai:ai",
