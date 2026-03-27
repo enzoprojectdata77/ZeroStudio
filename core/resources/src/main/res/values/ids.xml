@@ -107,6 +107,9 @@
      <item
           name="compose_container_template_details"
           type="id" />
+     <item
+          name="fragment_containers_parent"
+          type="id" />
           
 </resources>
 
